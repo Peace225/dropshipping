@@ -1,13 +1,1 @@
-{
-  "name": "aurae",
-  "private": true,
-  "workspaces": ["apps/*"],
-  "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev"
-  },
-  "devDependencies": {
-    "turbo": "^2.0.0"
-  },
-  "packageManager": "npm@10.0.0"
-}
+﻿{"private": true}
