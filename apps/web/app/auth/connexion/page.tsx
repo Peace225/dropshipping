@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
@@ -13,14 +14,14 @@ export default function ConnexionPage() {
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#333333]/70 hover:text-[#333333] mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Retour à l'accueil AURAE</span>
+          <span>Retour Ã  l'accueil AURAE</span>
         </Link>
 
         <div className="bg-white p-8 rounded-3xl border border-[#333333]/10 shadow-sm">
           <div className="text-center mb-8">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#E8C5C8]/40 text-[#333333] mb-3">
               <ShieldCheck className="w-3.5 h-3.5 text-[#6E857B]" />
-              Espace Client sécurisé
+              Espace Client sÃ©curisÃ©
             </span>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#333333] tracking-tight">
               Bon retour parmi nous
@@ -36,7 +37,7 @@ export default function ConnexionPage() {
             <p className="text-xs text-[#333333]/70 font-medium">
               Pas encore de compte ?{" "}
               <Link href="/auth/register" className="font-bold text-[#333333] hover:underline">
-                Créer un compte
+                CrÃ©er un compte
               </Link>
             </p>
           </div>
@@ -45,3 +46,4 @@ export default function ConnexionPage() {
     </div>
   );
 }
+

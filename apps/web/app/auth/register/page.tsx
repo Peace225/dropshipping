@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+export const dynamic = 'force-dynamic';
 
 import Link from "next/link";
 import { ArrowLeft, User, Mail, Lock, Sparkles, ShieldCheck } from "lucide-react";
@@ -14,7 +15,7 @@ export default function InscriptionPage() {
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#333333]/70 hover:text-[#333333] mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Retour à l'accueil AURAE</span>
+          <span>Retour Ã  l'accueil AURAE</span>
         </Link>
 
         {/* Carte principale d'inscription */}
@@ -25,10 +26,10 @@ export default function InscriptionPage() {
               <Sparkles className="w-6 h-6 animate-pulse" />
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#333333] tracking-tight">
-              Créer un compte AURAE
+              CrÃ©er un compte AURAE
             </h1>
             <p className="text-xs sm:text-sm text-[#333333]/70 font-medium mt-1">
-              Rejoignez notre univers dédié à la maternité et à la puériculture.
+              Rejoignez notre univers dÃ©diÃ© Ã  la maternitÃ© et Ã  la puÃ©riculture.
             </p>
           </div>
 
@@ -42,7 +43,7 @@ export default function InscriptionPage() {
                 </span>
                 <input
                   type="text"
-                  placeholder="Brad Sergueï Kokoliko"
+                  placeholder="Brad SergueÃ¯ Kokoliko"
                   className="w-full pl-11 pr-4 py-3 rounded-2xl border border-[#333333]/15 text-xs sm:text-sm font-medium focus:outline-none focus:border-[#333333] bg-[#F5EBE6]/10"
                 />
               </div>
@@ -70,7 +71,7 @@ export default function InscriptionPage() {
                 </span>
                 <input
                   type="password"
-                  placeholder="••••••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   className="w-full pl-11 pr-4 py-3 rounded-2xl border border-[#333333]/15 text-xs sm:text-sm font-medium focus:outline-none focus:border-[#333333] bg-[#F5EBE6]/10"
                 />
               </div>
@@ -89,7 +90,7 @@ export default function InscriptionPage() {
 
           {/* Lien vers connexion */}
           <div className="mt-6 text-center text-xs text-[#333333]/70 font-medium">
-            Déjà un compte AURAE ?{" "}
+            DÃ©jÃ  un compte AURAE ?{" "}
             <Link href="/auth/connexion" className="font-extrabold text-[#333333] hover:underline">
               Se connecter
             </Link>
@@ -97,7 +98,7 @@ export default function InscriptionPage() {
 
           <div className="flex items-center justify-center gap-1.5 mt-6 text-[10px] text-[#333333]/60 font-medium pt-4 border-t border-[#333333]/10">
             <ShieldCheck className="w-3.5 h-3.5 text-[#6E857B]" />
-            <span>Sécurité et confidentialité garanties.</span>
+            <span>SÃ©curitÃ© et confidentialitÃ© garanties.</span>
           </div>
 
         </div>
@@ -106,3 +107,4 @@ export default function InscriptionPage() {
     </div>
   );
 }
+
