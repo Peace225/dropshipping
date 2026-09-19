@@ -1,8 +1,13 @@
+"use client"; // Indique que le composant est interactif et utilise des hooks
+
 import Link from "next/link";
 import Image from "next/image";
 import { ShoppingBag, Search, User, HelpCircle, Users, Sparkles, ShieldCheck, Truck, Percent } from "lucide-react";
+import { useCart } from "@/context/cart-context"; // 1. Importation du hook du panier
 
 export function Header() {
+  const { totalItems } = useCart(); // 2. Récupération du nombre total d'articles
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -139,8 +144,9 @@ export function Header() {
               >
                 <ShoppingBag className="w-4 h-4 text-white transition-transform duration-300 hover:rotate-12" />
                 <span className="text-xs font-medium hidden md:inline">Panier</span>
+                {/* 3. Affichage dynamique du nombre total d'articles */}
                 <span className="w-4 h-4 rounded-full bg-white text-[#6E857B] text-[10px] flex items-center justify-center font-bold shadow-inner">
-                  0
+                  {totalItems}
                 </span>
               </Link>
 
