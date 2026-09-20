@@ -19,6 +19,25 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+function resolveImageUrl(rawImg: string, slug: string): string {
+  // Si URL http complète (Cloudinary encore valide) on garde
+  if (rawImg && rawImg.startsWith("http")) return rawImg;
+
+  // On nettoie le nom de fichier
+  let fileName = rawImg?.trim() || "";
+  if (fileName) {
+    fileName = fileName.replace(/^aurae-images\//, "").replace(/^\//, "");
+  }
+
+  // Si vide ou pas d'extension -> on utilise le slug.jpg (ton bucket est en slug.jpg d'après tes screens)
+  if (!fileName ||!fileName.includes(".")) {
+    fileName = `${slug}.jpg`;
+  }
+
+  const { data } = supabase.storage.from("aurae-images").getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
 export function FeaturedProducts() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { addItem } = useCart() as any;
@@ -56,18 +75,14 @@ export function FeaturedProducts() {
         return;
       }
 
-      // Si on a des flash_sales, on les priorise, sinon on affiche tout
       const withFlag = data.filter((d: any) => d.is_flash_sale === true);
       const dataToUse = withFlag.length > 0? withFlag : data;
 
       const formatted = dataToUse.map((item: any) => {
         const images = [...(item.product_images?? [])].sort((a: any, b: any) => (a.position?? 0) - (b.position?? 0));
         const rawImg = images.find((img: any) => img.is_primary)?.image_url?? images[0]?.image_url?? "";
-        // Si image_url est déjà une URL complète (cloudinary / supabase storage), on la garde telle quelle
-        const imageUrl = rawImg.startsWith("http")
-         ? rawImg
-          : rawImg ? `${supabaseUrl}/storage/v1/object/public/aurae-images/${rawImg.split("/").pop()}`
-          : "/placeholder.jpg";
+
+        const imageUrl = resolveImageUrl(rawImg, item.slug);
 
         const originalPrice = Number(item.price);
         const promoPrice = item.promo_price? Number(item.promo_price) : originalPrice * 0.75;
@@ -141,7 +156,7 @@ export function FeaturedProducts() {
                 <Clock3 className="h-4 w-4" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#333333]/55">Offre limitée</p>
+                <p className="text- font-bold uppercase tracking-[0.18em] text-[#333333]/55">Offre limitée</p>
                 <p className="mt-1 text-sm font-medium leading-5 text-[#333333]">Des essentiels à prix doux, pendant un temps limité.</p>
               </div>
             </div>
@@ -151,7 +166,7 @@ export function FeaturedProducts() {
               <span className="flex h-9 min-w-9 items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white shadow-sm">18</span>
               <span className="text-xs text-[#333333]/40">:</span>
               <span className="flex h-9 min-w-9 items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white shadow-sm">45</span>
-              <span className="ml-1 text-[10px] text-[#333333]/50">restantes</span>
+              <span className="ml-1 text- text-[#333333]/50">restantes</span>
             </div>
           </div>
         </div>
@@ -171,27 +186,27 @@ export function FeaturedProducts() {
         <div ref={scrollContainerRef} className="flex w-full gap-3 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:gap-5">
           {flashProducts.map((product) => (
             <article key={product.id} className="group relative flex w-[75%] shrink-0 flex-col overflow-hidden rounded-2xl border border-[#333333]/10 bg-white snap-start transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-[45%] lg:w-[calc(25%-15px)]">
-              <span className="absolute left-3 top-3 z-20 rounded-full bg-[#333333] px-2.5 py-1 text-[9px] font-bold tracking-wide text-white pointer-events-none">{product.discount}</span>
-              <span className={`absolute right-3 top-3 z-20 rounded-full px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wide pointer-events-none ${product.universeColor}`}>{product.universe}</span>
-              <Link href="/ventes-flash" className="relative block aspect-square w-full overflow-hidden bg-[#F5EBE6]/45 cursor-pointer" aria-label="Voir toutes les ventes flash">
+              <span className="absolute left-3 top-3 z-20 rounded-full bg-[#333333] px-2.5 py-1 text- font-bold tracking-wide text-white pointer-events-none">{product.discount}</span>
+              <span className={`absolute right-3 top-3 z-20 rounded-full px-2.5 py-1 text- font-semibold uppercase tracking-wide pointer-events-none ${product.universeColor}`}>{product.universe}</span>
+              <Link href={product.detailUrl} className="relative block aspect-square w-full overflow-hidden bg-[#F5EBE6]/45 cursor-pointer" aria-label={product.name}>
                 <Image src={product.image} alt={product.name} fill unoptimized sizes="(max-width: 639px) 75vw, (max-width: 1023px) 45vw, 25vw" className="object-contain p-5 transition-transform duration-700 ease-out group-hover:scale-105 sm:p-7" />
               </Link>
               <div className="flex flex-1 flex-col p-3.5 sm:p-5">
-                <p className="mb-1.5 line-clamp-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#6E857B] sm:text-[10px]">{product.categoryName}</p>
+                <p className="mb-1.5 line-clamp-1 text- font-semibold uppercase tracking-[0.12em] text-[#6E857B] sm:text-">{product.categoryName}</p>
                 <Link href={product.detailUrl}>
-                  <h3 className="line-clamp-2 min-h-[40px] text-xs font-semibold leading-5 text-[#333333] transition-colors group-hover:text-[#6E857B] sm:text-sm hover:underline">{product.name}</h3>
+                  <h3 className="line-clamp-2 min-h- text-xs font-semibold leading-5 text-[#333333] transition-colors group-hover:text-[#6E857B] sm:text-sm hover:underline">{product.name}</h3>
                 </Link>
                 <div className="mt-3 flex items-center gap-1">
                   <div className="flex items-center gap-0.5">{Array.from({ length: product.rating }, (_, index) => (<Star key={index} className="h-3 w-3 fill-current text-[#D4A396]" />))}</div>
-                  <span className="text-[10px] text-[#333333]/40">{product.rating}.0</span>
+                  <span className="text- text-[#333333]/40">{product.rating}.0</span>
                 </div>
                 <div className="mt-auto flex items-end justify-between gap-2 pt-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                       <span className="text-sm font-bold text-[#333333] sm:text-base">{product.price}</span>
-                      <span className="text-[10px] text-[#333333]/40 line-through">{product.oldPrice}</span>
+                      <span className="text- text-[#333333]/40 line-through">{product.oldPrice}</span>
                     </div>
-                    <p className="mt-1 text-[9px] font-medium text-[#6E857B]">Offre Flash</p>
+                    <p className="mt-1 text- font-medium text-[#6E857B]">Offre Flash</p>
                   </div>
                   <button type="button" onClick={(e) => { e.preventDefault(); handleAddToCart(product); }} aria-label={`Ajouter ${product.name} au panier`} className="relative z-20 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#333333] text-white shadow-sm transition-all duration-200 hover:bg-[#D4A396] hover:shadow-md active:scale-90 sm:h-10 sm:w-10">
                     <ShoppingBag className="h-4 w-4" />
