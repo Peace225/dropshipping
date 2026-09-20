@@ -5,7 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { sendOrderNotifications } from '@/lib/notifications/order-notifications';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20', // Alignement sur la version installée précédemment
+  apiVersion: '2024-06-20' as any,
 });
 
 export async function POST(req: Request) {
@@ -18,7 +18,6 @@ export async function POST(req: Request) {
 
   let event: Stripe.Event;
 
-  // 1. VÉRIFICATION STRICTE DE LA SIGNATURE WEBHOOK
   try {
     event = stripe.webhooks.constructEvent(
       body,
@@ -32,12 +31,9 @@ export async function POST(req: Request) {
 
   const supabaseAdmin = createAdminClient();
 
-  // NOTE : Si vous utilisez Stripe Checkout, l'événement recommandé est 'checkout.session.completed'. 
-  // Si vous utilisez les PaymentElements directs, 'payment_intent.succeeded' est correct.
   if (event.type === 'payment_intent.succeeded') {
     const payloadIntent = event.data.object as Stripe.PaymentIntent;
 
-    // 2. DOUBLE SÉCURITÉ : Récupération en direct de l'état réel auprès de Stripe
     const verifiedIntent = await stripe.paymentIntents.retrieve(payloadIntent.id);
 
     if (verifiedIntent.status !== 'succeeded') {
@@ -52,7 +48,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Métadonnées incomplètes.' }, { status: 400 });
     }
 
-    // 3. RÉCUPÉRATION DE LA COMMANDE ET DES DONNÉES CLIENT POUR LES NOTIFICATIONS
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .select(`
@@ -74,13 +69,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Commande introuvable.' }, { status: 404 });
     }
 
-    // Vérification anti-fraude du montant (Stripe fonctionne en centimes)
     if (Math.round(Number(order.total_amount) * 100) !== verifiedIntent.amount) {
       console.error('[ALERT_FRAUD] Le montant payé ne correspond pas au total en BDD !');
       return NextResponse.json({ error: 'Incohérence de montant détectée.' }, { status: 400 });
     }
 
-    // 4. MISE À JOUR TRANSACTIONNELLE
     await supabaseAdmin
       .from('payments')
       .update({
@@ -97,7 +90,6 @@ export async function POST(req: Request) {
       })
       .eq('id', orderId);
 
-    // Vidage du panier si l'utilisateur est connecté
     if (userId) {
       await supabaseAdmin
         .from('cart_items')
@@ -105,10 +97,7 @@ export async function POST(req: Request) {
         .eq('user_id', userId);
     }
 
-    // 5. DÉCLENCHEMENT DES NOTIFICATIONS (EMAIL & SMS)
-    // L'exécution se fait en arrière-plan grâce au composant importé
     try {
-      // On s'assure que customers est bien un objet unique (relation 1-to-1)
       const customerData = Array.isArray(order.customers) ? order.customers[0] : order.customers;
 
       if (customerData) {
@@ -121,7 +110,6 @@ export async function POST(req: Request) {
         });
       }
     } catch (notificationError) {
-      // On log l'erreur mais on ne bloque pas la réponse 200 au Webhook de Stripe
       console.error('[WEBHOOK_NOTIFICATION_FAILED]', notificationError);
     }
   }
