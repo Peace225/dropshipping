@@ -11,9 +11,9 @@ export function Header() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "AURAE",
-    "url": "https://aurae.app",
-    "logo": "https://aurae.app/og-image.jpg",
+    "name": "ECLOSIA",
+    "url": "https://eclosia.app",
+    "logo": "https://eclosia.app/og-image.jpg",
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Paris",
@@ -76,7 +76,7 @@ export function Header() {
                 <div className="relative w-14 h-14 overflow-hidden rounded-full shadow-sm border border-[#6E857B]/20 transition-transform duration-300 group-hover:scale-105 bg-white flex items-center justify-center">
                     <Image
                         src="/images/logo.png"
-                        alt="AURAE Logo"
+                        alt="ECLOSIA Logo"
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-110"
                         priority
@@ -84,7 +84,7 @@ export function Header() {
                 </div>
               <div className="flex flex-col transition-transform duration-300 group-hover:translate-x-0.5">
                 <span className="text-2xl font-bold tracking-widest text-[#333333] font-serif leading-none">
-                  AURAE
+                  ECLOSIA
                 </span>
                 <span className="text-[9px] font-medium tracking-wider uppercase text-[#6E857B] transition-colors group-hover:text-[#D4A396] mt-1">
                   Maternité & Puériculture

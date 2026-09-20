@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -15,117 +15,18 @@ import {
   X,
   RotateCcw,
 } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
+import { useCart } from "@/context/cart-context"; // Importation du panier
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const FLASH_SLOTS = [
   { id: "current", label: "En ce moment", status: "Termine dans", time: "01:46:53", active: true },
   { id: "slot-1", label: "Aujourd'hui 18:00", status: "À venir", time: "18:00", active: false },
   { id: "slot-2", label: "Demain 09:00", status: "À venir", time: "09:00", active: false },
   { id: "slot-3", label: "Demain 14:00", status: "À venir", time: "14:00", active: false },
-];
-
-const FLASH_PRODUCTS = [
-  {
-    id: 1,
-    universe: "Maman",
-    universeColor: "bg-[#E8C5C8]",
-    universeText: "text-[#333333]",
-    name: "Coffret Maternité Essentiel",
-    category: "Grossesse & Post-Partum",
-    price: "49,00 €",
-    oldPrice: "69,00 €",
-    discount: "-29%",
-    rating: 5,
-    reviewsCount: 24,
-    image: "/images/slide-1.jpg",
-    slug: "/ventes-flash",
-    stockLeft: 7,
-    stockTotal: 30,
-  },
-  {
-    id: 2,
-    universe: "Bébé",
-    universeColor: "bg-[#6E857B]",
-    universeText: "text-white",
-    name: "Porte-Bébé Ergonomique Physiolock",
-    category: "Soins & Tendresse",
-    price: "89,00 €",
-    oldPrice: "119,00 €",
-    discount: "-25%",
-    rating: 5,
-    reviewsCount: 42,
-    image: "/images/slide-2.png",
-    slug: "/ventes-flash",
-    stockLeft: 3,
-    stockTotal: 25,
-  },
-  {
-    id: 3,
-    universe: "Maman",
-    universeColor: "bg-[#E8C5C8]",
-    universeText: "text-[#333333]",
-    name: "Huile Sèche Apaisante Post-Partum",
-    category: "Bien-être & Vergetures",
-    price: "29,00 €",
-    oldPrice: "39,00 €",
-    discount: "-26%",
-    rating: 4,
-    reviewsCount: 18,
-    image: "/images/slide-3.png",
-    slug: "/ventes-flash",
-    stockLeft: 18,
-    stockTotal: 50,
-  },
-  {
-    id: 4,
-    universe: "Bébé",
-    universeColor: "bg-[#6E857B]",
-    universeText: "text-white",
-    name: "Coussin d'Allaitement Bio Coton",
-    category: "Allaitement & Confort",
-    price: "45,00 €",
-    oldPrice: "59,00 €",
-    discount: "-24%",
-    rating: 5,
-    reviewsCount: 15,
-    image: "/images/slide-7.jpg",
-    slug: "/ventes-flash",
-    stockLeft: 12,
-    stockTotal: 40,
-  },
-  {
-    id: 5,
-    universe: "Bébé",
-    universeColor: "bg-[#6E857B]",
-    universeText: "text-white",
-    name: "Biberon Anti-Colique en Verre 240ml",
-    category: "Repas & Repos",
-    price: "19,00 €",
-    oldPrice: "26,00 €",
-    discount: "-27%",
-    rating: 5,
-    reviewsCount: 31,
-    image: "/images/slide-1.jpg",
-    slug: "/ventes-flash",
-    stockLeft: 5,
-    stockTotal: 20,
-  },
-  {
-    id: 6,
-    universe: "Maman",
-    universeColor: "bg-[#E8C5C8]",
-    universeText: "text-[#333333]",
-    name: "Baume de Massage Relaxant Bio",
-    category: "Soins & Tendresse",
-    price: "22,00 €",
-    oldPrice: "32,00 €",
-    discount: "-31%",
-    rating: 4,
-    reviewsCount: 9,
-    image: "/images/slide-2.png",
-    slug: "/ventes-flash",
-    stockLeft: 22,
-    stockTotal: 60,
-  },
 ];
 
 const CATEGORIES = [
@@ -145,6 +46,12 @@ const DISCOUNT_OPTIONS = [
 ];
 
 export default function VentesFlashPage() {
+  const { addItem } = useCart() as any;
+
+  // États dynamiques
+  const [flashProducts, setFlashProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
   // États de filtrage et de recherche
   const [selectedSlot, setSelectedSlot] = useState("current");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -153,6 +60,69 @@ export default function VentesFlashPage() {
   const [minDiscount, setMinDiscount] = useState<number>(0);
   const [minRating, setMinRating] = useState<number>(0);
   const [sortBy, setSortBy] = useState("Les plus demandés");
+
+  // Charger les produits flash depuis Supabase
+  useEffect(() => {
+    async function fetchFlashProducts() {
+      const { data, error } = await supabase
+        .from("products")
+        .select(`
+          id,
+          name,
+          slug,
+          price,
+          promo_price,
+          stock,
+          description,
+          categories ( name, slug ),
+          product_images ( image_url, is_primary, position )
+        `)
+        .eq("is_flash_sale", true)
+        .eq("is_active", true);
+
+      if (error) {
+        console.error("Erreur de chargement des ventes flash :", error);
+      } else if (data) {
+        const formatted = data.map((item: any) => {
+          const images = [...(item.product_images ?? [])].sort((a, b) => a.position - b.position);
+          const rawImg = images.find((img) => img.is_primary)?.image_url ?? images[0]?.image_url ?? "placeholder.jpg";
+          const fileName = rawImg.includes("/") ? rawImg.split("/").pop() : rawImg;
+          const imageUrl = `https://cbvpxrhiurdjhzdpyceb.supabase.co/storage/v1/object/public/aurae-images/${fileName}`;
+
+          const originalPrice = Number(item.price);
+          const promoPrice = item.promo_price ? Number(item.promo_price) : originalPrice * 0.75;
+          const discountPercent = Math.round(((originalPrice - promoPrice) / originalPrice) * 100);
+
+          const catSlug = item.categories?.slug || "maternite";
+
+          return {
+            id: item.id,
+            name: item.name,
+            slug: item.slug,
+            category: item.categories?.name || "Grossesse & Post-Partum",
+            universe: catSlug === "bebe" ? "Bébé" : "Maman",
+            universeColor: catSlug === "bebe" ? "bg-[#6E857B]" : "bg-[#E8C5C8]",
+            universeText: catSlug === "bebe" ? "text-white" : "text-[#333333]",
+            price: `${promoPrice.toFixed(2).replace(".", ",")} €`,
+            numericPrice: promoPrice,
+            oldPrice: `${originalPrice.toFixed(2).replace(".", ",")} €`,
+            discount: `-${discountPercent}%`,
+            rating: 5,
+            reviewsCount: Math.floor(Math.random() * 50) + 10,
+            image: imageUrl,
+            detailUrl: `/shop/${catSlug}/${item.slug}`,
+            stockLeft: item.stock || 10,
+            stockTotal: 40,
+          };
+        });
+
+        setFlashProducts(formatted);
+      }
+      setLoading(false);
+    }
+
+    fetchFlashProducts();
+  }, []);
 
   // Fonction de réinitialisation globale
   const handleResetFilters = () => {
@@ -163,22 +133,27 @@ export default function VentesFlashPage() {
     setSortBy("Les plus demandés");
   };
 
-  const handleAddToCart = (product: (typeof FLASH_PRODUCTS)[number]) => {
-    alert(`« ${product.name} » a été ajouté à votre panier.`);
+  const handleAddToCart = (product: any) => {
+    if (addItem) {
+      addItem({
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        price: product.numericPrice,
+        priceFormatted: product.price,
+        image: product.image,
+        quantity: 1,
+      });
+    }
   };
 
   // Filtrage et Tri dynamique
   const filteredProducts = useMemo(() => {
-    return FLASH_PRODUCTS.filter((product) => {
-      // 1. Filtrage par Catégorie
-      if (
-        selectedCategory !== "Tous les produits" &&
-        product.category !== selectedCategory
-      ) {
+    return flashProducts.filter((product) => {
+      if (selectedCategory !== "Tous les produits" && product.category !== selectedCategory) {
         return false;
       }
 
-      // 2. Filtrage par Recherche textuelle
       if (searchQuery.trim() !== "") {
         const query = searchQuery.toLowerCase();
         const matchName = product.name.toLowerCase().includes(query);
@@ -186,29 +161,19 @@ export default function VentesFlashPage() {
         if (!matchName && !matchCategory) return false;
       }
 
-      // 3. Filtrage par Remise Minimale
       if (minDiscount > 0) {
-        const discountVal =
-          Math.abs(
-            parseInt(product.discount.replace("%", "").replace("-", ""), 10)
-          ) || 0;
+        const discountVal = Math.abs(parseInt(product.discount.replace("%", "").replace("-", ""), 10)) || 0;
         if (discountVal < minDiscount) return false;
       }
 
-      // 4. Filtrage par Note Minimale
       if (minRating > 0 && product.rating < minRating) {
         return false;
       }
 
       return true;
     }).sort((a, b) => {
-      // Helper pour convertir le prix "49,00 €" en number 49.00
-      const getNumericPrice = (p: string) =>
-        parseFloat(p.replace(",", ".").replace(/[^\d.]/g, ""));
-
-      // Helper pour convertir la remise "-29%" en number 29
-      const getNumericDiscount = (d: string) =>
-        Math.abs(parseInt(d.replace("%", "").replace("-", ""), 10)) || 0;
+      const getNumericPrice = (p: string) => parseFloat(p.replace(",", ".").replace(/[^\d.]/g, ""));
+      const getNumericDiscount = (d: string) => Math.abs(parseInt(d.replace("%", "").replace("-", ""), 10)) || 0;
 
       if (sortBy === "Prix : Croissant") {
         return getNumericPrice(a.price) - getNumericPrice(b.price);
@@ -219,9 +184,9 @@ export default function VentesFlashPage() {
       if (sortBy === "Meilleures remises") {
         return getNumericDiscount(b.discount) - getNumericDiscount(a.discount);
       }
-      return 0; // "Les plus demandés" (ordre par défaut)
+      return 0;
     });
-  }, [selectedCategory, searchQuery, minDiscount, minRating, sortBy]);
+  }, [flashProducts, selectedCategory, searchQuery, minDiscount, minRating, sortBy]);
 
   const hasActiveFilters =
     selectedCategory !== "Tous les produits" ||
@@ -230,7 +195,7 @@ export default function VentesFlashPage() {
     minRating > 0;
 
   return (
-    <main className="min-h-screen bg-[#FAFAFA] text-[#333333]">
+    <main className="min-h-screen bg-[#FAFAFA] text-[#333333] pt-24">
       {/* HEADER DE PAGE */}
       <div className="border-b border-[#333333]/10 bg-white py-6">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -273,7 +238,6 @@ export default function VentesFlashPage() {
                 : "-translate-x-full lg:translate-x-0"
             }`}
           >
-            {/* ENTÊTE SIDEBAR */}
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-[#333333]">
                 Filtres
@@ -329,7 +293,7 @@ export default function VentesFlashPage() {
 
             <hr className="my-5 border-[#333333]/10" />
 
-            {/* MARQUE / RECHERCHE */}
+            {/* RECHERCHE */}
             <div className="mb-6">
               <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#333333]/60">
                 Rechercher
@@ -357,7 +321,7 @@ export default function VentesFlashPage() {
 
             <hr className="my-5 border-[#333333]/10" />
 
-            {/* REMISES (%) */}
+            {/* REMISES */}
             <div className="mb-6">
               <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#333333]/60">
                 Remise minimale
@@ -386,50 +350,8 @@ export default function VentesFlashPage() {
                 ))}
               </div>
             </div>
-
-            <hr className="my-5 border-[#333333]/10" />
-
-            {/* ÉVALUATION */}
-            <div>
-              <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#333333]/60">
-                Avis Clients
-              </h3>
-              <div className="space-y-1.5">
-                {[5, 4].map((stars) => {
-                  const isActive = minRating === stars;
-                  return (
-                    <button
-                      key={stars}
-                      type="button"
-                      onClick={() => setMinRating(isActive ? 0 : stars)}
-                      className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 transition-colors ${
-                        isActive
-                          ? "bg-[#F5EBE6] font-semibold text-[#333333]"
-                          : "text-[#333333]/80 hover:bg-gray-50 hover:text-[#333333]"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="flex">
-                          {Array.from({ length: stars }, (_, i) => (
-                            <Star
-                              key={i}
-                              className="h-3 w-3 fill-current text-[#D4A396]"
-                            />
-                          ))}
-                        </div>
-                        <span className="text-xs">et plus</span>
-                      </div>
-                      {isActive && (
-                        <Check className="h-3.5 w-3.5 text-[#D4A396]" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
           </aside>
 
-          {/* OVERLAY MOBILE */}
           {showMobileFilters && (
             <div
               className="fixed inset-0 z-40 bg-black/40 lg:hidden"
@@ -441,9 +363,7 @@ export default function VentesFlashPage() {
               SECTION PRINCIPALE (DROITE)
           ====================================================== */}
           <div className="min-w-0 flex-1">
-            {/* BANNIÈRE DE VENTE FLASH ET BANDEAU CRÉNEAUX */}
             <div className="overflow-hidden rounded-2xl border border-[#333333]/10 bg-white shadow-sm">
-              {/* HEADER SOMBRE AURAE */}
               <div className="bg-[#333333] p-4 text-white sm:p-5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
@@ -460,7 +380,6 @@ export default function VentesFlashPage() {
                     </div>
                   </div>
 
-                  {/* COMPTE À REBOURS */}
                   <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3.5 py-2 backdrop-blur-sm">
                     <Clock3 className="h-4 w-4 text-[#D4A396]" />
                     <span className="text-xs text-white/80">Termine dans :</span>
@@ -471,7 +390,6 @@ export default function VentesFlashPage() {
                 </div>
               </div>
 
-              {/* TABS DE CRÉNEAUX HORAIRES */}
               <div className="flex overflow-x-auto border-b border-[#333333]/10 bg-[#F5EBE6]/50 [scrollbar-width:none]">
                 {FLASH_SLOTS.map((slot) => (
                   <button
@@ -493,7 +411,6 @@ export default function VentesFlashPage() {
               </div>
             </div>
 
-            {/* BARRE DE FILTRES MOBILES ET TRI */}
             <div className="mt-5 flex items-center justify-between gap-3">
               <button
                 type="button"
@@ -515,7 +432,6 @@ export default function VentesFlashPage() {
                 résultat(s)
               </p>
 
-              {/* TRI DYNAMIQUE */}
               <div className="ml-auto flex items-center gap-2">
                 <span className="hidden text-xs text-[#333333]/60 sm:inline">
                   Trier par :
@@ -536,16 +452,16 @@ export default function VentesFlashPage() {
               </div>
             </div>
 
-            {/* =====================================================
-                GRILLE DES PRODUITS FLASH
-            ====================================================== */}
-            {filteredProducts.length > 0 ? (
+            {/* GRILLE DES PRODUITS */}
+            {loading ? (
+              <div className="mt-12 flex justify-center py-12">
+                <p className="text-xs font-bold text-[#333333]/60 animate-pulse">Chargement des ventes flash...</p>
+              </div>
+            ) : filteredProducts.length > 0 ? (
               <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
                 {filteredProducts.map((product) => {
                   const stockPercentage = Math.round(
-                    ((product.stockTotal - product.stockLeft) /
-                      product.stockTotal) *
-                      100
+                    ((product.stockTotal - product.stockLeft) / product.stockTotal) * 100
                   );
 
                   return (
@@ -553,81 +469,62 @@ export default function VentesFlashPage() {
                       key={product.id}
                       className="group relative flex flex-col overflow-hidden rounded-2xl border border-[#333333]/10 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                     >
-                      {/* LIEN DE REDIRECTION SUR TOUTE LA CARTE */}
-                      <Link
-                        href={product.slug}
-                        className="absolute inset-0 z-10"
-                        aria-label={`Voir les détails de ${product.name}`}
-                      />
-
-                      {/* BADGE REMISE */}
-                      <span className="absolute left-3 top-3 z-20 rounded-full bg-[#333333] px-2.5 py-1 text-[9px] font-bold tracking-wide text-white">
+                      <span className="absolute left-3 top-3 z-20 rounded-full bg-[#333333] px-2.5 py-1 text-[9px] font-bold tracking-wide text-white pointer-events-none">
                         {product.discount}
                       </span>
 
-                      {/* BADGE UNIVERS */}
                       <span
-                        className={`absolute right-3 top-3 z-20 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${product.universeColor} ${product.universeText}`}
+                        className={`absolute right-3 top-3 z-20 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide pointer-events-none ${product.universeColor} ${product.universeText}`}
                       >
                         {product.universe}
                       </span>
 
-                      {/* IMAGE */}
-                      <div className="relative block aspect-square w-full overflow-hidden bg-[#F5EBE6]/45">
+                      {/* IMAGE CLIQUABLE DIRIGEANT VERS LA PAGE DE DÉTAIL */}
+                      <Link
+                        href={product.detailUrl}
+                        className="relative block aspect-square w-full overflow-hidden bg-[#F5EBE6]/45 cursor-pointer"
+                        aria-label={`Voir les détails de ${product.name}`}
+                      >
                         <Image
                           src={product.image}
                           alt={product.name}
                           fill
+                          unoptimized
                           sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 25vw"
                           className="object-contain p-5 transition-transform duration-700 ease-out group-hover:scale-105"
                         />
-                      </div>
+                      </Link>
 
-                      {/* INFORMATIONS */}
                       <div className="flex flex-1 flex-col p-3.5 sm:p-4">
                         <p className="mb-1 line-clamp-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#6E857B]">
                           {product.category}
                         </p>
 
-                        <h3 className="line-clamp-2 min-h-[36px] text-xs font-semibold leading-4 text-[#333333] transition-colors group-hover:text-[#6E857B]">
-                          {product.name}
-                        </h3>
+                        {/* TITRE CLIQUABLE DIRIGEANT VERS LA PAGE DE DÉTAIL */}
+                        <Link href={product.detailUrl}>
+                          <h3 className="line-clamp-2 min-h-[36px] text-xs font-semibold leading-4 text-[#333333] transition-colors group-hover:text-[#6E857B] hover:underline">
+                            {product.name}
+                          </h3>
+                        </Link>
 
-                        {/* ÉTOILES */}
                         <div className="mt-2 flex items-center gap-1">
                           <div className="flex items-center gap-0.5">
-                            {Array.from(
-                              { length: product.rating },
-                              (_, index) => (
-                                <Star
-                                  key={index}
-                                  className="h-3 w-3 fill-current text-[#D4A396]"
-                                />
-                              )
-                            )}
+                            {Array.from({ length: product.rating }, (_, index) => (
+                              <Star key={index} className="h-3 w-3 fill-current text-[#D4A396]" />
+                            ))}
                           </div>
-                          <span className="text-[10px] text-[#333333]/40">
-                            ({product.reviewsCount})
-                          </span>
+                          <span className="text-[10px] text-[#333333]/40">({product.reviewsCount})</span>
                         </div>
 
-                        {/* PRIX */}
                         <div className="mt-3 flex items-baseline gap-2">
-                          <span className="text-base font-bold text-[#333333]">
-                            {product.price}
-                          </span>
-                          <span className="text-xs text-[#333333]/40 line-through">
-                            {product.oldPrice}
-                          </span>
+                          <span className="text-base font-bold text-[#333333]">{product.price}</span>
+                          <span className="text-xs text-[#333333]/40 line-through">{product.oldPrice}</span>
                         </div>
 
-                        {/* JAUGE DE STOCK */}
                         <div className="mt-3">
                           <div className="mb-1 flex items-center justify-between text-[10px] font-medium text-[#333333]/70">
                             <span>Stock restant</span>
-                            <span className="font-bold text-[#D4A396]">
-                              {product.stockLeft} articles
-                            </span>
+                            <span className="font-bold text-[#D4A396]">{product.stockLeft} articles</span>
                           </div>
                           <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#333333]/10">
                             <div
@@ -637,7 +534,6 @@ export default function VentesFlashPage() {
                           </div>
                         </div>
 
-                        {/* BOUTON D'AJOUT PANIER */}
                         <button
                           type="button"
                           onClick={(e) => {
@@ -656,13 +552,9 @@ export default function VentesFlashPage() {
                 })}
               </div>
             ) : (
-              /* ÉTAT AUCUN RÉSULTAT */
               <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#333333]/20 bg-white p-12 text-center">
                 <p className="text-sm font-semibold text-[#333333]">
-                  Aucun produit ne correspond à vos critères de recherche.
-                </p>
-                <p className="mt-1 text-xs text-[#333333]/60">
-                  Essayez de modifier ou de réinitialiser vos filtres.
+                  Aucun produit en vente flash ne correspond à vos critères.
                 </p>
                 <button
                   type="button"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Truck, MapPin, Zap } from "lucide-react";
 
 interface ShippingOption {
@@ -46,8 +46,26 @@ export function ShippingSelector({
 }: ShippingSelectorProps) {
   const [activeId, setActiveId] = useState(selectedShippingId);
 
+  // Synchronisation au premier chargement depuis le localStorage si présent
+  useEffect(() => {
+    const savedId = localStorage.getItem("selected_shipping_id");
+    if (savedId) {
+      setActiveId(savedId);
+      const found = shippingOptions.find((opt) => opt.id === savedId);
+      if (found && onSelectShipping) {
+        onSelectShipping(found);
+      }
+    }
+  }, []);
+
   const handleSelect = (option: ShippingOption) => {
     setActiveId(option.id);
+
+    // Sauvegarde dans le localStorage pour le bloc de validation
+    localStorage.setItem("selected_shipping_id", option.id);
+    localStorage.setItem("selected_shipping_name", option.name);
+    localStorage.setItem("selected_shipping_price", option.price.toString());
+
     if (onSelectShipping) {
       onSelectShipping(option);
     }

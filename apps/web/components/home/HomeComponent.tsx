@@ -68,7 +68,7 @@ const FAQS = [
     answer: "Les livraisons s'effectuent généralement en 24 à 48 heures ouvrables à domicile ou en point relais partout en France métropolitaine."
   },
   {
-    question: "Quels modes de paiement sont acceptés sur AURAE ?",
+    question: "Quels modes de paiement sont acceptés sur ECLOSIA ?",
     answer: "Vous pouvez régler vos achats en toute sécurité par carte bancaire (Visa, Mastercard, CB), Apple Pay, PayPal ou en plusieurs fois sans frais."
   },
   {
@@ -101,10 +101,10 @@ export default function HomeComponent() {
             Plateforme e-commerce spécialisée en France
           </span>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4 text-gray-900">
-            AURAE — <span className="text-[#6E857B]">bien-être féminin</span> & puériculture
+            ECLOSIA — <span className="text-[#6E857B]">bien-être féminin</span> & puériculture
           </h1>
           <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-            AURAE est la référence de confiance dédiée aux mamans et aux tout-petits. Alliant la douceur des soins cosmétiques naturels et l'exigence de sécurité de la puériculture, nous proposons une sélection rigoureuse d'essentiels livrés directement chez vous en France. Profitez d'un paiement 100% sécurisé et d'un accompagnement sur-mesure.
+            ECLOSIA est la référence de confiance dédiée aux mamans et aux tout-petits. Alliant la douceur des soins cosmétiques naturels et l'exigence de sécurité de la puériculture, nous proposons une sélection rigoureuse d'essentiels livrés directement chez vous en France. Profitez d'un paiement 100% sécurisé et d'un accompagnement sur-mesure.
           </p>
         </div>
 
@@ -168,7 +168,7 @@ export default function HomeComponent() {
           Temps forts & rendez-vous bien-être de l'année
         </h2>
         <p className="text-sm text-gray-600 leading-relaxed mb-8">
-          AURAE rythme votre année avec des événements exclusifs conçus pour vous faire bénéficier d'avantages uniques sur vos marques préférées. De la Semaine de la Maternité au Grand Anniversaire AURAE, chaque temps fort est l'occasion de découvrir des sélections thématiques à prix privilégiés, pensées pour accompagner chaque étape de votre parentalité en toute sérénité.
+          ECLOSIA rythme votre année avec des événements exclusifs conçus pour vous faire bénéficier d'avantages uniques sur vos marques préférées. De la Semaine de la Maternité au Grand Anniversaire ECLOSIA, chaque temps fort est l'occasion de découvrir des sélections thématiques à prix privilégiés, pensées pour accompagner chaque étape de votre parentalité en toute sérénité.
         </p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
