@@ -66,7 +66,7 @@ export function FeaturedProducts() {
         // Si image_url est déjà une URL complète (cloudinary / supabase storage), on la garde telle quelle
         const imageUrl = rawImg.startsWith("http")
          ? rawImg
-          : rawImg? `https://cbvpxrhiurdjhzdpyceb.supabase.co/storage/v1/object/public/aurae-images/${rawImg.split("/").pop()}`
+          : rawImg ? `${supabaseUrl}/storage/v1/object/public/aurae-images/${rawImg.split("/").pop()}`
           : "/placeholder.jpg";
 
         const originalPrice = Number(item.price);
