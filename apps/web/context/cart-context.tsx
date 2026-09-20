@@ -24,7 +24,8 @@ interface CartContextType {
   shippingFee: number;             // Tarif de base défini par l'admin
   calculatedShippingFee: number;   // Montant final calculé selon les produits
   globalFreeShipping: boolean;     // Option globale si l'admin veut tout offrir
-  setShippingConfig: (config: { shippingFee?: number; globalFreeShipping?: boolean }) => void;
+  freeShippingThreshold: number; // Seuil pour livraison gratuite
+  setShippingConfig: (config: { shippingFee?: number; globalFreeShipping?: boolean; freeShippingThreshold?: number }) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -36,6 +37,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Configuration admin globale
   const [shippingFee, setShippingFee] = useState<number>(5.00);
   const [globalFreeShipping, setGlobalFreeShipping] = useState<boolean>(false);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(150);
 
   useEffect(() => {
     const savedCart = localStorage.getItem("aurae_cart");
@@ -85,9 +87,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart([]);
   };
 
-  const setShippingConfig = (config: { shippingFee?: number; globalFreeShipping?: boolean }) => {
+  const setShippingConfig = (config: { shippingFee?: number; globalFreeShipping?: boolean; freeShippingThreshold?: number }) => {
     if (config.shippingFee !== undefined) setShippingFee(config.shippingFee);
     if (config.globalFreeShipping !== undefined) setGlobalFreeShipping(config.globalFreeShipping);
+    if (config.freeShippingThreshold !== undefined) setFreeShippingThreshold(config.freeShippingThreshold);
   };
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -101,7 +104,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const hasOnlyFreeShippingItems = cart.length > 0 && cart.every((item) => item.isFreeShipping === true);
 
   const calculatedShippingFee = 
-    cart.length === 0 || globalFreeShipping || hasOnlyFreeShippingItems
+    cart.length === 0 || globalFreeShipping || hasOnlyFreeShippingItems || totalPrice >= freeShippingThreshold
       ? 0 
       : shippingFee;
 
@@ -118,6 +121,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         shippingFee,
         calculatedShippingFee,
         globalFreeShipping,
+        freeShippingThreshold,
         setShippingConfig,
       }}
     >

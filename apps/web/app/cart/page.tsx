@@ -9,7 +9,7 @@ import { CartSummary } from "@/components/cart/cart-summary";
 
 export default function CartPage() {
   const router = useRouter();
-  const { cart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice } = useCart();
+  const { cart, removeFromCart, updateQuantity, clearCart, totalItems } = useCart();
 
   const handleCheckoutRedirect = () => {
     router.push("/checkout");
@@ -19,7 +19,6 @@ export default function CartPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#F5EBE6]/30 via-white to-[#6E857B]/15 py-8 flex flex-col justify-between pt-24">
       <div className="max-w-4xl w-full mx-auto px-4 sm:px-6">
         
-        {/* Retour à l'accueil ou à la boutique */}
         <Link
           href="/shop/maternite"
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#333333]/70 hover:text-orange-600 mb-6 transition-colors"
@@ -28,7 +27,6 @@ export default function CartPage() {
           <span>Continuer mes achats</span>
         </Link>
 
-        {/* En-tête du panier */}
         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-lg mb-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
@@ -55,7 +53,6 @@ export default function CartPage() {
             )}
           </div>
 
-          {/* Contenu dynamique du panier */}
           {cart.length === 0 ? (
             <div className="text-center py-12 border-t border-gray-100">
               <p className="text-sm text-gray-500 font-medium mb-6">
@@ -71,7 +68,6 @@ export default function CartPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 border-t border-gray-100 pt-6">
-              {/* Liste des articles (2 colonnes) */}
               <div className="lg:col-span-2 space-y-4">
                 {cart.map((item) => (
                   <CartItem
@@ -83,17 +79,12 @@ export default function CartPage() {
                 ))}
               </div>
 
-              {/* Récapitulatif (1 colonne) */}
               <div>
-                <CartSummary
-                  totalPrice={totalPrice}
-                  onCheckout={handleCheckoutRedirect}
-                />
+                <CartSummary onCheckout={handleCheckoutRedirect} />
               </div>
             </div>
           )}
         </div>
-
       </div>
     </div>
   );

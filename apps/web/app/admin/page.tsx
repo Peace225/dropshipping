@@ -2,6 +2,10 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { MetricsCard } from "@/components/admin/metrics-card";
 import { DollarSign, ShoppingBag, Users, Zap } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+
 export default function AdminPage() {
   return (
     <div className="flex min-h-screen bg-[#FAFAFA]">

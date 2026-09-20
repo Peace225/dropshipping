@@ -1,13 +1,14 @@
-import { OrderTimeline } from '@/components/orders/order-timeline';
+import { OrderTimeline } from "@/components/orders/OrderTimeline";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function OrderDetailsPage({ params }: { params: { id: string } }) {
-  // Récupération de la commande et du suivi depuis Supabase
+  const supabase = await createClient();
+  const { data: order } = await supabase.from("orders").select("*, order_tracking(*)").eq("id", params.id).single();
+  const fallback = { status: "pending", order_tracking: [] as any[] };
+  const finalOrder = order || fallback;
   return (
     <main className="p-6">
-      <OrderTimeline 
-        currentStatusKey={order.status} 
-        historyEvents={order.order_tracking} 
-      />
+      <OrderTimeline currentStatusKey={finalOrder.status} historyEvents={finalOrder.order_tracking || []} />
     </main>
   );
 }

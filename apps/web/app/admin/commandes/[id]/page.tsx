@@ -5,6 +5,10 @@ import {
 } from "lucide-react";
 import { OrderTimeline } from "@/components/orders/OrderTimeline";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+
 export default function AdminOrderDetailsPage({ params }: { params: { id: string } }) {
   // En production : Fetch Supabase 
   // const { data: order } = await supabase.from('orders').select('*, customers(*), payments(*)').eq('id', params.id).single();
