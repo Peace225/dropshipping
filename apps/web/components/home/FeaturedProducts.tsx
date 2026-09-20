@@ -189,7 +189,7 @@ export function FeaturedProducts() {
               <span className="absolute left-3 top-3 z-20 rounded-full bg-[#333333] px-2.5 py-1 text- font-bold tracking-wide text-white pointer-events-none">{product.discount}</span>
               <span className={`absolute right-3 top-3 z-20 rounded-full px-2.5 py-1 text- font-semibold uppercase tracking-wide pointer-events-none ${product.universeColor}`}>{product.universe}</span>
               <Link href={product.detailUrl} className="relative block aspect-square w-full overflow-hidden bg-[#F5EBE6]/45 cursor-pointer" aria-label={product.name}>
-                <Image src={product.image} alt={product.name} fill unoptimized sizes="(max-width: 639px) 75vw, (max-width: 1023px) 45vw, 25vw" className="object-contain p-5 transition-transform duration-700 ease-out group-hover:scale-105 sm:p-7" />
+                <img src={product.image} alt={product.name} className="absolute inset-0 w-full h-full object-contain p-5 transition-transform duration-700 ease-out group-hover:scale-105 sm:p-7" onError={(e) => { e.currentTarget.src = "https://placehold.co/400x400/F5EBE6/a3a3a3?text=Bientot+Disponible" }} />
               </Link>
               <div className="flex flex-1 flex-col p-3.5 sm:p-5">
                 <p className="mb-1.5 line-clamp-1 text- font-semibold uppercase tracking-[0.12em] text-[#6E857B] sm:text-">{product.categoryName}</p>
