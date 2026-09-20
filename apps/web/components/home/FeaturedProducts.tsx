@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   ShoppingBag,
@@ -19,23 +18,42 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Mapping réel d'après tes screenshots Supabase
+const FILE_MAP: Record<string, string> = {
+  "ballon-de-grossesse": "ballon-grossesse.jpg",
+  "ballon-grossesse": "ballon-grossesse.jpg",
+  "coussinets-d-allaitement-jetables": "coussinets-allaitement-jetables.jpg",
+  "coussinets-allaitement-jetables": "coussinets-allaitement-jetables.jpg",
+  "serviettes-apaisantes-post-accouchement": "serviettes-apaisantes-post-accouchement.jpg",
+  "serviettes-apaisantes-post-partum": "serviettes-apaisantes-post-accouchement.jpg",
+};
+
 function resolveImageUrl(rawImg: string, slug: string): string {
-  // Si URL http complète (Cloudinary encore valide) on garde
   if (rawImg && rawImg.startsWith("http")) return rawImg;
 
-  // On nettoie le nom de fichier
   let fileName = rawImg?.trim() || "";
   if (fileName) {
     fileName = fileName.replace(/^aurae-images\//, "").replace(/^\//, "");
   }
 
-  // Si vide ou pas d'extension -> on utilise le slug.jpg (ton bucket est en slug.jpg d'après tes screens)
-  if (!fileName ||!fileName.includes(".")) {
-    fileName = `${slug}.jpg`;
+  // Si vide ou sans extension -> on prend le vrai nom du bucket
+  if (!fileName || !fileName.includes(".")) {
+    fileName = FILE_MAP[slug] || `${slug}.jpg`;
   }
 
   const { data } = supabase.storage.from("aurae-images").getPublicUrl(fileName);
   return data.publicUrl;
+}
+
+function getFallbackCandidates(slug: string, currentFile: string): string[] {
+  const candidates = [
+    currentFile,
+    FILE_MAP[slug],
+    `${slug}.jpg`,
+    slug.replace(/-de-/g, "-").replace(/-d-/g, "-") + ".jpg",
+  ].filter(Boolean) as string[];
+  // dédupliquer
+  return Array.from(new Set(candidates));
 }
 
 export function FeaturedProducts() {
@@ -48,8 +66,8 @@ export function FeaturedProducts() {
   useEffect(() => {
     async function fetchFlashSales() {
       const { data, error } = await supabase
-       .from("products")
-       .select(`
+        .from("products")
+        .select(`
           id,
           name,
           slug,
@@ -60,9 +78,9 @@ export function FeaturedProducts() {
           categories ( name, slug ),
           product_images ( image_url, is_primary, position )
         `)
-       .eq("is_active", true)
-       .order("created_at", { ascending: false })
-       .limit(12);
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(12);
 
       if (error) {
         console.error("Erreur chargement ventes flash:", error);
@@ -76,17 +94,18 @@ export function FeaturedProducts() {
       }
 
       const withFlag = data.filter((d: any) => d.is_flash_sale === true);
-      const dataToUse = withFlag.length > 0? withFlag : data;
+      const dataToUse = withFlag.length > 0 ? withFlag : data;
 
       const formatted = dataToUse.map((item: any) => {
-        const images = [...(item.product_images?? [])].sort((a: any, b: any) => (a.position?? 0) - (b.position?? 0));
-        const rawImg = images.find((img: any) => img.is_primary)?.image_url?? images[0]?.image_url?? "";
+        const images = [...(item.product_images ?? [])].sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0));
+        const rawImg = images.find((img: any) => img.is_primary)?.image_url ?? images[0]?.image_url ?? "";
 
         const imageUrl = resolveImageUrl(rawImg, item.slug);
+        const fallbackCandidates = getFallbackCandidates(item.slug, imageUrl);
 
         const originalPrice = Number(item.price);
-        const promoPrice = item.promo_price? Number(item.promo_price) : originalPrice * 0.75;
-        const discountPercent = originalPrice > 0? Math.round(((originalPrice - promoPrice) / originalPrice) * 100) : 0;
+        const promoPrice = item.promo_price ? Number(item.promo_price) : originalPrice * 0.75;
+        const discountPercent = originalPrice > 0 ? Math.round(((originalPrice - promoPrice) / originalPrice) * 100) : 0;
 
         const catSlug = item.categories?.slug || "maternite";
         const isBebe = catSlug.toLowerCase().includes("bebe") || item.name.toLowerCase().includes("bébé") || item.name.toLowerCase().includes("biberon");
@@ -96,15 +115,16 @@ export function FeaturedProducts() {
           name: item.name,
           slug: item.slug,
           categoryName: item.categories?.name || "Essentiel",
-          universe: isBebe? "Bébé" : "Maternité",
-          universeColor: isBebe? "bg-[#6E857B] text-white" : "bg-[#E8C5C8] text-[#333333]",
+          universe: isBebe ? "Bébé" : "Maternité",
+          universeColor: isBebe ? "bg-[#6E857B] text-white" : "bg-[#E8C5C8] text-[#333333]",
           price: `${promoPrice.toFixed(2).replace(".", ",")} €`,
           numericPrice: promoPrice,
           oldPrice: `${originalPrice.toFixed(2).replace(".", ",")} €`,
           discount: `-${discountPercent}%`,
           rating: 5,
           image: imageUrl,
-          detailUrl: `/shop/${isBebe? "bebe" : "maternite"}/${item.slug}`,
+          imageCandidates: fallbackCandidates,
+          detailUrl: `/shop/${isBebe ? "bebe" : "maternite"}/${item.slug}`,
         };
       });
 
@@ -133,7 +153,7 @@ export function FeaturedProducts() {
     if (scrollContainerRef.current) {
       const scrollAmount = scrollContainerRef.current.clientWidth * 0.75;
       scrollContainerRef.current.scrollBy({
-        left: direction === "left"? -scrollAmount : scrollAmount,
+        left: direction === "left" ? -scrollAmount : scrollAmount,
         behavior: "smooth",
       });
     }
@@ -189,7 +209,28 @@ export function FeaturedProducts() {
               <span className="absolute left-3 top-3 z-20 rounded-full bg-[#333333] px-2.5 py-1 text- font-bold tracking-wide text-white pointer-events-none">{product.discount}</span>
               <span className={`absolute right-3 top-3 z-20 rounded-full px-2.5 py-1 text- font-semibold uppercase tracking-wide pointer-events-none ${product.universeColor}`}>{product.universe}</span>
               <Link href={product.detailUrl} className="relative block aspect-square w-full overflow-hidden bg-[#F5EBE6]/45 cursor-pointer" aria-label={product.name}>
-                <img src={product.image} alt={product.name} className="w-full h-full object-contain p-5 transition-transform duration-700 ease-out group-hover:scale-105 sm:p-7" onError={(e) => { e.currentTarget.src = "https://placehold.co/400x400/F5EBE6/a3a3a3?text=Bientot+Disponible"; e.currentTarget.onerror = null; }} />
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-full object-contain p-5 transition-transform duration-700 ease-out group-hover:scale-105 sm:p-7"
+                  data-candidates={JSON.stringify(product.imageCandidates)}
+                  onError={(e) => {
+                    const target = e.currentTarget as HTMLImageElement & { _retry?: number };
+                    const candidates: string[] = JSON.parse(target.getAttribute("data-candidates") || "[]");
+                    const retry = target._retry || 0;
+                    // candidats sont des URLs complètes déjà, ou noms de fichiers -> convertir en publicUrl si besoin
+                    if (retry < candidates.length - 1) {
+                      const next = candidates[retry + 1];
+                      // si next est déjà une URL http, on l'utilise, sinon on reconstruit
+                      const nextUrl = next.startsWith("http") ? next : supabase.storage.from("aurae-images").getPublicUrl(next).data.publicUrl;
+                      target._retry = retry + 1;
+                      target.src = nextUrl;
+                    } else {
+                      target.src = "https://placehold.co/400x400/F5EBE6/a3a3a3?text=Bientot+Disponible";
+                      target.onerror = null;
+                    }
+                  }}
+                />
               </Link>
               <div className="flex flex-1 flex-col p-3.5 sm:p-5">
                 <p className="mb-1.5 line-clamp-1 text- font-semibold uppercase tracking-[0.12em] text-[#6E857B] sm:text-">{product.categoryName}</p>
