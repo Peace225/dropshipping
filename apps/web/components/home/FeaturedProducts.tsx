@@ -18,7 +18,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Mapping EXACT d'après tes 3 screenshots
+// Mapping EXACT d'après tes 3 fichiers Supabase
 const FILE_MAP: Record<string, string> = {
   "ballon-de-grossesse": "ballon-grossesse.jpg",
   "ballon-grossesse": "ballon-grossesse.jpg",
@@ -34,10 +34,7 @@ function resolveImageUrl(rawImg: string, slug: string): string {
   if (!fileName || !fileName.includes(".")) {
     fileName = FILE_MAP[slug] || `${slug}.jpg`;
   }
-  // Si le fichier mappé existe dans FILE_MAP on l'utilise en priorité
   if (FILE_MAP[slug]) fileName = FILE_MAP[slug];
-  if (FILE_MAP[fileName.replace(".jpg","")]) fileName = FILE_MAP[fileName.replace(".jpg","")];
-
   const { data } = supabase.storage.from("aurae-images").getPublicUrl(fileName);
   return data.publicUrl;
 }
@@ -69,7 +66,6 @@ export function FeaturedProducts() {
         const fileName = FILE_MAP[item.slug] || rawImg || `${item.slug}.jpg`;
         const imageUrl = resolveImageUrl(fileName, item.slug);
 
-        // Liste de secours UNIQUEMENT des noms de fichiers
         const fallbackFiles = Array.from(new Set([
           FILE_MAP[item.slug],
           `${item.slug}.jpg`,
@@ -91,7 +87,10 @@ export function FeaturedProducts() {
           price: `${promoPrice.toFixed(2).replace(".",",")} €`, numericPrice: promoPrice,
           oldPrice: `${originalPrice.toFixed(2).replace(".",",")} €`, discount: `-${discountPercent}%`,
           rating: 5, image: imageUrl, fallbackFiles,
+          // Fiche produit pour le titre
           detailUrl: `/shop/${isBebe?"bebe":"maternite"}/${item.slug}`,
+          // Page liste pour l'image (ce que tu demandes)
+          flashListUrl: "/ventes-flash",
         };
       });
       setFlashProducts(formatted);
@@ -139,7 +138,9 @@ export function FeaturedProducts() {
             <article key={product.id} className="group relative flex w-[75%] shrink-0 flex-col overflow-hidden rounded-2xl border border-[#333333]/10 bg-white snap-start transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-[45%] lg:w-[calc(25%-15px)]">
               <span className="absolute left-3 top-3 z-20 rounded-full bg-[#333333] px-2.5 py-1 text- font-bold tracking-wide text-white pointer-events-none">{product.discount}</span>
               <span className={`absolute right-3 top-3 z-20 rounded-full px-2.5 py-1 text- font-semibold uppercase tracking-wide pointer-events-none ${product.universeColor}`}>{product.universe}</span>
-              <Link href={product.detailUrl} className="relative block aspect-square w-full overflow-hidden bg-[#F5EBE6]/45 cursor-pointer" aria-label={product.name}>
+              
+              {/* IMAGE -> PAGE VENTES-FLASH comme demandé */}
+              <Link href={product.flashListUrl} className="relative block aspect-square w-full overflow-hidden bg-[#F5EBE6]/45 cursor-pointer z-10" aria-label="Voir toutes les ventes flash">
                 <img
                   src={product.image}
                   alt={product.name}
@@ -161,13 +162,15 @@ export function FeaturedProducts() {
                   }}
                 />
               </Link>
+
               <div className="flex flex-1 flex-col p-3.5 sm:p-5">
                 <p className="mb-1.5 line-clamp-1 text- font-semibold uppercase tracking-[0.12em] text-[#6E857B]">{product.categoryName}</p>
+                {/* TITRE -> FICHE PRODUIT DETAIL */}
                 <Link href={product.detailUrl}><h3 className="line-clamp-2 text-xs font-semibold leading-5 text-[#333333] group-hover:text-[#6E857B] sm:text-sm hover:underline">{product.name}</h3></Link>
                 <div className="mt-3 flex items-center gap-1"><div className="flex items-center gap-0.5">{Array.from({ length: product.rating }, (_, i) => (<Star key={i} className="h-3 w-3 fill-current text-[#D4A396]" />))}</div><span className="text- text-[#333333]/40">{product.rating}.0</span></div>
                 <div className="mt-auto flex items-end justify-between gap-2 pt-4">
                   <div className="min-w-0"><div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5"><span className="text-sm font-bold text-[#333333] sm:text-base">{product.price}</span><span className="text- text-[#333333]/40 line-through">{product.oldPrice}</span></div><p className="mt-1 text- font-medium text-[#6E857B]">Offre Flash</p></div>
-                  <button type="button" onClick={(e) => { e.preventDefault(); handleAddToCart(product); }} className="relative z-20 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#333333] text-white shadow-sm hover:bg-[#D4A396] active:scale-90 sm:h-10 sm:w-10"><ShoppingBag className="h-4 w-4" /></button>
+                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAddToCart(product); }} className="relative z-20 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#333333] text-white shadow-sm hover:bg-[#D4A396] active:scale-90 sm:h-10 sm:w-10"><ShoppingBag className="h-4 w-4" /></button>
                 </div>
               </div>
             </article>
