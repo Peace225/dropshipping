@@ -24,34 +24,35 @@ function resolveImageUrl(slug: string): string {
 }
 
 export async function MaternityCareSection() {
-  const { data: products, error } = await supabase.from("products").select(`id, name, slug, price, categories(slug, name), product_images(image_url, is_primary, position)`).eq("is_active", true).order("created_at", { ascending: false }).limit(20);
-  if (error) return null;
+  const { data: products } = await supabase.from("products").select(`id, name, slug, price, categories(slug, name)`).eq("is_active", true).order("created_at", { ascending: false }).limit(20);
   const mater = (products || []).filter((p:any) => {
     const c = p.categories?.slug?.toLowerCase() || "";
     const n = p.name?.toLowerCase() || "";
     return c.includes("mater") || c.includes("maman") || n.includes("grossesse") || n.includes("maternité") || n.includes("allaitement") || n.includes("accouchement");
   }).slice(0,4);
   const list = mater.length? mater : (products || []).slice(0,4);
-  const formatted = list.map((p:any) => ({ id: p.id, name: p.name, category: p.categories?.name || "MAMAN", price: `${Number(p.price).toFixed(2)} €`, image: resolveImageUrl(p.slug), slug: `/shop/maternite/${p.slug}` }));
-  if (!formatted.length) return null;
 
   return (
     <ProductSection title="Maternité & Bien-être" subtitle="Des soins pensés pour vous accompagner avant, pendant et après" viewAllLink="/shop/maternite">
-      {formatted.map((product:any) => (
-        <div key={product.id} className="group bg-white rounded-2xl border border-[#333333]/10 overflow-hidden shadow-sm hover:shadow-md transition-all">
-          <Link href={product.slug} className="relative w-full h-52 bg-[#F5EBE6]/50 flex items-center justify-center p-4 block">
-            <SafeImage src={product.image} alt={product.name} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform" />
-            <span className="absolute top-3 left-3 bg-white/90 px-2.5 py-1 rounded-full text- font-bold uppercase flex items-center gap-1"><Sparkles className="w-3 h-3"/>{product.category}</span>
-          </Link>
-          <div className="p-4">
-            <Link href={product.slug}><h3 className="font-semibold text-sm line-clamp-2 hover:underline">{product.name}</h3></Link>
-            <div className="mt-2 flex items-center justify-between">
-              <span className="font-bold">{product.price}</span>
-              <Link href={product.slug} className="h-8 w-8 flex items-center justify-center rounded-full bg-[#333333] text-white"><ShoppingBag className="w-4 h-4"/></Link>
+      {list.map((p:any) => {
+        const imageUrl = resolveImageUrl(p.slug);
+        return (
+          <div key={p.id} className="group bg-white rounded-2xl border border-[#333333]/10 overflow-hidden shadow-sm hover:shadow-md transition-all">
+            {/* CLIC IMAGE -> PAGE LISTING /shop/maternite */}
+            <Link href="/shop/maternite" className="relative w-full h-52 bg-[#F5EBE6]/50 flex items-center justify-center p-4 block">
+              <SafeImage src={imageUrl} alt={p.name} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform" />
+              <span className="absolute top-3 left-3 bg-white/90 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-1"><Sparkles className="w-3 h-3"/>{p.categories?.name || "MAMAN"}</span>
+            </Link>
+            <div className="p-4">
+              <Link href="/shop/maternite"><h3 className="font-semibold text-sm line-clamp-2 hover:underline">{p.name}</h3></Link>
+              <div className="mt-2 flex items-center justify-between">
+                <span className="font-bold">{Number(p.price).toFixed(2)} €</span>
+                <Link href="/shop/maternite" className="h-8 w-8 flex items-center justify-center rounded-full bg-[#333333] text-white"><ShoppingBag className="w-4 h-4"/></Link>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </ProductSection>
   );
 }
