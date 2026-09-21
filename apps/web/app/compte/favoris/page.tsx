@@ -13,7 +13,7 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 
 export default function FavorisPage() {
   const router = useRouter();
-  const { addItem } = useCart();
+  const { addToCart } = useCart();
   const [favorites, setFavorites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +34,12 @@ export default function FavorisPage() {
   };
 
   const handleAddToCart = (product: any) => {
-    addItem({ id: product.id, name: product.name, price: product.price, image: product.images?.[0] || "/images/placeholder.png", quantity: 1, slug: product.slug });
+    addToCart({ 
+      id: product.id, 
+      name: product.name, 
+      price: product.price, 
+      image: product.images?.[0] || "/images/placeholder.png"
+    });
   };
 
   const handleAddAllToCart = () => {
