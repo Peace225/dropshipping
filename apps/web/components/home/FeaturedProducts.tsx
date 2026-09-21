@@ -18,7 +18,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Mapping EXACT d'après tes 3 fichiers Supabase
 const FILE_MAP: Record<string, string> = {
   "ballon-de-grossesse": "ballon-grossesse.jpg",
   "ballon-grossesse": "ballon-grossesse.jpg",
@@ -87,9 +86,7 @@ export function FeaturedProducts() {
           price: `${promoPrice.toFixed(2).replace(".",",")} €`, numericPrice: promoPrice,
           oldPrice: `${originalPrice.toFixed(2).replace(".",",")} €`, discount: `-${discountPercent}%`,
           rating: 5, image: imageUrl, fallbackFiles,
-          // Fiche produit pour le titre
           detailUrl: `/shop/${isBebe?"bebe":"maternite"}/${item.slug}`,
-          // Page liste pour l'image (ce que tu demandes)
           flashListUrl: "/ventes-flash",
         };
       });
@@ -115,13 +112,24 @@ export function FeaturedProducts() {
   return (
     <ProductSection title="Flash Vente ECLOSIA" subtitle="Les essentiels de Maman & Bébé, sélectionnés à prix doux." viewAllLink="/ventes-flash">
       <div className="col-span-full w-full">
-        <div className="mb-8 w-full rounded-2xl border border-[#333333]/10 bg-[#F5EBE6] px-5 py-5 sm:px-6">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        {/* En-tête Offre limitée */}
+        <div className="mb-8 w-full rounded-2xl border border-[#333333]/10 bg-[#F5EBE6] px-4 py-4 sm:px-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#D4A396] text-white"><Clock3 className="h-4 w-4" /></div>
-              <div className="min-w-0"><p className="text- font-bold uppercase tracking-[0.18em] text-[#333333]/55">Offre limitée</p><p className="mt-1 text-sm font-medium leading-5 text-[#333333]">Des essentiels à prix doux, pendant un temps limité.</p></div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#333333]/55">Offre limitée</p>
+                <p className="mt-0.5 text-xs sm:text-sm font-medium leading-5 text-[#333333]">Des essentiels à prix doux, pendant un temps limité.</p>
+              </div>
             </div>
-            <div className="flex shrink-0 items-center gap-1.5"><span className="flex h-9 min-w-9 items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white shadow-sm">02</span><span className="text-xs text-[#333333]/40">:</span><span className="flex h-9 min-w-9 items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white shadow-sm">18</span><span className="text-xs text-[#333333]/40">:</span><span className="flex h-9 min-w-9 items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white shadow-sm">45</span><span className="ml-1 text- text-[#333333]/50">restantes</span></div>
+            <div className="flex shrink-0 items-center gap-1.5 self-center sm:self-auto">
+              <span className="flex h-8 sm:h-9 min-w-8 sm:min-w-9 items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white shadow-sm">02</span>
+              <span className="text-xs text-[#333333]/40">:</span>
+              <span className="flex h-8 sm:h-9 min-w-8 sm:min-w-9 items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white shadow-sm">18</span>
+              <span className="text-xs text-[#333333]/40">:</span>
+              <span className="flex h-8 sm:h-9 min-w-8 sm:min-w-9 items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white shadow-sm">45</span>
+              <span className="ml-1 text-[11px] text-[#333333]/50">restantes</span>
+            </div>
           </div>
         </div>
 
@@ -133,13 +141,13 @@ export function FeaturedProducts() {
           </div>
         </div>
 
+        {/* Liste des produits (Carousel horizontal adapté mobile) */}
         <div ref={scrollContainerRef} className="flex w-full gap-3 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-5">
           {flashProducts.map((product) => (
-            <article key={product.id} className="group relative flex w-[75%] shrink-0 flex-col overflow-hidden rounded-2xl border border-[#333333]/10 bg-white snap-start transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-[45%] lg:w-[calc(25%-15px)]">
-              <span className="absolute left-3 top-3 z-20 rounded-full bg-[#333333] px-2.5 py-1 text- font-bold tracking-wide text-white pointer-events-none">{product.discount}</span>
-              <span className={`absolute right-3 top-3 z-20 rounded-full px-2.5 py-1 text- font-semibold uppercase tracking-wide pointer-events-none ${product.universeColor}`}>{product.universe}</span>
+            <article key={product.id} className="group relative flex w-[85%] sm:w-[45%] lg:w-[calc(25%-15px)] shrink-0 flex-col overflow-hidden rounded-2xl border border-[#333333]/10 bg-white snap-start transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+              <span className="absolute left-3 top-3 z-20 rounded-full bg-[#333333] px-2.5 py-1 text-[10px] font-bold tracking-wide text-white pointer-events-none">{product.discount}</span>
+              <span className={`absolute right-3 top-3 z-20 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide pointer-events-none ${product.universeColor}`}>{product.universe}</span>
               
-              {/* IMAGE -> PAGE VENTES-FLASH comme demandé */}
               <Link href={product.flashListUrl} className="relative block aspect-square w-full overflow-hidden bg-[#F5EBE6]/45 cursor-pointer z-10" aria-label="Voir toutes les ventes flash">
                 <img
                   src={product.image}
@@ -164,13 +172,25 @@ export function FeaturedProducts() {
               </Link>
 
               <div className="flex flex-1 flex-col p-3.5 sm:p-5">
-                <p className="mb-1.5 line-clamp-1 text- font-semibold uppercase tracking-[0.12em] text-[#6E857B]">{product.categoryName}</p>
-                {/* TITRE -> FICHE PRODUIT DETAIL */}
-                <Link href={product.detailUrl}><h3 className="line-clamp-2 text-xs font-semibold leading-5 text-[#333333] group-hover:text-[#6E857B] sm:text-sm hover:underline">{product.name}</h3></Link>
-                <div className="mt-3 flex items-center gap-1"><div className="flex items-center gap-0.5">{Array.from({ length: product.rating }, (_, i) => (<Star key={i} className="h-3 w-3 fill-current text-[#D4A396]" />))}</div><span className="text- text-[#333333]/40">{product.rating}.0</span></div>
+                <p className="mb-1.5 line-clamp-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6E857B]">{product.categoryName}</p>
+                <Link href={product.detailUrl}>
+                  <h3 className="line-clamp-2 text-xs font-semibold leading-5 text-[#333333] group-hover:text-[#6E857B] sm:text-sm hover:underline">{product.name}</h3>
+                </Link>
+                <div className="mt-3 flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">{Array.from({ length: product.rating }, (_, i) => (<Star key={i} className="h-3 w-3 fill-current text-[#D4A396]" />))}</div>
+                  <span className="text-[11px] text-[#333333]/40">{product.rating}.0</span>
+                </div>
                 <div className="mt-auto flex items-end justify-between gap-2 pt-4">
-                  <div className="min-w-0"><div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5"><span className="text-sm font-bold text-[#333333] sm:text-base">{product.price}</span><span className="text- text-[#333333]/40 line-through">{product.oldPrice}</span></div><p className="mt-1 text- font-medium text-[#6E857B]">Offre Flash</p></div>
-                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAddToCart(product); }} className="relative z-20 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#333333] text-white shadow-sm hover:bg-[#D4A396] active:scale-90 sm:h-10 sm:w-10"><ShoppingBag className="h-4 w-4" /></button>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                      <span className="text-sm font-bold text-[#333333] sm:text-base">{product.price}</span>
+                      <span className="text-[11px] text-[#333333]/40 line-through">{product.oldPrice}</span>
+                    </div>
+                    <p className="mt-0.5 text-[10px] font-medium text-[#6E857B]">Offre Flash</p>
+                  </div>
+                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAddToCart(product); }} className="relative z-20 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#333333] text-white shadow-sm hover:bg-[#D4A396] active:scale-90 sm:h-10 sm:w-10">
+                    <ShoppingBag className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             </article>
@@ -178,7 +198,10 @@ export function FeaturedProducts() {
         </div>
 
         <div className="mt-8 flex justify-center">
-          <Link href="/ventes-flash" className="group inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#333333] hover:text-[#D4A396]">Découvrir toute la sélection Flash<ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" /></Link>
+          <Link href="/ventes-flash" className="group inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#333333] hover:text-[#D4A396]">
+            Découvrir toute la sélection Flash
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+          </Link>
         </div>
       </div>
     </ProductSection>

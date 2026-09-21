@@ -34,33 +34,25 @@ export async function MaternityCareSection() {
 
   return (
     <ProductSection title="Maternité & Bien-être" subtitle="Des soins pensés pour vous accompagner avant, pendant et après" viewAllLink="/shop/maternite">
-      {/* GRID RESPONSIVE : 2 cols mobile, 4 cols desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 w-full">
-        {list.map((p:any) => {
-          const imageUrl = resolveImageUrl(p.slug);
-          return (
-            <div key={p.id} className="group bg-white rounded-xl sm:rounded-2xl border border-[#333333]/10 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col">
-              <Link href="/shop/maternite" className="relative w-full h-36 xs:h-44 sm:h-52 bg-[#F5EBE6]/50 flex items-center justify-center p-2 sm:p-4 block">
-                <SafeImage src={imageUrl} alt={p.name} className="w-full h-full object-contain p-1 sm:p-4 group-hover:scale-105 transition-transform" />
-                <span className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-white/90 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold uppercase flex items-center gap-1">
-                  <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3"/>{p.categories?.name || "MAMAN"}
-                </span>
-              </Link>
-              <div className="p-2.5 sm:p-4 flex flex-col flex-1">
-                <Link href="/shop/maternite" className="flex-1">
-                  <h3 className="font-semibold text-[12px] sm:text-sm line-clamp-2 leading-tight">{p.name}</h3>
-                </Link>
-                <div className="mt-2 sm:mt-2 flex items-center justify-between">
-                  <span className="font-bold text-[13px] sm:text-base">{Number(p.price).toFixed(2)} €</span>
-                  <Link href="/shop/maternite" className="h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center rounded-full bg-[#333333] text-white shrink-0">
-                    <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4"/>
-                  </Link>
-                </div>
+      {list.map((p:any) => {
+        const imageUrl = resolveImageUrl(p.slug);
+        return (
+          <div key={p.id} className="group bg-white rounded-2xl border border-[#333333]/10 overflow-hidden shadow-sm hover:shadow-md transition-all">
+            {/* CLIC IMAGE -> PAGE LISTING /shop/maternite */}
+            <Link href="/shop/maternite" className="relative w-full h-52 bg-[#F5EBE6]/50 flex items-center justify-center p-4 block">
+              <SafeImage src={imageUrl} alt={p.name} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform" />
+              <span className="absolute top-3 left-3 bg-white/90 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase flex items-center gap-1"><Sparkles className="w-3 h-3"/>{p.categories?.name || "MAMAN"}</span>
+            </Link>
+            <div className="p-4">
+              <Link href="/shop/maternite"><h3 className="font-semibold text-sm line-clamp-2 hover:underline">{p.name}</h3></Link>
+              <div className="mt-2 flex items-center justify-between">
+                <span className="font-bold">{Number(p.price).toFixed(2)} €</span>
+                <Link href="/shop/maternite" className="h-8 w-8 flex items-center justify-center rounded-full bg-[#333333] text-white"><ShoppingBag className="w-4 h-4"/></Link>
               </div>
             </div>
-          );
-        })}
-      </div>
+          </div>
+        );
+      })}
     </ProductSection>
   );
 }

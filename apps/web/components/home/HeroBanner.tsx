@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Sparkles, ArrowRight } from "lucide-react";
 
-// 8 Bannières avec des images en arrière-plan (backgroundImage)
 const SLIDES = [
   {
     id: 1,
@@ -110,7 +109,8 @@ export function HeroBanner() {
       onMouseLeave={() => setIsPaused(false)}
       aria-label="Promotions et actualités AURAE"
     >
-      <div className="relative overflow-hidden rounded-2xl shadow-lg border border-[#333333]/10 h-[280px] sm:h-[340px] md:h-[400px] flex items-center">
+      {/* Hauteur augmentée sur mobile (320px) pour éviter l'écrasement */}
+      <div className="relative overflow-hidden rounded-2xl shadow-lg border border-[#333333]/10 h-[320px] sm:h-[340px] md:h-[400px] flex items-center">
         
         {SLIDES.map((slide, index) => {
           const isActive = index === currentIndex;
@@ -123,32 +123,33 @@ export function HeroBanner() {
                 isActive ? "opacity-100 z-10 pointer-events-auto" : "opacity-0 z-0 pointer-events-none"
               }`}
             >
-              {/* Overlay léger pour garantir une lisibilité parfaite du texte par-dessus l'image de fond */}
-              <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-transparent sm:w-[75%] md:w-[65%]" />
+              {/* Le dégradé ne prend que 90% sur mobile pour laisser entrevoir l'image */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/85 to-transparent w-[90%] sm:w-[75%] md:w-[65%]" />
 
-              <div className="w-full h-full flex flex-col items-start justify-center px-6 sm:px-10 md:px-16 z-20 max-w-xl">
+              {/* Marges asymétriques (pl-11 pr-8) sur mobile pour ne pas toucher les boutons */}
+              <div className="w-full h-full flex flex-col items-start justify-center pl-11 pr-8 sm:px-14 md:px-16 z-20 max-w-[90%] sm:max-w-xl">
                 
-                <div className="flex items-center mb-2">
-                  <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-sm ${slide.badgeBg}`}>
+                <div className="flex items-center mb-2 sm:mb-3">
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-[9px] sm:text-xs font-bold uppercase tracking-wider shadow-sm ${slide.badgeBg}`}>
                     <Sparkles className="w-3 h-3" />
-                    <span>{slide.badge}</span>
+                    <span className="line-clamp-1">{slide.badge}</span>
                   </span>
                 </div>
 
-                <h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold font-sans text-[#333333] leading-tight tracking-tight mb-2">
+                <h2 className="text-[1.25rem] sm:text-3xl md:text-4xl font-extrabold font-sans text-[#333333] leading-tight tracking-tight mb-2 sm:mb-3">
                   {slide.title}
                 </h2>
 
-                <p className="text-xs sm:text-sm md:text-base font-medium text-[#333333]/85 line-clamp-2 sm:line-clamp-none mb-4 leading-relaxed">
+                <p className="text-xs sm:text-sm md:text-base font-medium text-[#333333]/85 line-clamp-3 sm:line-clamp-2 mb-4 sm:mb-5 leading-relaxed">
                   {slide.subtitle}
                 </p>
 
                 <Link
                   href={slide.buttonLink}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#333333] hover:bg-black text-white font-bold text-xs sm:text-sm transition-all duration-300 shadow-md hover:shadow-lg active:scale-95"
+                  className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-[#333333] hover:bg-black text-white font-bold text-[11px] sm:text-sm transition-all duration-300 shadow-md hover:shadow-lg active:scale-95"
                 >
                   <span>{slide.buttonText}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Link>
 
               </div>
@@ -156,33 +157,33 @@ export function HeroBanner() {
           );
         })}
 
-        {/* Boutons de navigation */}
+        {/* Boutons de navigation (réduits sur mobile avec p-1.5 et rapprochés du bord) */}
         <button
           onClick={prevSlide}
-          className="absolute left-3 z-30 p-2 rounded-full bg-white/80 hover:bg-white text-[#333333] backdrop-blur-sm shadow-md transition-all active:scale-95"
+          className="absolute left-1.5 sm:left-3 z-30 p-1.5 sm:p-2 rounded-full bg-white/80 hover:bg-white text-[#333333] backdrop-blur-sm shadow-md transition-all active:scale-95"
           aria-label="Diapositive précédente"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         <button
           onClick={nextSlide}
-          className="absolute right-3 z-30 p-2 rounded-full bg-white/80 hover:bg-white text-[#333333] backdrop-blur-sm shadow-md transition-all active:scale-95"
+          className="absolute right-1.5 sm:right-3 z-30 p-1.5 sm:p-2 rounded-full bg-white/80 hover:bg-white text-[#333333] backdrop-blur-sm shadow-md transition-all active:scale-95"
           aria-label="Diapositive suivante"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         {/* Indicateurs de pagination */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-white/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/40">
+        <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2 bg-white/60 backdrop-blur-md px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full border border-white/40">
           {SLIDES.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
               className={`transition-all duration-300 rounded-full ${
                 index === currentIndex
-                  ? "w-6 h-2 bg-[#333333]"
-                  : "w-2 h-2 bg-[#333333]/30 hover:bg-[#333333]/60"
+                  ? "w-4 h-1.5 sm:w-6 sm:h-2 bg-[#333333]"
+                  : "w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#333333]/30 hover:bg-[#333333]/60"
               }`}
               aria-label={`Aller à la diapositive ${index + 1}`}
             />

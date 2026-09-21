@@ -3,17 +3,26 @@ import { Inter } from "next/font/google";
 import "../styles/globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-import { CartProvider } from "@/context/cart-context"; // Importation du contexte du panier
-import AiChatDrawer from "@/components/ai/ai-chat-drawer"; // <-- Ajout de la Conseillère IA
+import { CartProvider } from "@/context/cart-context";
+import AiChatDrawer from "@/components/ai/ai-chat-drawer";
+import { ConditionalAiChat } from "@/components/ai/conditional-ai-chat";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AURAE — Bien-être Maternité & Bébé | France",
+  title: "ECLOSIA — Bien-être Maternité & Bébé | France",
   description: "Plateforme intelligente de santé maternelle et de puériculture en France. Accompagnement par IA, soins experts, communauté et essentiels pour mamans et bébés.",
   generator: "Next.js",
-  applicationName: "AURAE",
+  applicationName: "ECLOSIA",
   referrer: "origin-when-cross-origin",
+  
+  // 👉 Configuration de votre logo personnalisé dans l'onglet
+  icons: {
+    icon: "logo.png",
+    shortcut: "logo.png",
+    apple: "logo.png",
+  },
+
   keywords: [
     "santé maternelle France",
     "bien-être bébé",
@@ -22,17 +31,17 @@ export const metadata: Metadata = {
     "conseillère IA maternité",
     "maternité et post-partum",
     "coffret maternité",
-    "AURAE",
+    "ECLOSIA",
   ],
-  authors: [{ name: "AURAE Team", url: "https://aurae.app" }],
-  creator: "AURAE",
-  publisher: "AURAE",
+  authors: [{ name: "ECLOSIA Team", url: "https://eclosia.app" }],
+  creator: "ECLOSIA",
+  publisher: "ECLOSIA",
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://aurae.app"),
+  metadataBase: new URL("https://eclosia.app"),
   alternates: {
     canonical: "/",
     languages: {
@@ -41,16 +50,16 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "AURAE — Bien-être Maternité & Bébé",
+    title: "ECLOSIA — Bien-être Maternité & Bébé",
     description: "La référence du bien-être maternel et infantile en France. Soins experts, accompagnement intelligent et essentiels pour bébés et mamans.",
-    url: "https://aurae.app",
-    siteName: "AURAE",
+    url: "https://eclosia.app",
+    siteName: "ECLOSIA",
     images: [
       {
-        url: "https://aurae.app/og-image.jpg",
+        url: "https://eclosia.app/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "AURAE Bien-être Maternité & Bébé France",
+        alt: "ECLOSIA Bien-être Maternité & Bébé France",
       },
     ],
     locale: "fr_FR",
@@ -58,9 +67,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "AURAE — Bien-être Maternité & Bébé",
+    title: "ECLOSIA — Bien-être Maternité & Bébé",
     description: "Plateforme de santé maternelle et puériculture assistée par IA en France.",
-    images: ["https://aurae.app/twitter-image.jpg"],
+    images: ["https://eclosia.app/twitter-image.jpg"],
   },
   robots: {
     index: true,
@@ -92,7 +101,6 @@ export default function RootLayout({
   return (
     <html lang="fr" className="h-full">
       <body className={`${inter.className} h-full bg-aurae-nude text-aurae-charcoal antialiased selection:bg-aurae-rose/30`}>
-        {/* Enveloppement global avec le CartProvider pour que le panier soit accessible partout */}
         <CartProvider>
           <div id="app-root" className="min-h-full flex flex-col relative">
             <Header />
@@ -101,8 +109,9 @@ export default function RootLayout({
             
             <Footer />
             
-            {/* Widget IA global : Il flottera par-dessus toute l'application */}
-            <AiChatDrawer />
+            <ConditionalAiChat>
+              <AiChatDrawer />
+            </ConditionalAiChat>
           </div>
         </CartProvider>
       </body>

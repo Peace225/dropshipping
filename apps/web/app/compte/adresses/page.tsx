@@ -1,134 +1,181 @@
+"use client";
+export const dynamic = 'force-dynamic';
+
+import { useEffect, useState, FormEvent } from "react";
+import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
+import { MapPin, Plus, X, Loader2, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { ArrowLeft, MapPin, Plus, Trash2, Edit3, CheckCircle2 } from "lucide-react";
 
-export default function AddressesPage() {
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export default function AdressesPage() {
+  const router = useRouter();
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [showModal, setShowModal] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [addressLine, setAddressLine] = useState("");
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [country, setCountry] = useState("France");
+  const [saving, setSaving] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function getAddresses() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { router.push("/auth/connexion"); return; }
+
+      setUserId(session.user.id);
+
+      const { data } = await supabase
+        .from("customer_addresses")
+        .select("*")
+        .eq("customer_id", session.user.id);
+
+      if (data) setAddresses(data);
+      setLoading(false);
+    }
+    getAddresses();
+  }, [router]);
+
+  const handleAddAddress = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!userId) return;
+    setSaving(true);
+
+    const { data, error } = await supabase
+      .from("customer_addresses")
+      .insert([{
+        customer_id: userId,
+        first_name: firstName,
+        last_name: lastName,
+        phone: phone,
+        address_line: addressLine,
+        city: city,
+        postal_code: postalCode,
+        country: country,
+        is_default: addresses.length === 0
+      }])
+      .select();
+
+    if (error) {
+      console.error("Erreur adresse:", error);
+      alert(`Erreur d'enregistrement : ${error.message}`);
+    } else if (data) {
+      setAddresses([...addresses, data[0]]);
+      setShowModal(false);
+      setFirstName(""); setLastName(""); setPhone(""); setAddressLine(""); setCity(""); setPostalCode(""); setCountry("France");
+    }
+    setSaving(false);
+  };
+
+  const handleDeleteAddress = async (id: string) => {
+    const { error } = await supabase.from("customer_addresses").delete().eq("id", id);
+    if (!error) {
+      setAddresses(addresses.filter(addr => addr.id !== id));
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F5EBE6]/30 via-white to-[#6E857B]/10 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Fil d'Ariane / Retour */}
-        <Link
-          href="/compte"
-          className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#333333]/70 hover:text-[#333333] mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Retour à mon compte</span>
-        </Link>
-
-        {/* En-tête */}
-        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#333333]/10 shadow-sm mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 relative">
+      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#333333]/10 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-[#333333]/10">
           <div>
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#E8C5C8]/30 text-[#333333] mb-2">
-              Carnet d'adresses
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#333333] tracking-tight">
-              Mes adresses de livraison
-            </h1>
-            <p className="text-xs sm:text-sm text-[#333333]/70 font-medium mt-1">
-              Gérez vos lieux de livraison pour vos commandes d'essentiels AURAE.
-            </p>
+            <h1 className="text-xl sm:text-2xl font-black text-[#333333]">Mes Adresses</h1>
+            <p className="text-xs text-[#333333]/60 mt-1">Gérez vos lieux de livraison en France et à l'international.</p>
           </div>
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#333333] hover:bg-black text-white font-bold text-xs sm:text-sm transition-all shadow-md active:scale-95"
-          >
+          <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#6E857B] text-white text-xs font-bold hover:bg-[#5b7067] transition-all cursor-pointer shadow-sm">
             <Plus className="w-4 h-4" />
             <span>Ajouter une adresse</span>
           </button>
         </div>
 
-        {/* Liste des adresses */}
-        <div className="space-y-4">
-          
-          {/* Adresse 1 (Principale) */}
-          <div className="bg-white p-6 rounded-3xl border-2 border-[#333333] shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#E8C5C8]/30 flex items-center justify-center text-[#333333] flex-shrink-0 mt-1">
-                <MapPin className="w-6 h-6" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <h2 className="font-extrabold text-sm sm:text-base text-[#333333]">
-                    Domicile (Principal)
-                  </h2>
-                  <span className="inline-flex items-center gap-1 bg-[#6E857B]/15 text-[#333333] text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
-                    <CheckCircle2 className="w-3 h-3 text-[#6E857B]" />
-                    Par défaut
-                  </span>
+        {loading ? (
+          <p className="text-xs text-[#333333]/60">Chargement...</p>
+        ) : addresses.length === 0 ? (
+          <div className="text-center py-12 border border-dashed border-[#333333]/15 rounded-3xl p-6 bg-[#F5EBE6]/10">
+            <MapPin className="w-10 h-10 text-[#333333]/30 mx-auto mb-3" />
+            <p className="text-sm font-bold text-[#333333]">Aucune adresse enregistrée</p>
+            <p className="text-xs text-[#333333]/60 mt-1">Ajoutez une adresse pour faciliter vos futurs achats.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {addresses.map((addr) => (
+              <div key={addr.id} className="p-4 rounded-2xl border border-[#333333]/10 relative bg-[#F5EBE6]/20 flex flex-col justify-between">
+                <div>
+                  <p className="text-xs font-bold text-[#333333]">{addr.first_name} {addr.last_name}</p>
+                  <p className="text-xs text-[#333333]/80 mt-1">{addr.address_line}</p>
+                  <p className="text-xs text-[#333333]/70">{addr.city}, {addr.postal_code}</p>
+                  <p className="text-xs text-[#333333]/60">{addr.country} {addr.phone ? `- Tél: ${addr.phone}` : ""}</p>
                 </div>
-                <p className="text-xs sm:text-sm text-[#333333]/80 font-medium leading-relaxed">
-                  Brad Sergueï Kokoliko<br />
-                  Cocody Riviera Palmeraie<br />
-                  Abidjan, Côte d'Ivoire<br />
-                  Tél : +225 07 00 00 00 00
-                </p>
+                <button onClick={() => handleDeleteAddress(addr.id)} className="mt-3 self-end p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </div>
-            </div>
-
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 pt-4 sm:pt-0 border-[#333333]/10">
-              <button
-                type="button"
-                className="p-2.5 rounded-xl border border-[#333333]/15 hover:bg-[#333333]/5 text-[#333333] transition-colors"
-                title="Modifier"
-              >
-                <Edit3 className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                className="p-2.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 transition-colors"
-                title="Supprimer"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+            ))}
           </div>
+        )}
+      </div>
 
-          {/* Adresse 2 */}
-          <div className="bg-white p-6 rounded-3xl border border-[#333333]/10 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#F5EBE6] flex items-center justify-center text-[#333333] flex-shrink-0 mt-1">
-                <MapPin className="w-6 h-6" />
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-[#333333]/10 shadow-xl relative my-8">
+            <button onClick={() => setShowModal(false)} className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 text-[#333333]/60">
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-lg font-black text-[#333333] mb-1">Nouvelle adresse</h2>
+            <p className="text-xs text-[#333333]/60 mb-6">Renseignez vos coordonnées de livraison.</p>
+            <form onSubmit={handleAddAddress} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#333333] mb-1.5">Prénom</label>
+                  <input type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Brad" className="w-full px-4 py-3 rounded-2xl border border-[#333333]/15 text-xs bg-[#F5EBE6]/10" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#333333] mb-1.5">Nom</label>
+                  <input type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Falcone" className="w-full px-4 py-3 rounded-2xl border border-[#333333]/15 text-xs bg-[#F5EBE6]/10" />
+                </div>
               </div>
               <div>
-                <h2 className="font-extrabold text-sm sm:text-base text-[#333333] mb-1">
-                  Bureau / Professionnel
-                </h2>
-                <p className="text-xs sm:text-sm text-[#333333]/80 font-medium leading-relaxed">
-                  Brad Sergueï Kokoliko<br />
-                  Plateau, Immeuble Alpha 2000<br />
-                  Abidjan, Côte d'Ivoire<br />
-                  Tél : +225 07 00 00 00 00
-                </p>
+                <label className="block text-xs font-bold text-[#333333] mb-1.5">Téléphone</label>
+                <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+33 6 00 00 00 00" className="w-full px-4 py-3 rounded-2xl border border-[#333333]/15 text-xs bg-[#F5EBE6]/10" />
               </div>
-            </div>
-
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 pt-4 sm:pt-0 border-[#333333]/10">
-              <button
-                type="button"
-                className="px-4 py-2 rounded-xl border border-[#333333]/15 text-xs font-bold text-[#333333] hover:bg-[#333333]/5 transition-colors"
-              >
-                Définir par défaut
-              </button>
-              <button
-                type="button"
-                className="p-2.5 rounded-xl border border-[#333333]/15 hover:bg-[#333333]/5 text-[#333333] transition-colors"
-                title="Modifier"
-              >
-                <Edit3 className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                className="p-2.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 transition-colors"
-                title="Supprimer"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+              <div>
+                <label className="block text-xs font-bold text-[#333333] mb-1.5">Rue et numéro (address_line)</label>
+                <input type="text" required value={addressLine} onChange={(e) => setAddressLine(e.target.value)} placeholder="123 rue de la République" className="w-full px-4 py-3 rounded-2xl border border-[#333333]/15 text-xs bg-[#F5EBE6]/10" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#333333] mb-1.5">Ville</label>
+                  <input type="text" required value={city} onChange={(e) => setCity(e.target.value)} placeholder="Paris" className="w-full px-4 py-3 rounded-2xl border border-[#333333]/15 text-xs bg-[#F5EBE6]/10" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#333333] mb-1.5">Code postal</label>
+                  <input type="text" required value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="75001" className="w-full px-4 py-3 rounded-2xl border border-[#333333]/15 text-xs bg-[#F5EBE6]/10" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#333333] mb-1.5">Pays</label>
+                <input type="text" required value={country} onChange={(e) => setCountry(e.target.value)} placeholder="France" className="w-full px-4 py-3 rounded-2xl border border-[#333333]/15 text-xs bg-[#F5EBE6]/10" />
+              </div>
+              <div className="pt-2 flex items-center gap-3">
+                <button type="button" onClick={() => setShowModal(false)} className="w-1/2 py-3 rounded-2xl border border-[#333333]/15 text-xs font-bold cursor-pointer">Annuler</button>
+                <button type="submit" disabled={saving} className="w-1/2 inline-flex items-center justify-center gap-2 py-3 rounded-2xl bg-[#333333] text-white text-xs font-bold cursor-pointer">
+                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                  <span>Enregistrer</span>
+                </button>
+              </div>
+            </form>
           </div>
-
         </div>
-
-      </div>
+      )}
     </div>
   );
 }
