@@ -14,7 +14,7 @@ export default function ConseilIAPage() {
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#333333]/70 hover:text-[#333333] mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Retour à l'accueil AURAE</span>
+          <span>Retour à l'accueil ECLOSIA</span>
         </Link>
 
         {/* En-tête de la page */}
@@ -24,7 +24,7 @@ export default function ConseilIAPage() {
           </div>
           <div className="text-center sm:text-left">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#333333] tracking-tight">
-              Conseiller IA AURAE
+              Conseiller IA ECLOSIA
             </h1>
             <p className="text-xs sm:text-sm text-[#333333]/70 font-medium mt-1">
               Votre expert virtuel dédié à la maternité et à la puériculture. Posez vos questions à tout moment pour des recommandations personnalisées, bienveillantes et sécurisées.
@@ -42,7 +42,7 @@ export default function ConseilIAPage() {
                 <Bot className="w-5 h-5 text-amber-300" />
               </div>
               <div>
-                <h2 className="text-sm font-extrabold">Assistant IA AURAE</h2>
+                <h2 className="text-sm font-extrabold">Assistant IA ECLOSIA</h2>
                 <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-medium">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                   En ligne • Prêt à vous écouter
@@ -62,7 +62,7 @@ export default function ConseilIAPage() {
                 <Bot className="w-4 h-4" />
               </div>
               <div className="p-4 rounded-2xl rounded-tl-none bg-white text-[#333333] border border-[#333333]/10 shadow-sm text-xs sm:text-sm font-medium leading-relaxed">
-                Bonjour et bienvenue sur l'espace de conseil intelligent d'AURAE ! Je suis là pour vous accompagner pas à pas dans votre parcours de future ou jeune maman. Que souhaitez-vous aborder aujourd'hui ?
+                Bonjour et bienvenue sur l'espace de conseil intelligent d'ECLOSIA ! Je suis là pour vous accompagner pas à pas dans votre parcours de future ou jeune maman. Que souhaitez-vous aborder aujourd'hui ?
               </div>
             </div>
 

@@ -22,7 +22,7 @@ export default function AiChatDrawer() {
     {
       id: '1',
       role: 'assistant',
-      content: 'Bonjour ! Je suis Clara, votre conseillère AURAE. Comment puis-je vous aider aujourd\'hui ?',
+      content: 'Bonjour ! Je suis Clara, votre conseillère ECLOSIA. Comment puis-je vous aider aujourd\'hui ?',
     },
   ])
   const [loading, setLoading] = useState(false)
@@ -119,7 +119,7 @@ export default function AiChatDrawer() {
             
             <div className="flex flex-col items-start justify-center ml-1 z-10">
               <span className="font-extrabold text-sm tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
-                Conseillère AURAE
+                Conseillère ECLOSIA
               </span>
               <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1 group-hover:text-emerald-300 transition-colors">
                 <MessageCircleHeart className="w-3 h-3" />

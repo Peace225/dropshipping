@@ -13,7 +13,7 @@ export default function ChatInterface() {
     {
       id: '1',
       role: 'assistant',
-      content: 'Bonjour ! Je suis l\'assistant virtuel d\'AURAE. Comment puis-je vous aider aujourd\'hui concernant nos produits Maman et Bébé ?',
+      content: 'Bonjour ! Je suis l\'assistant virtuel d\'ECLOSIA. Comment puis-je vous aider aujourd\'hui concernant nos produits Maman et Bébé ?',
     },
   ])
   const [input, setInput] = useState('')
@@ -78,7 +78,7 @@ export default function ChatInterface() {
     <div className="flex flex-col h-[600px] w-full max-w-3xl mx-auto bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
       {/* En-tête du Chat */}
       <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-        <h3 className="font-semibold text-gray-800">Assistant IA AURAE</h3>
+        <h3 className="font-semibold text-gray-800">Assistant IA ECLOSIA</h3>
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
           En ligne
         </span>

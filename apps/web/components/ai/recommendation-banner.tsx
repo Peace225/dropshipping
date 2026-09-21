@@ -13,7 +13,7 @@ interface RecommendationBannerProps {
 
 export default function RecommendationBanner({
   title = "Besoin d'aide pour choisir ?",
-  subtitle = "Discutez avec notre conseillère IA AURAE pour trouver les produits parfaits pour maman et bébé.",
+  subtitle = "Discutez avec notre conseillère IA CLO pour trouver les produits parfaits pour maman et bébé.",
   ctaText = "Lancer la discussion",
   ctaLink = "/conseillere-ia",
   onClose,
@@ -38,7 +38,7 @@ export default function RecommendationBanner({
       <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="space-y-1 max-w-xl">
           <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur-sm mb-2">
-            Assistant Intelligent AURAE
+            Assistant Intelligent ECLOSIA
           </span>
           <h2 className="text-xl md:text-2xl font-bold tracking-tight">
             {title}
