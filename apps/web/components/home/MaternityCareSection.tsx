@@ -34,15 +34,22 @@ export async function MaternityCareSection() {
   const list = mater.length? mater : (products || []).slice(0,4);
   const formatted = list.map((p:any) => ({ id: p.id, name: p.name, category: p.categories?.name || "MAMAN", price: `${Number(p.price).toFixed(2)} €`, image: resolveImageUrl(p.slug), slug: `/shop/maternite/${p.slug}` }));
   if (!formatted.length) return null;
+
   return (
     <ProductSection title="Maternité & Bien-être" subtitle="Des soins pensés pour vous accompagner avant, pendant et après" viewAllLink="/shop/maternite">
       {formatted.map((product:any) => (
         <div key={product.id} className="group bg-white rounded-2xl border border-[#333333]/10 overflow-hidden shadow-sm hover:shadow-md transition-all">
-          <div className="relative w-full h-52 bg-[#F5EBE6]/50 flex items-center justify-center p-4">
+          <Link href={product.slug} className="relative w-full h-52 bg-[#F5EBE6]/50 flex items-center justify-center p-4 block">
             <SafeImage src={product.image} alt={product.name} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform" />
             <span className="absolute top-3 left-3 bg-white/90 px-2.5 py-1 rounded-full text- font-bold uppercase flex items-center gap-1"><Sparkles className="w-3 h-3"/>{product.category}</span>
+          </Link>
+          <div className="p-4">
+            <Link href={product.slug}><h3 className="font-semibold text-sm line-clamp-2 hover:underline">{product.name}</h3></Link>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="font-bold">{product.price}</span>
+              <Link href={product.slug} className="h-8 w-8 flex items-center justify-center rounded-full bg-[#333333] text-white"><ShoppingBag className="w-4 h-4"/></Link>
+            </div>
           </div>
-          <div className="p-4"><h3 className="font-semibold text-sm line-clamp-2">{product.name}</h3><div className="mt-2 flex items-center justify-between"><span className="font-bold">{product.price}</span><Link href={product.slug} className="h-8 w-8 flex items-center justify-center rounded-full bg-[#333333] text-white"><ShoppingBag className="w-4 h-4"/></Link></div></div>
         </div>
       ))}
     </ProductSection>
