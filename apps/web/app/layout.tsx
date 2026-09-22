@@ -18,9 +18,11 @@ export const metadata: Metadata = {
   
   // 👉 Configuration de votre logo personnalisé dans l'onglet
   icons: {
-    icon: "logo.png",
-    shortcut: "logo.png",
-    apple: "logo.png",
+    icon: [
+      { url: "/logo.png", type: "image/png" }
+    ],
+    shortcut: "/logo.png",
+    apple: "/logo.png",
   },
 
   keywords: [
