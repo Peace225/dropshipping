@@ -1,15 +1,35 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { Sparkles, Star, ShoppingBag, ShieldCheck, ChevronRight, ArrowLeft } from "lucide-react";
+import { Sparkles, Star, ShoppingBag, ChevronRight, ArrowLeft, ShieldCheck } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 
 // Initialisation du client Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+const BUCKET = "https://cbvpxrhiurdjhzdpyceb.supabase.co/storage/v1/object/public/aurae-images";
+
+// Dictionnaire pour mapper les slugs exacts aux noms de fichiers réels dans le Storage Supabase
+const FILE_MAP: Record<string, string> = {
+  "porte-bebe": "porte-bebe-ergonomique.jpg",
+  "tapis-deveil": "tapis-d-eveil.jpg",
+  "couches-pampers-tailles": "pack-couches-pampers.jpg",
+  "coffret-maternite-essentielle": "coffret-maternite-essentielle.jpg",
+  "lit-cododo": "lit-cododo-reglable.jpg",
+  "kit-gigoteuse-lange-nid-ange-serviettes": "kit-naissance-gigoteuse-lange.jpg",
+  "pack-soin-bebe-mustela": "pack-soins-mustela.jpg",
+  "chaise-haute": "chaise-haute-evolutive.jpg",
+  "baignoire-twistshake": "baignoire-twistshake.jpg",
+  "coffret-naissance-biberons-mam": "coffret-biberons-mam.jpg",
+  "lot-2-tetines-mam": "tetines-mam-lot-de-2.jpg",
+  "kit-repas-bebe-silicone": "kit-repas-bebe-silicone.jpg",
+  "trousse-premiers-soins-bebe": "trousse-premiers-soins-bebe.jpg",
+  "transat-electrique-momi": "transat-electrique-momi.jpg",
+  "lot-3-pyjamas": "lot-3-pyjamas-coton.jpg",
+};
 
 // Structure des catégories par univers pour la Sidebar
 const UNIVERSES = [
@@ -69,11 +89,11 @@ export default function GlobalShopPage() {
         const formatted = data.map((product: any) => {
           const catSlug = product.categories?.slug || "";
           
-          // Détermination propre de l'univers (Bébé ou Maternité) pour diriger vers la bonne page de détail
           const isBebe = catSlug.toLowerCase().includes("bebe") || product.name.toLowerCase().includes("bébé") || product.name.toLowerCase().includes("biberon") || product.name.toLowerCase().includes("poussette");
           const targetFolder = isBebe ? "bebe" : "maternite";
 
-          const directStorageImageUrl = `https://cbvpxrhiurdjhzdpyceb.supabase.co/storage/v1/object/public/aurae-images/${product.slug}.jpg`;
+          const fileName = FILE_MAP[product.slug] || `${product.slug}.jpg`;
+          const imageUrl = `${BUCKET}/${fileName}`;
 
           return {
             id: product.id,
@@ -83,10 +103,10 @@ export default function GlobalShopPage() {
             price: `${Number(product.price).toFixed(2).replace(".", ",")} €`,
             rating: 5,
             reviewsCount: Math.floor(Math.random() * 80) + 20,
-            image: directStorageImageUrl,
-            slug: `/shop/${targetFolder}/${product.slug}`, // URL garantie vers la bonne page détail
+            image: imageUrl,
+            slug: `/shop/${targetFolder}/${product.slug}`,
             badge: product.is_featured ? "Coup de cœur" : "Essentiel",
-            description: product.description || "Un indispensable sélectionné par AURAE.",
+            description: product.description || "Un indispensable sélectionné par ECLOSIA.",
           };
         });
         setProducts(formatted);
@@ -97,7 +117,6 @@ export default function GlobalShopPage() {
     fetchAllProducts();
   }, []);
 
-  // Filtrage par univers et par catégorie sélectionnée dans la sidebar
   const filteredProducts = products.filter((p) => {
     if (selectedUniverse !== "Tous" && p.universe !== selectedUniverse) {
       return false;
@@ -109,7 +128,7 @@ export default function GlobalShopPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pt-28 pb-16">
+    <div className="min-h-screen bg-gradient-to-b from-[#F5EBE6]/30 via-white to-[#F5EBE6]/25 pt-28 pb-16">
       
       {/* Bouton de retour à l'accueil */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mb-6">
@@ -123,11 +142,33 @@ export default function GlobalShopPage() {
       </div>
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Banner ECLOSIA élégante */}
+        <div className="bg-gradient-to-r from-[#F5EBE6] via-[#DCE4E0]/50 to-[#F5EBE6] rounded-[32px] p-8 sm:p-10 border border-[#333333]/10 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 mb-10">
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#6E857B] text-white mb-3">
+              <Sparkles className="w-3.5 h-3.5" />
+              Boutique Officielle ECLOSIA
+            </span>
+            <h1 className="text-2xl sm:text-4xl font-extrabold text-[#333333] tracking-tight mb-2">
+              L'excellence pour la maternité et bébé
+            </h1>
+            <p className="text-xs sm:text-sm text-[#333333]/80 font-medium">
+              Découvrez notre sélection rigoureuse d'essentiels pensés pour le confort, la sécurité et le bien-être de toute la famille.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-[#333333]/10 shadow-sm text-xs text-[#333333] font-medium min-w-[260px]">
+            <div className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-[#6E857B]" /><span>Paiement 100% sécurisé</span></div>
+            <div className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-[#6E857B]" /><span>Livraison standard 7-10 jours</span></div>
+            <div className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-[#6E857B]" /><span>Retours sous 30 jours</span></div>
+          </div>
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-8">
           
-          {/* ================= SIDEBAR PREMIUM ================= */}
+          {/* ================= SIDEBAR ECLOSIA ================= */}
           <aside className="w-full lg:w-72 shrink-0">
-            <div className="sticky top-28 bg-white rounded-3xl border border-[#EAE6E1] p-6 shadow-sm">
+            <div className="sticky top-28 bg-white rounded-3xl border border-[#333333]/10 p-6 shadow-sm">
               <h3 className="text-xs font-extrabold uppercase tracking-widest text-[#333333] mb-6">
                 Univers & Catégories
               </h3>
@@ -145,20 +186,19 @@ export default function GlobalShopPage() {
                         className={`flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition-all ${
                           isUniverseActive && selectedCategory === "Tous"
                             ? "bg-[#333333] text-white shadow-sm"
-                            : "bg-[#FAFAFA] text-[#333333] hover:bg-gray-100"
+                            : "bg-[#FAFAFA] text-[#333333] hover:bg-[#6E857B]/10"
                         }`}
                       >
                         <span>{uni.name}</span>
                         <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isUniverseActive ? "rotate-90" : ""}`} />
                       </button>
 
-                      {/* Sous-catégories si l'univers est actif */}
                       {uni.categories && isUniverseActive && (
-                        <div className="flex flex-col pl-4 gap-1 mt-1 border-l-2 border-[#EAE6E1] ml-2">
+                        <div className="flex flex-col pl-4 gap-1 mt-1 border-l-2 border-[#333333]/10 ml-2">
                           <button
                             onClick={() => setSelectedCategory("Tous")}
                             className={`text-left py-1.5 px-2 rounded-lg text-xs font-medium transition-colors ${
-                              selectedCategory === "Tous" ? "text-[#333333] font-bold bg-gray-50" : "text-gray-500 hover:text-[#333333]"
+                              selectedCategory === "Tous" ? "text-[#333333] font-bold bg-[#6E857B]/10" : "text-gray-500 hover:text-[#333333]"
                             }`}
                           >
                             Toutes les catégories
@@ -168,7 +208,7 @@ export default function GlobalShopPage() {
                               key={cat}
                               onClick={() => setSelectedCategory(cat)}
                               className={`text-left py-1.5 px-2 rounded-lg text-xs font-medium transition-colors ${
-                                selectedCategory === cat ? "text-[#333333] font-bold bg-gray-50" : "text-gray-500 hover:text-[#333333]"
+                                selectedCategory === cat ? "text-[#333333] font-bold bg-[#6E857B]/10" : "text-gray-500 hover:text-[#333333]"
                               }`}
                             >
                               {cat}
@@ -186,50 +226,47 @@ export default function GlobalShopPage() {
           {/* ================= CONTENU PRINCIPAL ================= */}
           <main className="flex-1">
             
-            {/* En-tête épuré */}
-            <div className="bg-[#FDFBF9] rounded-3xl p-8 border border-[#EAE6E1] mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#333333]/10 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#6E857B] block mb-1">
-                  Catalogue Officiel
+                  Catalogue Actuel
                 </span>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#333333] tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-[#333333] tracking-tight">
                   {selectedUniverse === "Tous" ? "Tous les produits" : `Univers ${selectedUniverse}`}
-                  {selectedCategory !== "Tous" && <span className="text-gray-400 font-normal text-lg"> / {selectedCategory}</span>}
-                </h1>
+                  {selectedCategory !== "Tous" && <span className="text-gray-400 font-normal text-base"> / {selectedCategory}</span>}
+                </h2>
               </div>
-              <p className="text-xs font-semibold text-gray-500 bg-white px-4 py-2 rounded-full border border-[#EAE6E1]">
+              <p className="text-xs font-bold text-[#333333] bg-[#F5EBE6] px-4 py-2 rounded-full border border-[#333333]/5">
                 {filteredProducts.length} article(s) disponible(s)
               </p>
             </div>
 
-            {/* Grille des produits */}
             {loading ? (
               <div className="flex justify-center items-center h-64">
-                <p className="text-gray-400 font-medium animate-pulse text-sm">Chargement de la collection...</p>
+                <p className="text-[#333333]/50 font-medium animate-pulse text-sm">Chargement de la collection...</p>
               </div>
             ) : filteredProducts.length === 0 ? (
-              <div className="text-center py-20 bg-white rounded-3xl border border-[#EAE6E1]">
-                <p className="text-gray-400 text-sm">Aucun produit ne correspond à cette sélection.</p>
+              <div className="text-center py-20 bg-white rounded-3xl border border-[#333333]/10 shadow-sm">
+                <p className="text-gray-400 text-sm font-medium">Aucun produit ne correspond à cette sélection.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredProducts.map((product) => (
                   <div
                     key={product.id}
-                    className="group bg-white rounded-[24px] border border-[#EAE6E1] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                    className="group bg-white rounded-[24px] border border-[#333333]/10 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
                   >
-                    {/* Image cliquable redirigeant vers la page de détail */}
                     <Link 
                       href={product.slug} 
-                      className="relative block w-full h-[280px] bg-[#FDFBF9] overflow-hidden p-6 cursor-pointer"
+                      className="relative block w-full h-[280px] bg-[#6E857B]/10 overflow-hidden p-6 cursor-pointer flex items-center justify-center"
                     >
-                      <Image
+                      <img
                         src={product.image}
                         alt={product.name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-contain p-6 group-hover:scale-105 transition-transform duration-700"
-                        unoptimized
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "https://cbvpxrhiurdjhzdpyceb.supabase.co/storage/v1/object/public/aurae-images/baignoire-twistshake.jpg";
+                        }}
+                        className="w-full h-full object-contain p-6 group-hover:scale-105 transition-transform duration-700"
                       />
                       <span className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-bold text-[#333333] shadow-sm uppercase tracking-wider z-10">
                         {product.universe}
@@ -250,9 +287,8 @@ export default function GlobalShopPage() {
                             ({product.reviewsCount})
                           </span>
                         </div>
-                        {/* Titre cliquable redirigeant vers la page de détail */}
                         <Link href={product.slug}>
-                          <h3 className="font-bold text-[#333333] text-base leading-tight group-hover:text-[#6E857B] transition-colors line-clamp-2 hover:underline">
+                          <h3 className="font-extrabold text-[#333333] text-base leading-tight group-hover:text-[#6E857B] transition-colors line-clamp-2 hover:underline">
                             {product.name}
                           </h3>
                         </Link>
@@ -261,13 +297,13 @@ export default function GlobalShopPage() {
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between pt-4 border-t border-[#EAE6E1] mt-2">
+                      <div className="flex items-center justify-between pt-4 border-t border-[#333333]/5 mt-2">
                         <span className="font-extrabold text-lg text-[#333333]">
                           {product.price}
                         </span>
                         <Link
                           href={product.slug}
-                          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#333333] text-white hover:bg-[#6E857B] transition-colors active:scale-95 text-xs font-semibold"
+                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#333333] text-white hover:bg-[#6E857B] transition-colors active:scale-95 text-xs font-bold"
                         >
                           <ShoppingBag className="w-3.5 h-3.5" />
                           <span>Découvrir</span>
