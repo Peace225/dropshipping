@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Sparkles, MessageCircleHeart } from 'lucide-react'
+import { X, Sparkles, MessageCircleHeart, AlertCircle } from 'lucide-react'
 import ChatMessageList from './chat-message-list'
 import ChatInput from './chat-input'
 
@@ -135,7 +135,7 @@ export default function AiChatDrawer() {
 
       {/* Fenêtre de chat flottante */}
       {isOpen && (
-        <div className="flex flex-col h-[520px] w-[380px] bg-white border border-[#333333]/20 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 transform origin-bottom-right">
+        <div className="flex flex-col h-[560px] w-[380px] bg-white border border-[#333333]/20 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 transform origin-bottom-right">
           
           {/* En-tête de la fenêtre (Noir Anthracite Premium) */}
           <div className="px-5 py-4 bg-gradient-to-r from-[#333333] to-[#1a1a1a] text-white flex items-center justify-between border-b border-white/10 relative overflow-hidden">
@@ -148,7 +148,7 @@ export default function AiChatDrawer() {
                 <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center shadow-lg overflow-hidden border-[2.5px] border-white/20">
                   <img 
                     src={counselorImage} 
-                    alt="Clara - AURAE" 
+                    alt="Clara - ECLOSIA" 
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -157,7 +157,7 @@ export default function AiChatDrawer() {
               </div>
               
               <div className="flex flex-col">
-                <h3 className="font-extrabold text-[15px] tracking-wide text-white">Clara d'AURAE</h3>
+                <h3 className="font-extrabold text-[15px] tracking-wide text-white">Clara d'ECLOSIA</h3>
                 <div className="flex items-center gap-1.5 text-[11px] text-emerald-300 font-medium mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                   En ligne • À votre écoute
@@ -172,6 +172,14 @@ export default function AiChatDrawer() {
             >
               <X className="w-5 h-5" />
             </button>
+          </div>
+
+          {/* Avertissement Médical Clair & Intégré */}
+          <div className="bg-[#F5EBE6] border-b border-[#333333]/10 px-3 py-2 flex items-start gap-2 text-[11px] text-[#333333]">
+            <AlertCircle className="w-4 h-4 text-[#6E857B] shrink-0 mt-0.5" />
+            <p className="leading-tight">
+              <strong className="font-bold">Info :</strong> Cet assistant ne remplace pas un professionnel de santé.
+            </p>
           </div>
 
           {/* Liste des messages */}

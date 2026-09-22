@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Send } from 'lucide-react'
 
 interface ChatInputProps {
   onSend: (message: string) => void
@@ -18,21 +19,22 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="p-3 bg-white border-t border-gray-200 flex gap-2">
+    <form onSubmit={handleSubmit} className="p-4 bg-white border-t border-[#333333]/10 flex gap-2">
       <input
         type="text"
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        placeholder="Écrivez votre message..."
+        placeholder="Posez votre question à la conseillère..."
         disabled={disabled}
-        className="flex-1 px-3.5 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-100"
+        className="flex-1 px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:border-[#6E857B] transition-colors text-xs sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
       />
       <button
         type="submit"
         disabled={disabled || !input.trim()}
-        className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#6E857B] hover:bg-[#5b6e65] text-white text-xs sm:text-sm font-bold rounded-2xl transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Envoyer
+        <Send className="w-4 h-4" />
+        <span>Envoyer</span>
       </button>
     </form>
   )

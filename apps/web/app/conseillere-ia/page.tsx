@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Sparkles, Bot, User, Send, Heart, ShieldCheck, HelpCircle } from "lucide-react";
+import { ArrowLeft, Sparkles, Bot, User, Send, ShieldCheck, AlertCircle } from "lucide-react";
 
 export default function ConseilIAPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F5EBE6]/30 via-white to-[#6E857B]/10 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-[#F5EBE6]/30 via-white to-[#6E857B]/10 py-8 pt-28">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Fil d'Ariane / Retour */}
@@ -24,15 +24,23 @@ export default function ConseilIAPage() {
           </div>
           <div className="text-center sm:text-left">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#333333] tracking-tight">
-              Conseiller IA ECLOSIA
+              Conseillère IA ECLOSIA
             </h1>
             <p className="text-xs sm:text-sm text-[#333333]/70 font-medium mt-1">
-              Votre expert virtuel dédié à la maternité et à la puériculture. Posez vos questions à tout moment pour des recommandations personnalisées, bienveillantes et sécurisées.
+              Votre expert virtuel dédié à la maternité et à la puériculture. Posez vos questions à tout moment pour des recommandations personnalisées et bienveillantes.
             </p>
           </div>
         </div>
 
-        {/* Interface principale de discussion interactive (Interface dédiée) */}
+        {/* Avertissement Médical Clair */}
+        <div className="bg-[#F5EBE6] border border-[#333333]/10 rounded-2xl p-4 mb-6 flex items-start gap-3 text-xs sm:text-sm text-[#333333]">
+          <AlertCircle className="w-5 h-5 text-[#6E857B] shrink-0 mt-0.5" />
+          <p className="leading-relaxed">
+            <strong className="font-bold">Avertissement important :</strong> Les conseils fournis par cette intelligence artificielle le sont à titre purement indicatif et <strong className="underline">ne remplacent en aucun cas</strong> l'avis, le diagnostic ou la consultation d'un médecin ou d'un professionnel de santé qualifié.
+          </p>
+        </div>
+
+        {/* Interface principale de discussion interactive */}
         <div className="bg-white rounded-3xl border border-[#333333]/10 shadow-sm overflow-hidden flex flex-col h-[600px]">
           
           {/* Barre supérieure de l'interface */}
@@ -42,10 +50,10 @@ export default function ConseilIAPage() {
                 <Bot className="w-5 h-5 text-amber-300" />
               </div>
               <div>
-                <h2 className="text-sm font-extrabold">Assistant IA ECLOSIA</h2>
+                <h2 className="text-sm font-extrabold">Conseillère IA ECLOSIA</h2>
                 <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-medium">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  En ligne • Prêt à vous écouter
+                  En ligne • Prête à vous écouter
                 </div>
               </div>
             </div>
@@ -90,14 +98,14 @@ export default function ConseilIAPage() {
               />
               <button
                 type="submit"
-                className="inline-flex items-center justify-center px-5 py-3 rounded-2xl bg-[#333333] hover:bg-black text-white font-bold transition-all shadow-md active:scale-95"
+                className="inline-flex items-center justify-center px-5 py-3 rounded-2xl bg-[#6E857B] hover:bg-[#5b6e65] text-white font-bold transition-all shadow-md active:scale-95"
               >
                 <Send className="w-4 h-4" />
               </button>
             </form>
             <div className="flex items-center justify-center gap-2 mt-2 text-[11px] text-[#333333]/60 font-medium">
               <ShieldCheck className="w-3.5 h-3.5 text-[#6E857B]" />
-              <span>Conseils formulés en collaboration avec des professionnels de santé.</span>
+              <span>Plateforme sécurisée & accompagnement bienveillant.</span>
             </div>
           </div>
 
