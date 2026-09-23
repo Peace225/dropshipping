@@ -15,7 +15,7 @@ export default function ConnexionPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // État pour l'œil
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -25,15 +25,31 @@ export default function ConnexionPage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      // 1. Authentification Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
 
-      // Redirection directe vers l'Espace Client après connexion
-      router.push("/compte");
+      const user = authData.user;
+      if (!user) throw new Error("Utilisateur introuvable.");
+
+      // 2. Vérification du rôle dans la table "profiles"
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      // 3. Redirection conditionnelle selon le rôle
+      if (!profileError && profileData?.role === "admin") {
+        router.push("/admin"); // Redirection vers le Dashboard Admin si admin
+      } else {
+        router.push("/compte"); // Redirection vers l'Espace Client classique sinon
+      }
+      
       router.refresh();
     } catch (error: any) {
       setErrorMessage(error.message || "Email ou mot de passe incorrect.");
@@ -57,13 +73,13 @@ export default function ConnexionPage() {
           <div className="text-center mb-8">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#E8C5C8]/40 text-[#333333] mb-3">
               <ShieldCheck className="w-3.5 h-3.5 text-[#6E857B]" />
-              Espace Client sécurisé
+              Espace sécurisé ECLOSIA
             </span>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#333333] tracking-tight">
               Bon retour parmi nous
             </h1>
             <p className="text-xs sm:text-sm text-[#333333]/70 font-medium mt-1">
-              Connectez-vous pour suivre vos commandes et profiter de vos avantages.
+              Connectez-vous pour accéder à votre espace.
             </p>
           </div>
 

@@ -357,8 +357,8 @@ export default function BebeProductDetailPage() {
                 {product.name}
               </h1>
               <div className="text-xs text-gray-500 mb-4 flex items-center gap-1">
-                Marque: <Link href="#" className="text-blue-600 hover:underline">AURAE</Link> | 
-                <Link href="#" className="text-blue-600 hover:underline">Produits similaires par AURAE</Link>
+                Marque: <Link href="#" className="text-blue-600 hover:underline">ECLOSIA</Link> | 
+                <Link href="#" className="text-blue-600 hover:underline">Produits similaires par ECLOSIA</Link>
               </div>
 
               <hr className="border-gray-200 mb-4" />
@@ -436,7 +436,7 @@ export default function BebeProductDetailPage() {
             <div className="p-3.5 border-b border-gray-200 flex justify-between items-center bg-gray-50/50 rounded-t-xl">
               <h3 className="font-extrabold text-[11px] text-[#333333] uppercase tracking-wider">LIVRAISON & RETOURS</h3>
               <span className="text-[9px] font-bold text-orange-600 bg-orange-50 border border-orange-100 px-1.5 py-0.5 rounded flex items-center gap-1">
-                AURAE <Truck className="w-3 h-3"/>
+                ECLOSIA <Truck className="w-3 h-3"/>
               </span>
             </div>
             

@@ -14,7 +14,6 @@ import {
   LogOut,
   Tag,
   ShieldCheck,
-  ChevronRight,
   ChevronDown,
   Sparkles,
   Layers,
@@ -42,9 +41,8 @@ interface NavGroup {
 export function AdminSidebar() {
   const pathname = usePathname();
   
-  // État pour gérer l'ouverture des sous-menus (ex: Produits)
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
-    Produits: true, // Ouvert par défaut pour plus de visibilité
+    Produits: true,
   });
 
   const toggleMenu = (title: string) => {
@@ -54,7 +52,7 @@ export function AdminSidebar() {
     }));
   };
 
-  // Structure du menu latéral
+  // Liens avec /admin/produits/... pour correspondre à votre dossier
   const navigation: NavGroup[] = [
     {
       groupLabel: "Vue d'ensemble",
@@ -68,24 +66,20 @@ export function AdminSidebar() {
       items: [
         {
           title: "Produits",
-          href: "#", // Pas de lien direct car c'est un bouton déroulant
+          href: "#",
           icon: Package,
           subItems: [
-            {
-              title: "Maman (Grossesse & Post-Partum)",
-              href: "/admin/produits/maman",
-            },
-            {
-              title: "Bébé (Soins & Tendresse)",
-              href: "/admin/produits/bebe",
-            },
+            { title: "Gestion Catalogue", href: "/admin/produits" },
+            { title: "Importer (CSV Fournisseur)", href: "/admin/import" },
+            { title: "Maman (Grossesse)", href: "/admin/produits/maman" },
+            { title: "Bébé (Soins)", href: "/admin/produits/bebe" },
           ],
         },
         {
           title: "Commandes",
           href: "/admin/commandes",
           icon: ShoppingBag,
-          badge: "12",
+          badge: "Suivi",
           badgeColor: "bg-[#6E857B] text-white",
         },
         { title: "Catégories", href: "/admin/categories", icon: Layers },
@@ -98,7 +92,7 @@ export function AdminSidebar() {
           title: "Ventes Flash",
           href: "/admin/ventes-flash",
           icon: Zap,
-          badge: "En cours",
+          badge: "Actif",
           badgeColor: "bg-[#D4A396] text-[#333333]",
         },
         { title: "Promotions & Coupons", href: "/admin/promotions", icon: Tag },
@@ -120,9 +114,8 @@ export function AdminSidebar() {
   ];
 
   return (
-    <aside className="sticky top-0 flex h-screen w-72 flex-col justify-between border-r border-[#333333]/10 bg-white p-4 shrink-0 font-sans">
-      <div className="space-y-6 overflow-y-auto pr-1">
-        {/* LOGO & BRANDING HEADER */}
+    <aside className="sticky top-0 h-screen w-72 bg-white border-r border-[#333333]/10 flex flex-col justify-between shrink-0 font-sans z-30">
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <div className="flex items-center justify-between px-2 pt-2 pb-4 border-b border-[#333333]/10">
           <Link href="/admin" className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#333333] text-white shadow-sm">
@@ -130,7 +123,7 @@ export function AdminSidebar() {
             </span>
             <div>
               <span className="block text-base font-bold tracking-tight text-[#333333]">
-                AURAE
+                ECLOSIA
               </span>
               <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#6E857B]">
                 Super Admin
@@ -142,17 +135,16 @@ export function AdminSidebar() {
           </span>
         </div>
 
-        {/* GROUPES DE NAVIGATION */}
-        <nav className="space-y-5">
+        <div className="space-y-6">
           {navigation.map((group, groupIdx) => (
             <div key={groupIdx} className="space-y-1.5">
-              <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-[#333333]/50">
+              <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-[#333333]/40">
                 {group.groupLabel}
               </p>
+              
               <div className="space-y-1">
                 {group.items.map((item) => {
                   const hasSubItems = item.subItems && item.subItems.length > 0;
-                  // On vérifie si l'URL courante correspond à l'item principal ou à un de ses sous-menus
                   const isActive = pathname === item.href || (hasSubItems && item.subItems?.some(sub => pathname.startsWith(sub.href)));
                   const isOpen = openMenus[item.title];
                   const Icon = item.icon;
@@ -160,74 +152,53 @@ export function AdminSidebar() {
                   return (
                     <div key={item.title}>
                       {hasSubItems ? (
-                        /* BOUTON AVEC SOUS-MENU (ACCORDÉON) */
                         <button
                           onClick={() => toggleMenu(item.title)}
-                          className={`group flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition-all duration-200 ${
+                          className={`w-full flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
                             isActive || isOpen
                               ? "bg-gray-50 text-[#333333]"
-                              : "text-[#333333]/70 hover:bg-[#F5EBE6]/60 hover:text-[#333333]"
+                              : "text-[#333333]/70 hover:bg-[#F5EBE6]/50 hover:text-[#333333]"
                           }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            <Icon
-                              className={`h-4 w-4 transition-colors ${
-                                isActive || isOpen ? "text-[#D4A396]" : "text-[#333333]/60 group-hover:text-[#333333]"
-                              }`}
-                            />
+                            <Icon className={`h-4 w-4 ${isActive || isOpen ? "text-[#D4A396]" : "text-[#333333]/60"}`} />
                             <span>{item.title}</span>
                           </div>
-                          <ChevronDown
-                            className={`h-3.5 w-3.5 transition-transform duration-200 text-[#333333]/60 ${
-                              isOpen ? "rotate-180" : ""
-                            }`}
-                          />
+                          <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 text-[#333333]/60 ${isOpen ? "rotate-180" : ""}`} />
                         </button>
                       ) : (
-                        /* LIEN SIMPLE */
                         <Link
                           href={item.href}
-                          className={`group flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition-all duration-200 ${
+                          className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition-all ${
                             isActive
                               ? "bg-[#333333] text-white shadow-sm"
-                              : "text-[#333333]/70 hover:bg-[#F5EBE6]/60 hover:text-[#333333]"
+                              : "text-[#333333]/70 hover:bg-[#F5EBE6]/50 hover:text-[#333333]"
                           }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            <Icon
-                              className={`h-4 w-4 transition-colors ${
-                                isActive ? "text-[#D4A396]" : "text-[#333333]/60 group-hover:text-[#333333]"
-                              }`}
-                            />
+                            <Icon className={`h-4 w-4 ${isActive ? "text-[#D4A396]" : "text-[#333333]/60"}`} />
                             <span>{item.title}</span>
                           </div>
-                          {item.badge ? (
+                          {item.badge && (
                             <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${item.badgeColor}`}>
                               {item.badge}
                             </span>
-                          ) : (
-                            <ChevronRight
-                              className={`h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-100 ${
-                                isActive ? "text-white opacity-100" : "text-[#333333]/40"
-                              }`}
-                            />
                           )}
                         </Link>
                       )}
 
-                      {/* AFFICHAGE DES SOUS-MENUS SI OUVERT */}
                       {hasSubItems && isOpen && (
-                        <div className="mt-1 ml-4 flex flex-col space-y-0.5 border-l border-[#333333]/10 pl-3">
+                        <div className="mt-1 ml-4 flex flex-col space-y-1 border-l border-[#333333]/15 pl-3 py-1">
                           {item.subItems?.map((sub) => {
                             const isSubActive = pathname === sub.href;
                             return (
                               <Link
                                 key={sub.href}
                                 href={sub.href}
-                                className={`rounded-lg px-3 py-2 text-[11px] font-medium transition-all ${
+                                className={`rounded-lg px-3 py-1.5 text-[11px] font-medium transition-colors ${
                                   isSubActive
-                                    ? "bg-[#333333]/5 text-[#333333] font-bold"
-                                    : "text-[#333333]/60 hover:bg-gray-50 hover:text-[#333333]"
+                                    ? "bg-[#333333]/10 text-[#333333] font-bold"
+                                    : "text-[#333333]/60 hover:text-[#333333] hover:bg-gray-50"
                                 }`}
                               >
                                 {sub.title}
@@ -242,11 +213,10 @@ export function AdminSidebar() {
               </div>
             </div>
           ))}
-        </nav>
+        </div>
       </div>
 
-      {/* PIED DU SIDEBAR : PROFIL ADMIN & DÉCONNEXION */}
-      <div className="border-t border-[#333333]/10 pt-4 space-y-3">
+      <div className="p-4 border-t border-[#333333]/10 space-y-3 bg-white">
         <div className="flex items-center justify-between rounded-xl bg-[#FAFAFA] p-2.5 border border-[#333333]/5">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#D4A396]/30 font-bold text-[#333333] text-xs">
@@ -254,10 +224,10 @@ export function AdminSidebar() {
             </div>
             <div className="overflow-hidden text-left">
               <p className="truncate text-xs font-bold text-[#333333]">
-                Admin Aurae
+                Admin Eclosia
               </p>
               <p className="truncate text-[10px] text-[#333333]/60">
-                admin@aurae.com
+                admin@eclosia.com
               </p>
             </div>
           </div>

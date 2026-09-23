@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CheckCircle, ShoppingBag, ArrowRight, Mail } from "lucide-react";
 import { OrderTimeline } from "@/components/orders/OrderTimeline";
@@ -67,7 +67,7 @@ export default function CheckoutSuccessPage() {
                 <li className="flex justify-between">
                   <span className="font-medium">Client</span>
                   <span className="font-bold text-[#333333]">
-                    {customerName !== "" ? customerName : (orderData?.customer?.email || "Client AURAE")}
+                    {customerName !== "" ? customerName : (orderData?.customer?.email || "Client ECLOSIA")}
                   </span>
                 </li>
                 <li className="flex justify-between">

@@ -8,25 +8,30 @@ import { MaternityCareSection } from "@/components/home/MaternityCareSection";
 import { BabyCareSection } from "@/components/home/BabyCareSection";
 import HomeComponent from "@/components/home/HomeComponent";
 
+export const metadata = {
+  title: "ECLOSIA | Maternité, Puériculture & Bien-être Maman & Bébé",
+  description: "Plateforme d'excellence dédiée à la maternité et à la puériculture basée à Paris. Retrouvez nos essentiels, notre conseillère IA et des produits sélectionnés avec soin pour maman et bébé.",
+};
+
 export default function HomePage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "AURAE",
-    "image": "https://aurae.app/og-image.jpg",
-    "@id": "https://aurae.app",
-    "url": "https://aurae.app",
+    "name": "ECLOSIA",
+    "image": "https://eclosia.app/og-image.jpg",
+    "@id": "https://eclosia.app",
+    "url": "https://eclosia.app",
     "telephone": "",
     "address": {
       "@type": "PostalAddress",
-      "addressLocality": "Abidjan",
-      "addressRegion": "Abidjan Autonomous District",
-      "addressCountry": "CI"
+      "addressLocality": "Paris",
+      "addressRegion": "Île-de-France",
+      "addressCountry": "FR"
     },
     "geo": {
       "@type": "GeoCoordinates",
-      "latitude": 5.3600,
-      "longitude": -4.0083
+      "latitude": 48.8566,
+      "longitude": 2.3522
     },
     "openingHoursSpecification": {
       "@type": "OpeningHoursSpecification",
@@ -43,11 +48,11 @@ export default function HomePage() {
       "closes": "23:59"
     },
     "sameAs": [
-      "https://facebook.com/aurae",
-      "https://instagram.com/aurae"
+      "https://facebook.com/eclosia",
+      "https://instagram.com/eclosia"
     ],
     "priceRange": "$$",
-    "description": "Secure, AI-powered maternal and baby wellness platform supporting mothers in Abidjan and Côte d'Ivoire with expert care, community, and curated essentials."
+    "description": "Plateforme e-commerce spécialisée dans la maternité et le bien-être de bébé, offrant des articles de puériculture d'excellence et un accompagnement sur mesure depuis Paris, France."
   };
 
   return (

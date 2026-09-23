@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     }
 
     // Génération d'un numéro de commande unique
-    const orderNumber = `AURAE-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
+    const orderNumber = `ECLOSIA-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
 
     // 1. Enregistrement initial dans Supabase
     const { data: orderData, error: dbError } = await supabase
