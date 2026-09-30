@@ -124,7 +124,14 @@ export function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0 group order-1">
               <div className="relative w-12 h-12 sm:w-14 sm:h-14 overflow-hidden rounded-full shadow-sm border border-[#6E857B]/20 bg-white flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-                <Image src="/images/logo.png" alt="ECLOSIA Logo" fill className="object-cover transition-transform duration-500 group-hover:scale-110" priority />
+                <Image 
+                  src="/images/logo.png" 
+                  alt="ECLOSIA Logo" 
+                  fill
+                  sizes="(max-width: 640px) 48px, 56px"
+                  className="object-cover transition-transform duration-500 group-hover:scale-110" 
+                  priority 
+                />
               </div>
               <div className="flex flex-col transition-transform duration-300 group-hover:translate-x-0.5">
                 <span className={`text-[1.65rem] sm:text-[1.90rem] font-extrabold tracking-tight text-[#333333] leading-none ${logoFont.className}`}>ECLOSIA</span>

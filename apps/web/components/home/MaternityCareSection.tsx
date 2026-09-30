@@ -8,6 +8,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const BUCKET = "https://cbvpxrhiurdjhzdpyceb.supabase.co/storage/v1/object/public/aurae-images";
+const PLACEHOLDER = `${BUCKET}/placeholder.jpg`; // mets un placeholder dans ton bucket
 
 const FILE_MAP: Record<string, string> = {
   "sac-de-maternite-organisateur-valise": "sac-maternite-organisateur.jpg",
@@ -25,19 +26,24 @@ const FILE_MAP: Record<string, string> = {
 };
 
 function getImageUrl(slug: string, rawImage?: string): string {
-  if (rawImage && rawImage.startsWith("http") && rawImage.includes("aurae-images") && rawImage.length > 60) {
-    if (!rawImage.endsWith("aurae-ima") && !rawImage.endsWith("aurae-images")) {
-      return rawImage;
-    }
+  // 1. Si image DB valide, on la prend direct
+  if (rawImage && rawImage.trim()!== "") {
+    // si c'est déjà une URL complète
+    if (rawImage.startsWith("http")) return rawImage;
+    // si c'est un chemin /aurae-images/xxx.jpg
+    if (rawImage.includes("aurae-images")) return `${BUCKET}/${rawImage.split("/").pop()}`;
+    // si c'est juste le nom de fichier
+    return `${BUCKET}/${rawImage}`;
   }
+  // 2. Fallback FILE_MAP
   const fileName = FILE_MAP[slug] || `${slug}.jpg`;
   return `${BUCKET}/${fileName}`;
 }
 
 export async function MaternityCareSection() {
   const { data: products } = await supabase
-    .from("products")
-    .select(`
+   .from("products")
+   .select(`
       id,
       name,
       slug,
@@ -45,10 +51,10 @@ export async function MaternityCareSection() {
       categories!inner(slug, name),
       product_images(image_url, is_primary, position)
     `)
-    .eq("is_active", true)
-    .eq("categories.slug", "maman")
-    .order("created_at", { ascending: false })
-    .limit(8);
+   .eq("is_active", true)
+   .eq("categories.slug", "maman")
+   .order("created_at", { ascending: false })
+   .limit(8);
 
   if (!products || products.length === 0) return null;
 
@@ -61,33 +67,35 @@ export async function MaternityCareSection() {
       viewAllLink="/shop/maternite"
     >
       {list.map((p: any) => {
-        const imgs = [...(p.product_images || [])].sort((a: any, b: any) => a.position - b.position);
+        const imgs = [...(p.product_images || [])].sort((a: any, b: any) => (a.position || 0) - (b.position || 0));
         const primary = imgs.find((i: any) => i.is_primary) || imgs[0];
         const imageUrl = getImageUrl(p.slug, primary?.image_url);
 
         return (
           <div key={p.id} className="group bg-white rounded-2xl border border-[#333333]/10 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col h-full">
-            {/* HAUTEUR ET PADDINGS RESPONSIVES */}
             <Link href={`/shop/maternite/${p.slug}`} className="relative w-full h-40 sm:h-52 bg-[#F5EBE6]/50 flex items-center justify-center p-3 sm:p-4 shrink-0 block">
               <img
                 src={imageUrl}
                 alt={p.name}
                 className="w-full h-full object-contain p-2 sm:p-4 group-hover:scale-105 transition-transform duration-300"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (target.src!== PLACEHOLDER) {
+                    target.src = FILE_MAP[p.slug]? `${BUCKET}/${FILE_MAP[p.slug]}` : PLACEHOLDER;
+                  }
+                }}
               />
-              {/* CORRECTION DU TEXT- MANQUANT ET BADGE RESPONSIVE */}
-              <span className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-white/90 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase flex items-center gap-1">
+              <span className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-white/90 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text- sm:text- font-bold uppercase flex items-center gap-1">
                 <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 <span className="line-clamp-1">{p.categories?.name || "MAMAN"}</span>
               </span>
             </Link>
-            
-            {/* CONTENU FLEXIBLE POUR ALIGNEMENT PARFAIT */}
+
             <div className="p-3 sm:p-4 flex flex-col flex-grow">
               <Link href={`/shop/maternite/${p.slug}`}>
                 <h3 className="font-semibold text-xs sm:text-sm line-clamp-2 hover:underline">{p.name}</h3>
               </Link>
-              
-              {/* mt-auto POUSSE LE PRIX ET LE BOUTON TOUT EN BAS DE LA CARTE */}
+
               <div className="mt-auto pt-3 flex items-center justify-between">
                 <span className="font-bold text-sm sm:text-base">{Number(p.price).toFixed(2)} €</span>
                 <Link href={`/shop/maternite/${p.slug}`} className="h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center rounded-full bg-[#333333] text-white hover:bg-black transition-colors shrink-0">
