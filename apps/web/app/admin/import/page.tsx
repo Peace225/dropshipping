@@ -1,20 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { UploadCloud, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
 export default function AdminImportPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [supplier, setSupplier] = useState<string>("kiddystores");
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Par défaut, on se met en mode "auto-détection"
+  const [supplier, setSupplier] = useState<string>("auto");
   const [coefficient, setCoefficient] = useState<number>(2.5);
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-      setMessage(null);
+      const selectedFile = e.target.files[0];
+      if (selectedFile.name.endsWith('.csv')) {
+        setFile(selectedFile);
+        setMessage(null);
+      } else {
+        setMessage({ type: "error", text: "Veuillez sélectionner un fichier au format .csv" });
+      }
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const droppedFile = e.dataTransfer.files[0];
+      if (droppedFile.name.endsWith('.csv')) {
+        setFile(droppedFile);
+        setMessage(null);
+      } else {
+        setMessage({ type: "error", text: "Format incorrect : Veuillez déposer un fichier .csv" });
+      }
     }
   };
 
@@ -46,7 +79,12 @@ export default function AdminImportPage() {
       }
 
       setMessage({ type: "success", text: `Importation réussie ! ${data.count || 0} produits synchronisés.` });
+      
       setFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      
     } catch (err: any) {
       setMessage({ type: "error", text: err.message });
     } finally {
@@ -79,12 +117,17 @@ export default function AdminImportPage() {
               <select
                 value={supplier}
                 onChange={(e) => setSupplier(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-[#333333]/20 bg-white text-sm focus:outline-none focus:border-[#6E857B]"
+                className="w-full px-4 py-2.5 rounded-xl border border-[#333333]/20 bg-white text-sm focus:outline-none focus:border-[#6E857B] cursor-pointer"
               >
-                <option value="kiddystores">Kiddy Stores (Textile Bébé)</option>
-                <option value="bbla">BBLA (Made in France / Puériculture)</option>
-                <option value="matterhorn">Matterhorn (Maternité / Post-partum)</option>
+                {/* L'option auto-détection devient l'option par défaut ! */}
+                <option value="auto">Auto-détection (via le fichier CSV)</option>
+                <option value="BBLA">Groupe BBLA (Forcer pour tout le fichier)</option>
+                <option value="kiddystores">Kiddy Stores</option>
+                <option value="matterhorn">Matterhorn</option>
               </select>
+              <p className="text-[10px] text-[#333333]/50 mt-1">
+                L'auto-détection lira la colonne "brand" du fichier pour assigner la bonne marque (ex: P'tits Dessous).
+              </p>
             </div>
 
             {/* Choix du coefficient de marge */}
@@ -95,7 +138,7 @@ export default function AdminImportPage() {
               <select
                 value={coefficient}
                 onChange={(e) => setCoefficient(parseFloat(e.target.value))}
-                className="w-full px-4 py-2.5 rounded-xl border border-[#333333]/20 bg-white text-sm focus:outline-none focus:border-[#6E857B]"
+                className="w-full px-4 py-2.5 rounded-xl border border-[#333333]/20 bg-white text-sm focus:outline-none focus:border-[#6E857B] cursor-pointer"
               >
                 <option value="2">x2.0 (Standard)</option>
                 <option value="2.5">x2.5 (Recommandé - Haut de gamme)</option>
@@ -109,23 +152,34 @@ export default function AdminImportPage() {
               <label className="block text-xs font-bold uppercase tracking-wider text-[#333333]/70 mb-2">
                 Fichier CSV du catalogue
               </label>
-              <div className="flex flex-col items-center justify-center border-2 border-dashed border-[#333333]/20 rounded-2xl p-8 text-center hover:border-[#6E857B] transition-colors cursor-pointer bg-[#FBF8F5]/50">
+              <div 
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-8 text-center transition-colors cursor-pointer ${
+                  isDragging 
+                    ? "border-[#6E857B] bg-[#6E857B]/5" 
+                    : "border-[#333333]/20 bg-[#FBF8F5]/50 hover:border-[#6E857B]"
+                }`}
+              >
                 <input
                   type="file"
                   accept=".csv"
                   onChange={handleFileChange}
+                  ref={fileInputRef}
                   className="hidden"
                   id="csv-file-input"
                 />
-                <label htmlFor="csv-file-input" className="cursor-pointer space-y-2 flex flex-col items-center">
+                <div className="space-y-2 flex flex-col items-center pointer-events-none">
                   <div className="p-3 bg-[#6E857B]/10 text-[#6E857B] rounded-xl">
                     <UploadCloud className="w-6 h-6" />
                   </div>
                   <span className="text-sm font-medium text-[#333333]">
                     {file ? file.name : "Cliquez pour choisir un fichier CSV ou glissez-le ici"}
                   </span>
-                  <span className="text-xs text-neutral-400">Format accepté : .csv</span>
-                </label>
+                  <span className="text-xs text-neutral-400">Format accepté : .csv uniquement</span>
+                </div>
               </div>
             </div>
 
@@ -146,7 +200,7 @@ export default function AdminImportPage() {
               className="w-full py-3 px-4 bg-[#6E857B] text-white text-sm font-semibold rounded-xl hover:bg-[#5a6e66] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {loading ? "Traitement en cours..." : "Lancer l'importation dans Supabase"}
+              {loading ? "Traitement et importation en cours..." : "Lancer l'importation du catalogue"}
             </button>
           </form>
         </div>

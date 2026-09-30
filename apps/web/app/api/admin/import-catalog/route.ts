@@ -1,94 +1,101 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import Papa from "papaparse";
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    // 1. Récupérer le fichier FormData et le coefficient envoyés depuis le dashboard
-    const formData = await request.formData();
+    const formData = await req.formData();
     const file = formData.get("file") as File;
-    const supplier = formData.get("supplier") as string;
-    const coefficientStr = formData.get("coefficient") as string;
-    const coefficient = coefficientStr ? parseFloat(coefficientStr) : 2.5;
+    const coefficient = parseFloat(formData.get("coefficient") as string || "2.5");
+    const supplierSel = formData.get("supplier") as string || "auto";
 
-    if (!file) {
-      return NextResponse.json({ error: "Aucun fichier fourni." }, { status: 400 });
-    }
+    if (!file) return NextResponse.json({ error: "Aucun fichier fourni." }, { status: 400 });
 
-    // 2. Lire le contenu textuel du fichier CSV
-    const textContent = await file.text();
-    const lines = textContent.split("\n").filter((line) => line.trim() !== "");
+    const text = (await file.text()).replace(/^\uFEFF/, '').trim();
 
-    if (lines.length < 2) {
-      return NextResponse.json({ error: "Le fichier CSV est vide ou mal formaté." }, { status: 400 });
-    }
-
-    // Détection basique du séparateur (virgule ou point-virgule)
-    const headerLine = lines[0];
-    const separator = headerLine.includes(";") ? ";" : ",";
-    const headers = headerLine.split(separator).map((h) => h.trim().replace(/^["']|["']$/g, ""));
+    const parsed = Papa.parse(text, {
+      header: true,
+      skipEmptyLines: true,
+      delimiter: ";",
+      transformHeader: h => h.trim().toLowerCase(),
+    });
 
     let importedCount = 0;
 
-    // 3. Parcourir les lignes du CSV (à partir de la ligne 1, en sautant l'en-tête)
-    for (let i = 1; i < lines.length; i++) {
-      const currentLine = lines[i];
-      const values = currentLine.split(separator).map((v) => v.trim().replace(/^["']|["']$/g, ""));
+    for (const r of parsed.data as any[]) {
+      const sku = r.sku || r.reference || r["référence"];
+      const name = r.name || r["nom du produit"];
+      if (!sku || !name) continue;
 
-      const rowData: Record<string, string> = {};
-      headers.forEach((header, index) => {
-        rowData[header.toLowerCase()] = values[index] || "";
-      });
+      const cost = parseFloat((r.price_achat || r.prix_achat || "0").replace(",", ".")) || 0;
+      const price = Math.round(cost * coefficient * 100) / 100;
+      const marketPrice = Math.round(price * 1.3 * 100) / 100;
+      const brand = supplierSel === "auto" ? (r.brand || r.marque || "Easy Dort") : supplierSel;
 
-      const sku = rowData["sku"] || rowData["ref"] || rowData["reference"] || `ECL-${i}`;
-      const name = rowData["name"] || rowData["titre"] || rowData["produit"] || "Produit Eclosia";
-      const rawPrice = parseFloat(rowData["price"] || rowData["prix"] || "10") || 10;
-      const stock = parseInt(rowData["stock"] || rowData["quantite"] || "10") || 10;
-      const imageUrl = rowData["image"] || rowData["image_url"] || "";
-      
-      const csvMarketPrice = parseFloat(rowData["market_price"] || rowData["prix_marche"] || "0");
-
-      // Application dynamique du coefficient choisi dans le dashboard
-      const sellingPrice = Math.round(rawPrice * coefficient * 100) / 100;
-      
-      // Estimation automatique ou lecture du prix du marché
-      const marketPrice = csvMarketPrice > 0 ? csvMarketPrice : Math.round(rawPrice * 3.2 * 100) / 100;
-
-      // 4. Enregistrement ou mise à jour dans Supabase (Upsert sur la colonne SKU unique)
-      const { error: upsertError } = await supabase
+      // 1. Upsert dans la table "products" basé sur le SKU unique
+      const { data: productData, error: productError } = await supabase
         .from("products")
         .upsert(
           {
-            sku: sku,
-            name: name,
-            price: sellingPrice,
-            cost_price: rawPrice,
+            sku: sku.trim(),
+            name: name.trim(),
+            slug: sku.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            cost_price: cost,
+            price: price,
             market_price: marketPrice,
-            stock: stock,
-            image_url: imageUrl,
-            supplier: supplier,
+            supplier: brand,
+            is_active: true,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "sku" }
-        );
+        )
+        .select("id")
+        .single();
 
-      if (!upsertError) {
-        importedCount++;
+      if (productError || !productData) {
+        console.error(`Erreur SKU ${sku}:`, productError?.message);
+        continue;
       }
+
+      const productId = productData.id;
+
+      // 2. Gestion de la galerie dans la table "product_images"
+      const mainImage = r.img1 || r.image_url || "";
+      const allImages = (r.images_all || mainImage || "").split('|').filter((v: string) => v && v.startsWith('http'));
+
+      if (allImages.length > 0) {
+        const imageRecords = allImages.map((imgUrl: string, index: number) => ({
+          product_id: productId,
+          image_url: imgUrl.trim(),
+          position: index + 1,
+          is_primary: index === 0,
+          display_order: index + 1,
+        }));
+        
+        // Supprime puis insère en batch pour la galerie
+        await supabase.from("product_images").delete().eq("product_id", productId);
+        await supabase.from("product_images").insert(imageRecords);
+      }
+
+      importedCount++;
     }
 
-    return NextResponse.json({
-      success: true,
-      count: importedCount,
-      message: `Importation réussie pour le fournisseur ${supplier}.`,
+    if (importedCount === 0) {
+      return NextResponse.json({ error: `0 produit importé. Vérifiez les en-têtes du CSV (sku, name, price_achat).` }, { status: 400 });
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      count: importedCount, 
+      message: `Importation réussie ! ${importedCount} produits et leurs galeries synchronisés.` 
     });
 
-  } catch (err: any) {
-    console.error("Erreur serveur import CSV:", err);
-    return NextResponse.json({ error: err.message || "Erreur interne du serveur." }, { status: 500 });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

@@ -8,10 +8,26 @@ import { ArrowLeft, Star, ShieldCheck, RotateCcw, Heart, MapPin, Home, ChevronRi
 import { createClient } from "@supabase/supabase-js";
 import { useCart } from "@/context/cart-context";
 
-// Initialisation du client Supabase côté client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+const PLACEHOLDER = "https://cbvpxrhiurdjhzdpyceb.supabase.co/storage/v1/object/public/aurae-images/placeholder-bebe.jpg";
+
+// Fonction de déduplication des produits pour les suggestions
+function normalizeKey(name: string): string {
+  return name.toLowerCase()
+    .replace(/\(.*?\)/g, "")
+    .replace(/coton mixte|bio|blanc|mixte/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function cleanImageUrl(raw?: string): string {
+  if (!raw) return PLACEHOLDER;
+  const first = raw.includes("|") ? raw.split("|")[0].trim() : raw.trim();
+  return first || PLACEHOLDER;
+}
 
 export default function BebeProductDetailPage() {
   const params = useParams();
@@ -25,7 +41,6 @@ export default function BebeProductDetailPage() {
   const [mainImage, setMainImage] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
 
-  // États pour la logistique
   const [locations, setLocations] = useState<Record<string, any[]>>({});
   const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
@@ -80,53 +95,33 @@ export default function BebeProductDetailPage() {
     return "";
   };
 
-  const shareOnFacebook = () => {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${getShareUrl()}`, "_blank");
-  };
-
-  const shareOnTwitter = () => {
-    const text = encodeURIComponent(`Découvrez ${product?.name} sur ECLOSIA ! `);
-    window.open(`https://twitter.com/intent/tweet?url=${getShareUrl()}&text=${text}`, "_blank");
-  };
-
-  const shareOnWhatsApp = () => {
-    const text = encodeURIComponent(`Regarde ça, j'ai trouvé ${product?.name} sur ECLOSIA : `);
-    window.open(`https://wa.me/?text=${text}${getShareUrl()}`, "_blank");
-  };
+  const shareOnFacebook = () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${getShareUrl()}`, "_blank");
+  const shareOnTwitter = () => window.open(`https://twitter.com/intent/tweet?url=${getShareUrl()}&text=${encodeURIComponent(`Découvrez ${product?.name} sur ECLOSIA ! `)}`, "_blank");
+  const shareOnWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(`Regarde ça, j'ai trouvé ${product?.name} sur ECLOSIA : `)}${getShareUrl()}`, "_blank");
 
   useEffect(() => {
     async function fetchData() {
       if (!slug) return;
 
-      // 1. Récupérer l'ID de la catégorie "bebe"
       const { data: catData } = await supabase
         .from("categories")
         .select("id")
         .ilike("slug", "%bebe%")
         .single();
 
-      // 2. Récupération du produit actuel par son slug
       let query = supabase
         .from("products")
         .select(`
-          id,
-          name,
-          slug,
-          price,
-          description,
-          image_url,
+          id, name, slug, price, description, image_url,
           product_images ( image_url, is_primary, position )
         `)
         .eq("slug", slug);
 
-      if (catData) {
-        query = query.eq("category_id", catData.id);
-      }
+      if (catData) query = query.eq("category_id", catData.id);
 
       const { data: productData, error: productError } = await query.single();
 
       if (productError || !productData) {
-        console.error("Erreur de chargement du produit :", productError);
         setLoading(false);
         return;
       }
@@ -137,16 +132,12 @@ export default function BebeProductDetailPage() {
 
         if (rawImages.length > 0) {
           const sortedImages = [...rawImages].sort((a, b) => a.position - b.position);
-          formattedImages = sortedImages.map((img: any) => img.image_url);
+          formattedImages = sortedImages.map((img: any) => cleanImageUrl(img.image_url));
         } else if (productData.image_url) {
-          formattedImages = productData.image_url.includes('|') 
-            ? productData.image_url.split('|').map((s: string) => s.trim())
-            : [productData.image_url];
+          formattedImages = [cleanImageUrl(productData.image_url)];
         }
 
-        if (formattedImages.length === 0) {
-          formattedImages.push("https://cbvpxrhiurdjhzdpyceb.supabase.co/storage/v1/object/public/aurae-images/baignoire-twistshake.jpg");
-        }
+        if (formattedImages.length === 0) formattedImages.push(PLACEHOLDER);
 
         setProduct({
           ...productData,
@@ -157,37 +148,47 @@ export default function BebeProductDetailPage() {
         });
         setMainImage(formattedImages[0]);
 
-        // 3. Récupération des suggestions dans la même catégorie
+        // === CORRECTION DES SUGGESTIONS AVEC DÉDUPLICATION ===
         if (catData) {
           const { data: suggestionsData } = await supabase
             .from("products")
-            .select(`
-              id, name, slug, price, image_url,
-              product_images ( image_url, is_primary, position )
-            `)
+            .select(`id, name, slug, price, image_url, product_images ( image_url, is_primary, position )`)
             .eq("category_id", catData.id)
             .eq("is_active", true)
             .neq("id", productData.id)
-            .limit(8);
+            .limit(30);
 
           if (suggestionsData) {
-            const formattedSuggestions = suggestionsData.map((sug: any) => {
-              const rawImg = sug.image_url || "";
-              const sugImg = rawImg.includes('|') ? rawImg.split('|')[0].trim() : rawImg.trim();
+            const map = new Map<string, any>();
+            const seenImages = new Set<string>();
+            // On ajoute l'image principale du produit actuel pour ne pas la suggérer
+            seenImages.add(formattedImages[0]); 
 
-              return {
-                id: sug.id,
-                name: sug.name,
-                price: `${Number(sug.price || 0).toFixed(2).replace(".", ",")} €`,
-                image: sugImg || "https://cbvpxrhiurdjhzdpyceb.supabase.co/storage/v1/object/public/aurae-images/baignoire-twistshake.jpg",
-                slug: `/shop/bebe/${sug.slug}`
-              };
+            suggestionsData.forEach((sug: any) => {
+              const key = normalizeKey(sug.name);
+              let rawImg = sug.product_images?.find((i: any) => i.is_primary)?.image_url || sug.product_images?.[0]?.image_url || sug.image_url || "";
+              let finalImg = cleanImageUrl(rawImg);
+
+              if (seenImages.has(finalImg) && sug.product_images && sug.product_images.length > 1) {
+                finalImg = cleanImageUrl(sug.product_images[1].image_url);
+              }
+
+              if (!map.has(key) && !seenImages.has(finalImg)) {
+                seenImages.add(finalImg);
+                map.set(key, {
+                  id: sug.id,
+                  name: sug.name.replace(/\s*\(.*?\)/g, "").trim(),
+                  price: `${Number(sug.price || 0).toFixed(2).replace(".", ",")} €`,
+                  slug: `/shop/bebe/${sug.slug}`,
+                  image: finalImg
+                });
+              }
             });
-            setSuggestions(formattedSuggestions);
+
+            setSuggestions(Array.from(map.values()).slice(0, 8));
           }
         }
 
-        // 4. Récupération des régions et villes pour la livraison
         const { data: regionsData } = await supabase
           .from("regions")
           .select(`name, cities (name, relais_price, home_price)`)
@@ -195,16 +196,12 @@ export default function BebeProductDetailPage() {
 
         if (regionsData) {
           const fetchedLocations: Record<string, any[]> = {};
-          
           regionsData.forEach((region: any) => {
-            if (region.cities) {
-              fetchedLocations[region.name] = region.cities.sort((a: any, b: any) => a.name.localeCompare(b.name));
-            }
+            if (region.cities) fetchedLocations[region.name] = region.cities.sort((a: any, b: any) => a.name.localeCompare(b.name));
           });
-          
           setLocations(fetchedLocations);
 
-          if (fetchedLocations["Île-de-France"] && fetchedLocations["Île-de-France"].length > 0) {
+          if (fetchedLocations["Île-de-France"]?.length > 0) {
             setSelectedRegion("Île-de-France");
             setSelectedCity(fetchedLocations["Île-de-France"][0].name);
           } else if (Object.keys(fetchedLocations).length > 0) {
@@ -240,15 +237,8 @@ export default function BebeProductDetailPage() {
   }
 
   const currentCityObj = locations[selectedRegion]?.find((c) => c.name === selectedCity);
-  
-  const relaisPriceStr = currentCityObj?.relais_price != null 
-    ? `${Number(currentCityObj.relais_price).toFixed(2).replace(".", ",")} €` 
-    : "3,99 €";
-    
-  const homePriceStr = currentCityObj?.home_price != null 
-    ? `${Number(currentCityObj.home_price).toFixed(2).replace(".", ",")} €` 
-    : "6,99 €";
-
+  const relaisPriceStr = currentCityObj?.relais_price != null ? `${Number(currentCityObj.relais_price).toFixed(2).replace(".", ",")} €` : "3,99 €";
+  const homePriceStr = currentCityObj?.home_price != null ? `${Number(currentCityObj.home_price).toFixed(2).replace(".", ",")} €` : "6,99 €";
   const activeDeliveryPriceStr = deliveryMethod === "relais" ? relaisPriceStr : homePriceStr;
 
   return (
@@ -278,11 +268,7 @@ export default function BebeProductDetailPage() {
               
               <div className="relative w-full aspect-square flex items-center justify-center mb-4 bg-white rounded-xl border border-[#333333]/5 p-4">
                 <Image src={mainImage} alt={product.name} fill unoptimized className="object-contain p-4 mix-blend-multiply" />
-                
-                <button 
-                  onClick={() => setIsFavorite(!isFavorite)}
-                  className={`absolute top-3 right-3 p-2 transition-colors ${isFavorite ? "text-red-500" : "text-gray-400 hover:text-red-500"}`}
-                >
+                <button onClick={() => setIsFavorite(!isFavorite)} className={`absolute top-3 right-3 p-2 transition-colors ${isFavorite ? "text-red-500" : "text-gray-400 hover:text-red-500"}`}>
                   <Heart className={`w-6 h-6 transition-all ${isFavorite ? "fill-current scale-110" : ""}`} />
                 </button>
               </div>
@@ -294,9 +280,7 @@ export default function BebeProductDetailPage() {
                     <button
                       key={idx}
                       onClick={() => setMainImage(imgUrl)}
-                      className={`relative w-14 h-14 shrink-0 rounded-lg overflow-hidden border transition-all bg-white ${
-                        mainImage === imgUrl ? "border-[#333333] shadow-xs" : "border-[#333333]/10 hover:border-[#333333]/30"
-                      }`}
+                      className={`relative w-14 h-14 shrink-0 rounded-lg overflow-hidden border transition-all bg-white ${mainImage === imgUrl ? "border-[#333333] shadow-xs" : "border-[#333333]/10 hover:border-[#333333]/30"}`}
                     >
                       <Image src={imgUrl} alt={`Vue ${idx + 1}`} fill unoptimized className="object-contain p-1 mix-blend-multiply" />
                     </button>
@@ -310,112 +294,65 @@ export default function BebeProductDetailPage() {
               <div className="py-2">
                 <p className="text-xs font-bold text-[#333333] mb-3 uppercase tracking-wide">Partagez ce produit</p>
                 <div className="flex items-center gap-3">
-                  <button onClick={shareOnFacebook} className="w-8 h-8 rounded-full border border-[#333333]/15 flex items-center justify-center hover:bg-blue-50 hover:text-blue-600 text-gray-700 transition-colors">
-                    <Facebook className="w-4 h-4 fill-current" />
-                  </button>
-                  <button onClick={shareOnTwitter} className="w-8 h-8 rounded-full border border-[#333333]/15 flex items-center justify-center hover:bg-sky-50 hover:text-sky-500 text-gray-700 transition-colors">
-                    <Twitter className="w-4 h-4 fill-current" />
-                  </button>
-                  <button onClick={shareOnWhatsApp} className="w-8 h-8 rounded-full border border-[#333333]/15 flex items-center justify-center hover:bg-green-50 hover:text-green-500 text-gray-700 transition-colors">
-                    <MessageCircle className="w-4 h-4" />
-                  </button>
+                  <button onClick={shareOnFacebook} className="w-8 h-8 rounded-full border border-[#333333]/15 flex items-center justify-center hover:bg-blue-50 hover:text-blue-600 text-gray-700 transition-colors"><Facebook className="w-4 h-4 fill-current" /></button>
+                  <button onClick={shareOnTwitter} className="w-8 h-8 rounded-full border border-[#333333]/15 flex items-center justify-center hover:bg-sky-50 hover:text-sky-500 text-gray-700 transition-colors"><Twitter className="w-4 h-4 fill-current" /></button>
+                  <button onClick={shareOnWhatsApp} className="w-8 h-8 rounded-full border border-[#333333]/15 flex items-center justify-center hover:bg-green-50 hover:text-green-500 text-gray-700 transition-colors"><MessageCircle className="w-4 h-4" /></button>
                 </div>
               </div>
 
               <hr className="border-[#333333]/10 my-2" />
-              
-              <button className="text-left text-xs font-medium text-blue-600 hover:underline flex items-center gap-2 mt-2">
-                <Flag className="w-3.5 h-3.5" />
-                Signaler des informations incorrectes
-              </button>
+              <button className="text-left text-xs font-medium text-blue-600 hover:underline flex items-center gap-2 mt-2"><Flag className="w-3.5 h-3.5" /> Signaler des informations incorrectes</button>
             </div>
 
             {/* --- Partie Informations (Centre) --- */}
             <div className="w-full md:w-[55%] flex flex-col p-4 sm:p-6">
-              
               <div className="flex justify-between items-start mb-2">
                 <div className="flex flex-wrap gap-2">
-                  <span className="bg-[#6E857B] text-white text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
-                    Boutique ECLOSIA
-                  </span>
-                  <span className="bg-[#333333] text-white text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">
-                    Oeko-Tex Standard
-                  </span>
+                  <span className="bg-[#6E857B] text-white text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">Boutique ECLOSIA</span>
+                  <span className="bg-[#333333] text-white text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wide">Oeko-Tex Standard</span>
                 </div>
-                
-                <button 
-                  onClick={() => setIsFavorite(!isFavorite)}
-                  className={`p-1.5 rounded-full transition-all -mt-1 -mr-1 ${isFavorite ? "text-red-500 bg-red-50" : "text-gray-400 hover:text-red-500"}`}
-                >
+                <button onClick={() => setIsFavorite(!isFavorite)} className={`p-1.5 rounded-full transition-all -mt-1 -mr-1 ${isFavorite ? "text-red-500 bg-red-50" : "text-gray-400 hover:text-red-500"}`}>
                   <Heart className={`w-6 h-6 transition-all ${isFavorite ? "fill-current scale-110" : ""}`} />
                 </button>
               </div>
 
-              <h1 className="text-xl sm:text-2xl font-extrabold text-[#333333] leading-snug mb-1.5">
-                {product.name}
-              </h1>
-              <div className="text-xs text-gray-500 mb-4 flex items-center gap-1">
-                Marque: <span className="text-[#6E857B] font-bold">ECLOSIA / Easy Dort</span>
-              </div>
+              <h1 className="text-xl sm:text-2xl font-extrabold text-[#333333] leading-snug mb-1.5">{product.name}</h1>
+              <div className="text-xs text-gray-500 mb-4 flex items-center gap-1">Marque: <span className="text-[#6E857B] font-bold">ECLOSIA / Easy Dort</span></div>
 
               <hr className="border-[#333333]/10 mb-4" />
 
-              {/* Prix */}
               <div className="flex items-center gap-3 mb-1">
                 <p className="text-3xl font-extrabold text-[#333333]">{product.priceFormatted}</p>
                 <p className="text-base font-medium text-gray-400 line-through">{product.oldPriceFormatted}</p>
-                <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-md">
-                  -20%
-                </span>
+                <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-md">-20%</span>
               </div>
               
               <p className="text-xs text-[#31A039] font-medium mb-1">En stock - Expédition rapide</p>
-              <p className="text-xs text-[#333333]/80 mb-3">
-                + livraison à partir de <span className="font-bold text-[#333333]">{activeDeliveryPriceStr}</span> vers <strong className="font-medium">{selectedCity || "votre adresse"}</strong>
-              </p>
+              <p className="text-xs text-[#333333]/80 mb-3">+ livraison à partir de <span className="font-bold text-[#333333]">{activeDeliveryPriceStr}</span> vers <strong className="font-medium">{selectedCity || "votre adresse"}</strong></p>
 
-              {/* Avis */}
               <div className="flex items-center gap-1.5 mb-5">
                 <div className="flex items-center text-amber-500">
-                  <Star className="w-4 h-4 fill-current" />
-                  <Star className="w-4 h-4 fill-current" />
-                  <Star className="w-4 h-4 fill-current" />
-                  <Star className="w-4 h-4 fill-current" />
-                  <Star className="w-4 h-4 text-gray-300" />
+                  <Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 text-gray-300" />
                 </div>
                 <span className="text-xs text-[#333333]/60 font-medium">({product.reviewsCount} avis vérifiés)</span>
               </div>
 
               <hr className="border-[#333333]/10 mb-5" />
 
-              {/* Bouton d'achat */}
-              <button 
-                onClick={handleBuy}
-                className="w-full bg-[#333333] hover:bg-black text-white py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors shadow-sm mb-6"
-              >
-                <ShoppingCart className="w-5 h-5" />
-                J'achète
+              <button onClick={handleBuy} className="w-full bg-[#333333] hover:bg-black text-white py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors shadow-sm mb-6">
+                <ShoppingCart className="w-5 h-5" /> J'achète
               </button>
 
-              {/* Promotions */}
               <div className="mt-auto">
                 <h3 className="text-xs font-extrabold text-[#333333] uppercase tracking-wider mb-3">Promotions & Services</h3>
                 <div className="flex flex-col gap-3">
                   <div className="flex items-start gap-2.5">
-                    <div className="mt-0.5 p-1 bg-[#6E857B]/10 rounded text-[#6E857B] shrink-0">
-                      <Phone className="w-3.5 h-3.5" />
-                    </div>
-                    <p className="text-xs text-[#333333]/80 font-medium">
-                      Besoin d'aide pour commander, appelez nous au <span className="font-bold cursor-pointer">01 23 45 67 89</span>
-                    </p>
+                    <div className="mt-0.5 p-1 bg-[#6E857B]/10 rounded text-[#6E857B] shrink-0"><Phone className="w-3.5 h-3.5" /></div>
+                    <p className="text-xs text-[#333333]/80 font-medium">Besoin d'aide pour commander, appelez nous au <span className="font-bold cursor-pointer">01 23 45 67 89</span></p>
                   </div>
                   <div className="flex items-start gap-2.5">
-                    <div className="mt-0.5 p-1 bg-[#6E857B]/10 rounded text-[#6E857B] shrink-0">
-                      <Star className="w-3.5 h-3.5 fill-current" />
-                    </div>
-                    <p className="text-xs text-[#333333]/80 font-medium">
-                      Garantie conformité et sécurité certifiée pour le confort de bébé.
-                    </p>
+                    <div className="mt-0.5 p-1 bg-[#6E857B]/10 rounded text-[#6E857B] shrink-0"><Star className="w-3.5 h-3.5 fill-current" /></div>
+                    <p className="text-xs text-[#333333]/80 font-medium">Garantie conformité et sécurité certifiée pour le confort de bébé.</p>
                   </div>
                 </div>
               </div>
@@ -425,113 +362,48 @@ export default function BebeProductDetailPage() {
 
           {/* BLOC DROIT (Livraison & Retours) */}
           <div className="lg:col-span-3 bg-white rounded-2xl border border-[#333333]/10 shadow-sm flex flex-col">
-            
             <div className="p-4 border-b border-[#333333]/10 flex justify-between items-center bg-[#6E857B]/5 rounded-t-2xl">
               <h3 className="font-extrabold text-xs text-[#333333] uppercase tracking-wider">LIVRAISON & RETOURS</h3>
-              <span className="text-xs font-bold text-white bg-[#6E857B] px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs">
-                ECLOSIA <Truck className="w-3 h-3"/>
-              </span>
+              <span className="text-xs font-bold text-white bg-[#6E857B] px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs">ECLOSIA <Truck className="w-3 h-3"/></span>
             </div>
             
             <div className="p-4">
-              
               <div className="grid grid-cols-2 gap-2 mb-4">
-                <button 
-                  onClick={() => setDeliveryMethod("relais")}
-                  className={`flex flex-col items-center justify-center p-2.5 border rounded-xl transition-all text-xs font-bold ${deliveryMethod === "relais" ? "border-[#333333] bg-[#333333] text-white shadow-xs" : "border-[#333333]/15 text-[#333333]/70 hover:border-[#333333]/30 bg-white"}`}
-                >
-                  <MapPin className="w-4 h-4 mb-1" />
-                  <span>Point Relais</span>
+                <button onClick={() => setDeliveryMethod("relais")} className={`flex flex-col items-center justify-center p-2.5 border rounded-xl transition-all text-xs font-bold ${deliveryMethod === "relais" ? "border-[#333333] bg-[#333333] text-white shadow-xs" : "border-[#333333]/15 text-[#333333]/70 hover:border-[#333333]/30 bg-white"}`}>
+                  <MapPin className="w-4 h-4 mb-1" /><span>Point Relais</span>
                 </button>
-                <button 
-                  onClick={() => setDeliveryMethod("domicile")}
-                  className={`flex flex-col items-center justify-center p-2.5 border rounded-xl transition-all text-xs font-bold ${deliveryMethod === "domicile" ? "border-[#333333] bg-[#333333] text-white shadow-xs" : "border-[#333333]/15 text-[#333333]/70 hover:border-[#333333]/30 bg-white"}`}
-                >
-                  <Home className="w-4 h-4 mb-1" />
-                  <span>À domicile</span>
+                <button onClick={() => setDeliveryMethod("domicile")} className={`flex flex-col items-center justify-center p-2.5 border rounded-xl transition-all text-xs font-bold ${deliveryMethod === "domicile" ? "border-[#333333] bg-[#333333] text-white shadow-xs" : "border-[#333333]/15 text-[#333333]/70 hover:border-[#333333]/30 bg-white"}`}>
+                  <Home className="w-4 h-4 mb-1" /><span>À domicile</span>
                 </button>
               </div>
 
               <h4 className="text-xs font-extrabold text-[#333333] mb-3">Choisissez le lieu</h4>
               
               <div className="flex flex-col gap-3 mb-5">
-                <select 
-                  className="w-full text-sm border border-[#333333]/20 rounded-xl p-2.5 text-[#333333] outline-none focus:border-[#333333] bg-white font-medium"
-                  value={selectedRegion}
-                  onChange={(e) => {
-                    const newRegion = e.target.value;
-                    setSelectedRegion(newRegion);
-                    if (locations[newRegion] && locations[newRegion].length > 0) {
-                      setSelectedCity(locations[newRegion][0].name);
-                    } else {
-                      setSelectedCity("");
-                    }
-                  }}
-                >
-                  {Object.keys(locations).map((region) => (
-                    <option key={region} value={region}>{region}</option>
-                  ))}
+                <select className="w-full text-sm border border-[#333333]/20 rounded-xl p-2.5 text-[#333333] outline-none focus:border-[#333333] bg-white font-medium" value={selectedRegion} onChange={(e) => { const newRegion = e.target.value; setSelectedRegion(newRegion); if (locations[newRegion] && locations[newRegion].length > 0) { setSelectedCity(locations[newRegion][0].name); } else { setSelectedCity(""); } }}>
+                  {Object.keys(locations).map((region) => (<option key={region} value={region}>{region}</option>))}
                 </select>
-
-                <select 
-                  className="w-full text-sm border border-[#333333]/20 rounded-xl p-2.5 text-[#333333] outline-none focus:border-[#333333] bg-white font-medium disabled:bg-gray-100"
-                  value={selectedCity}
-                  onChange={(e) => setSelectedCity(e.target.value)}
-                  disabled={!locations[selectedRegion] || locations[selectedRegion].length === 0}
-                >
-                  {locations[selectedRegion] && locations[selectedRegion].length > 0 ? (
-                    locations[selectedRegion].map((city) => (
-                      <option key={city.name} value={city.name}>{city.name}</option>
-                    ))
-                  ) : (
-                    <option value="">Aucune ville disponible</option>
-                  )}
+                <select className="w-full text-sm border border-[#333333]/20 rounded-xl p-2.5 text-[#333333] outline-none focus:border-[#333333] bg-white font-medium disabled:bg-gray-100" value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} disabled={!locations[selectedRegion] || locations[selectedRegion].length === 0}>
+                  {locations[selectedRegion] && locations[selectedRegion].length > 0 ? (locations[selectedRegion].map((city) => (<option key={city.name} value={city.name}>{city.name}</option>))) : (<option value="">Aucune ville disponible</option>)}
                 </select>
               </div>
 
               <div className="border border-[#333333]/10 rounded-xl divide-y divide-[#333333]/10 overflow-hidden bg-[#F9F6F4]">
                 <div className="p-3.5 flex items-start gap-3">
-                  <div className="p-2 bg-white border border-[#333333]/10 rounded-lg shrink-0">
-                    {deliveryMethod === "relais" ? <Package className="w-4 h-4 text-[#333333]" /> : <Home className="w-4 h-4 text-[#333333]" />}
-                  </div>
+                  <div className="p-2 bg-white border border-[#333333]/10 rounded-lg shrink-0">{deliveryMethod === "relais" ? <Package className="w-4 h-4 text-[#333333]" /> : <Home className="w-4 h-4 text-[#333333]" />}</div>
                   <div className="flex-1 w-full">
-                    <div className="flex justify-between items-center mb-1">
-                      <p className="text-xs font-extrabold text-[#333333]">
-                        {deliveryMethod === "relais" ? "Point relais" : "Livraison à domicile"}
-                      </p>
-                    </div>
-                    <p className="text-xs text-[#333333] mb-1 font-medium">
-                      Frais : <span className="font-bold text-[#6E857B]">{activeDeliveryPriceStr}</span>
-                    </p>
-                    <p className="text-xs text-[#333333]/70 leading-relaxed">
-                      {deliveryMethod === "relais" ? "Retrait à " : "Livraison à "} 
-                      <strong className="text-[#333333]">{selectedCity || "votre région"}</strong> sous 48h à 72h.
-                    </p>
+                    <p className="text-xs font-extrabold text-[#333333] mb-1">{deliveryMethod === "relais" ? "Point relais" : "Livraison à domicile"}</p>
+                    <p className="text-xs text-[#333333] mb-1 font-medium">Frais : <span className="font-bold text-[#6E857B]">{activeDeliveryPriceStr}</span></p>
+                    <p className="text-xs text-[#333333]/70 leading-relaxed">{deliveryMethod === "relais" ? "Retrait à " : "Livraison à "} <strong className="text-[#333333]">{selectedCity || "votre région"}</strong> sous 48h à 72h.</p>
                   </div>
                 </div>
-
                 <div className="p-3.5 flex items-start gap-3">
-                  <div className="p-2 bg-white border border-[#333333]/10 rounded-lg shrink-0">
-                    <RotateCcw className="w-4 h-4 text-[#333333]" />
-                  </div>
-                  <div className="flex-1 w-full">
-                    <p className="text-xs font-extrabold text-[#333333] mb-1">Politique de retour</p>
-                    <p className="text-xs text-[#333333]/70 leading-relaxed">
-                      Retours gratuits sur 10 jours (produits non ouverts).
-                    </p>
-                  </div>
+                  <div className="p-2 bg-white border border-[#333333]/10 rounded-lg shrink-0"><RotateCcw className="w-4 h-4 text-[#333333]" /></div>
+                  <div className="flex-1 w-full"><p className="text-xs font-extrabold text-[#333333] mb-1">Politique de retour</p><p className="text-xs text-[#333333]/70 leading-relaxed">Retours gratuits sur 10 jours.</p></div>
                 </div>
-
                 <div className="p-3.5 flex items-start gap-3">
-                  <div className="p-2 bg-white border border-[#333333]/10 rounded-lg shrink-0">
-                    <ShieldCheck className="w-4 h-4 text-[#333333]" />
-                  </div>
-                  <div className="flex-1 w-full">
-                    <p className="text-xs font-extrabold text-[#333333] mb-1">Garantie</p>
-                    <p className="text-xs text-[#333333]/70 leading-relaxed">
-                      12 Mois - Certifié sans substances nocives.
-                    </p>
-                  </div>
+                  <div className="p-2 bg-white border border-[#333333]/10 rounded-lg shrink-0"><ShieldCheck className="w-4 h-4 text-[#333333]" /></div>
+                  <div className="flex-1 w-full"><p className="text-xs font-extrabold text-[#333333] mb-1">Garantie</p><p className="text-xs text-[#333333]/70 leading-relaxed">12 Mois - Certifié sans substances nocives.</p></div>
                 </div>
               </div>
 
