@@ -13,7 +13,7 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 
 export default function FavorisPage() {
   const router = useRouter();
-  const { addToCart } = useCart();
+  const { addItem } = useCart() as any;
   const [favorites, setFavorites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,12 +33,22 @@ export default function FavorisPage() {
     setFavorites(favorites.filter(f => f.id !== id));
   };
 
+  // ✅ FIX BUILD: slug requis + types corrects
   const handleAddToCart = (product: any) => {
-    addToCart({ 
+    if (!product) return;
+    const rawImages = product.images || product.product_images || [];
+    const firstImg = Array.isArray(rawImages) 
+      ? (typeof rawImages[0] === 'string' ? rawImages[0] : rawImages[0]?.image_url || "/images/placeholder.png")
+      : "/images/placeholder.png";
+
+    addItem({ 
       id: product.id, 
       name: product.name, 
-      price: product.price, 
-      image: product.images?.[0] || "/images/placeholder.png"
+      slug: product.slug || product.handle || String(product.id),
+      price: Number(product.price) || 0,
+      priceFormatted: `${Number(product.price || 0).toFixed(2).replace(".",",")} €`,
+      image: firstImg,
+      quantity: 1
     });
   };
 
