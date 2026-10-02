@@ -14,556 +14,426 @@ import {
   Zap,
   X,
   RotateCcw,
+  Sparkles,
 } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
-import { useCart } from "@/context/cart-context"; // Importation du panier
+import { useCart } from "@/context/cart-context";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 const FLASH_SLOTS = [
-  { id: "current", label: "En ce moment", status: "Termine dans", time: "01:46:53", active: true },
-  { id: "slot-1", label: "Aujourd'hui 18:00", status: "À venir", time: "18:00", active: false },
-  { id: "slot-2", label: "Demain 09:00", status: "À venir", time: "09:00", active: false },
-  { id: "slot-3", label: "Demain 14:00", status: "À venir", time: "14:00", active: false },
+  { id: "current", label: "En ce moment", status: "Termine dans", active: true },
+  { id: "slot-1", label: "Aujourd'hui 18:00", status: "À venir", active: false },
+  { id: "slot-2", label: "Demain 09:00", status: "À venir", active: false },
 ];
 
-const CATEGORIES = [
-  "Tous les produits",
-  "Grossesse & Post-Partum",
-  "Soins & Tendresse",
-  "Allaitement & Confort",
-  "Bien-être & Vergetures",
-  "Repas & Repos",
-];
+const CATEGORIES = ["Tous les produits", "Bébé", "Maman"];
 
-const DISCOUNT_OPTIONS = [
-  { label: "Toutes les offres", value: 0 },
-  { label: "10% et plus", value: 10 },
-  { label: "20% et plus", value: 20 },
-  { label: "30% et plus", value: 30 },
-];
+// Composant interne de compte à rebours réel
+function LiveCountdown({ endsAt }: { endsAt: string | Date }) {
+  const [timeLeft, setTimeLeft] = useState({ h: 1, m: 46, s: 53, expired: false });
+
+  useEffect(() => {
+    const target = new Date(endsAt).getTime();
+    const tick = () => {
+      const diff = target - Date.now();
+      if (diff <= 0) {
+        setTimeLeft({ h: 0, m: 0, s: 0, expired: true });
+        return;
+      }
+      setTimeLeft({
+        h: Math.floor(diff / 3600000),
+        m: Math.floor((diff % 3600000) / 60000),
+        s: Math.floor((diff % 60000) / 1000),
+        expired: false,
+      });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [endsAt]);
+
+  if (timeLeft.expired) return <span className="text-xs font-bold text-red-400">Expiré</span>;
+
+  return (
+    <span className="font-mono text-sm font-bold tracking-wider text-white">
+      {String(timeLeft.h).padStart(2, "0")}h : {String(timeLeft.m).padStart(2, "0")}m : {String(timeLeft.s).padStart(2, "0")}s
+    </span>
+  );
+}
 
 export default function VentesFlashPage() {
   const { addItem } = useCart() as any;
-
-  // États dynamiques
   const [flashProducts, setFlashProducts] = useState<any[]>([]);
+  const [flashEndsAt, setFlashEndsAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // États de filtrage et de recherche
   const [selectedSlot, setSelectedSlot] = useState("current");
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Tous les produits");
   const [searchQuery, setSearchQuery] = useState("");
-  const [minDiscount, setMinDiscount] = useState<number>(0);
-  const [minRating, setMinRating] = useState<number>(0);
   const [sortBy, setSortBy] = useState("Les plus demandés");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // Charger les produits flash depuis Supabase
   useEffect(() => {
-    async function fetchFlashProducts() {
-      const { data, error } = await supabase
+    async function fetchData() {
+      // 1. Récupère la vente flash active et sa fin
+      const { data: flash } = await supabase
+        .from("flash_sales")
+        .select("ends_at")
+        .eq("slot_label", "En ce moment")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (flash?.ends_at) {
+        setFlashEndsAt(flash.ends_at);
+      } else {
+        setFlashEndsAt(new Date(Date.now() + 2 * 3600000).toISOString());
+      }
+
+      // 2. Récupération des produits flash (-10%)
+      const { data } = await supabase
         .from("products")
         .select(`
-          id,
-          name,
-          slug,
-          price,
-          promo_price,
-          stock,
-          description,
+          id, name, slug, price, promo_price, flash_sale_ends_at, stock, description,
           categories ( name, slug ),
           product_images ( image_url, is_primary, position )
         `)
         .eq("is_flash_sale", true)
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .limit(8);
 
-      if (error) {
-        console.error("Erreur de chargement des ventes flash :", error);
-      } else if (data) {
+      if (data) {
         const formatted = data.map((item: any) => {
-          const images = [...(item.product_images ?? [])].sort((a, b) => a.position - b.position);
-          const rawImg = images.find((img) => img.is_primary)?.image_url ?? images[0]?.image_url ?? "placeholder.jpg";
-          const fileName = rawImg.includes("/") ? rawImg.split("/").pop() : rawImg;
-          const imageUrl = `https://cbvpxrhiurdjhzdpyceb.supabase.co/storage/v1/object/public/aurae-images/${fileName}`;
-
-          const originalPrice = Number(item.price);
-          const promoPrice = item.promo_price ? Number(item.promo_price) : originalPrice * 0.75;
-          const discountPercent = Math.round(((originalPrice - promoPrice) / originalPrice) * 100);
-
-          const catSlug = item.categories?.slug || "maternite";
-
+          const images = [...(item.product_images ?? [])].sort((a: any, b: any) => a.position - b.position);
+          const raw = images.find((i: any) => i.is_primary)?.image_url ?? images[0]?.image_url ?? "";
+          const imageUrl = raw.startsWith("http") ? raw : `/placeholder.jpg`;
+          const original = Number(item.price);
+          const promo = Number(item.promo_price || (original * 0.9).toFixed(2));
+          const universe = item.categories?.slug === "bebe" || item.name.toLowerCase().includes("culotte") || item.name.toLowerCase().includes("maillot") || item.name.toLowerCase().includes("matelas") ? "Bébé" : "Maman";
+          
           return {
             id: item.id,
             name: item.name,
             slug: item.slug,
-            category: item.categories?.name || "Grossesse & Post-Partum",
-            universe: catSlug === "bebe" ? "Bébé" : "Maman",
-            universeColor: catSlug === "bebe" ? "bg-[#6E857B]" : "bg-[#E8C5C8]",
-            universeText: catSlug === "bebe" ? "text-white" : "text-[#333333]",
-            price: `${promoPrice.toFixed(2).replace(".", ",")} €`,
-            numericPrice: promoPrice,
-            oldPrice: `${originalPrice.toFixed(2).replace(".", ",")} €`,
-            discount: `-${discountPercent}%`,
-            rating: 5,
-            reviewsCount: Math.floor(Math.random() * 50) + 10,
+            category: universe,
+            universe,
+            universeColor: universe === "Bébé" ? "bg-[#6E857B]" : "bg-[#E8C5C8]",
+            universeText: universe === "Bébé" ? "text-white" : "text-[#333]",
+            price: `${promo.toFixed(2).replace(".", ",")} €`,
+            numericPrice: promo,
+            oldPrice: `${original.toFixed(2).replace(".", ",")} €`,
+            originalNumeric: original,
+            discount: `-10%`,
             image: imageUrl,
-            detailUrl: `/shop/${catSlug}/${item.slug}`,
-            stockLeft: item.stock || 10,
-            stockTotal: 40,
+            detailUrl: `/shop/${item.categories?.slug || "maternite"}/${item.slug}`,
+            stockLeft: Math.floor((item.stock || 40) * 0.25),
+            stockTotal: item.stock || 40,
+            rating: 5,
+            reviewsCount: Math.floor(Math.random() * 40) + 15,
+            ends_at: item.flash_sale_ends_at || flash?.ends_at,
           };
         });
-
         setFlashProducts(formatted);
       }
       setLoading(false);
     }
-
-    fetchFlashProducts();
+    fetchData();
   }, []);
 
-  // Fonction de réinitialisation globale
+  const filtered = useMemo(() => {
+    return flashProducts
+      .filter((p) => {
+        if (selectedCategory !== "Tous les produits" && p.category !== selectedCategory) return false;
+        if (searchQuery && !p.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        if (sortBy === "Prix : Croissant") return a.numericPrice - b.numericPrice;
+        if (sortBy === "Prix : Décroissant") return b.numericPrice - a.numericPrice;
+        return 0;
+      });
+  }, [flashProducts, selectedCategory, searchQuery, sortBy]);
+
   const handleResetFilters = () => {
     setSelectedCategory("Tous les produits");
     setSearchQuery("");
-    setMinDiscount(0);
-    setMinRating(0);
     setSortBy("Les plus demandés");
   };
 
-  const handleAddToCart = (product: any) => {
-    if (addItem) {
-      addItem({
-        id: product.id,
-        name: product.name,
-        slug: product.slug,
-        price: product.numericPrice,
-        priceFormatted: product.price,
-        image: product.image,
-        quantity: 1,
-      });
-    }
-  };
-
-  // Filtrage et Tri dynamique
-  const filteredProducts = useMemo(() => {
-    return flashProducts.filter((product) => {
-      if (selectedCategory !== "Tous les produits" && product.category !== selectedCategory) {
-        return false;
-      }
-
-      if (searchQuery.trim() !== "") {
-        const query = searchQuery.toLowerCase();
-        const matchName = product.name.toLowerCase().includes(query);
-        const matchCategory = product.category.toLowerCase().includes(query);
-        if (!matchName && !matchCategory) return false;
-      }
-
-      if (minDiscount > 0) {
-        const discountVal = Math.abs(parseInt(product.discount.replace("%", "").replace("-", ""), 10)) || 0;
-        if (discountVal < minDiscount) return false;
-      }
-
-      if (minRating > 0 && product.rating < minRating) {
-        return false;
-      }
-
-      return true;
-    }).sort((a, b) => {
-      const getNumericPrice = (p: string) => parseFloat(p.replace(",", ".").replace(/[^\d.]/g, ""));
-      const getNumericDiscount = (d: string) => Math.abs(parseInt(d.replace("%", "").replace("-", ""), 10)) || 0;
-
-      if (sortBy === "Prix : Croissant") {
-        return getNumericPrice(a.price) - getNumericPrice(b.price);
-      }
-      if (sortBy === "Prix : Décroissant") {
-        return getNumericPrice(b.price) - getNumericPrice(a.price);
-      }
-      if (sortBy === "Meilleures remises") {
-        return getNumericDiscount(b.discount) - getNumericDiscount(a.discount);
-      }
-      return 0;
-    });
-  }, [flashProducts, selectedCategory, searchQuery, minDiscount, minRating, sortBy]);
-
-  const hasActiveFilters =
-    selectedCategory !== "Tous les produits" ||
-    searchQuery !== "" ||
-    minDiscount > 0 ||
-    minRating > 0;
+  const hasActiveFilters = selectedCategory !== "Tous les produits" || searchQuery !== "";
 
   return (
-    <main className="min-h-screen bg-[#FAFAFA] text-[#333333] pt-24">
-      {/* HEADER DE PAGE */}
-      <div className="border-b border-[#333333]/10 bg-white py-6">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#D4A396] text-white">
-                  <Zap className="h-3.5 w-3.5 fill-current" />
-                </span>
-                <h1 className="text-xl font-bold tracking-tight text-[#333333] sm:text-2xl">
-                  Ventes Flash AURAE
-                </h1>
-              </div>
-              <p className="mt-1 text-xs text-[#333333]/60">
-                Offres exclusives à durée et stock limités.
-              </p>
-            </div>
-
-            {/* BREADCRUMB */}
-            <nav className="text-xs text-[#333333]/50">
-              <Link href="/" className="hover:text-[#333333]">
-                Accueil
-              </Link>
-              <span className="mx-2">/</span>
-              <span className="font-semibold text-[#333333]">Ventes Flash</span>
-            </nav>
+    <main className="min-h-screen bg-[#FAFAFA] pt-24 text-[#333333]">
+      <div className="border-b bg-white py-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#D4A396] text-white">
+              <Zap className="h-3.5 w-3.5 fill-current" />
+            </span>
+            <h1 className="text-xl font-bold">Ventes Flash ECLOSIA -10%</h1>
           </div>
+          <nav className="text-xs text-[#333333]/50">
+            <Link href="/">Accueil</Link> / <span className="font-semibold text-[#333]">Ventes Flash</span>
+          </nav>
         </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        {/* BANNIÈRE TOP FLASH */}
+        <div className="mb-6 overflow-hidden rounded-2xl border bg-white shadow-sm">
+          <div className="flex flex-col items-center justify-between gap-4 bg-[#333333] p-4 text-white sm:flex-row">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#D4A396]">
+                <Zap className="h-4 w-4 fill-current" />
+              </span>
+              <div>
+                <h2 className="font-bold">Vente Flash -10% en cours</h2>
+                <p className="text-[11px] text-white/70">{filtered.length} produits sélectionnés • Stock limité</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2">
+              <Clock3 className="h-4 w-4 text-[#D4A396]" />
+              <span className="text-xs text-white/80">Termine dans :</span>
+              {flashEndsAt && <LiveCountdown endsAt={flashEndsAt} />}
+            </div>
+          </div>
+          
+          <div className="flex overflow-x-auto border-b bg-[#F5EBE6]/50">
+            {FLASH_SLOTS.map((slot) => (
+              <button
+                key={slot.id}
+                onClick={() => setSelectedSlot(slot.id)}
+                className={`flex min-w-[140px] flex-1 flex-col items-center border-b-2 px-4 py-3 ${
+                  selectedSlot === slot.id ? "border-[#D4A396] bg-white font-bold" : "border-transparent text-[#333]/60"
+                }`}
+              >
+                <span className="text-xs">{slot.label}</span>
+                <span className="text-[10px] text-[#6E857B]">{slot.status}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* LAYOUT PRINCIPAL AVEC SIDEBAR */}
         <div className="flex gap-8">
-          {/* =====================================================
-              SIDEBAR : FILTRES (GAUCHE)
-          ====================================================== */}
+          
+          {/* ================= SIDEBAR CAPTIVANTE (Desktop & Mobile Drawer) ================= */}
           <aside
-            className={`fixed inset-y-0 left-0 z-50 w-72 transform overflow-y-auto bg-white p-6 shadow-2xl transition-transform duration-300 lg:static lg:z-0 lg:w-64 lg:shrink-0 lg:translate-x-0 lg:overflow-visible lg:rounded-2xl lg:border lg:border-[#333333]/10 lg:p-5 lg:shadow-none ${
-              showMobileFilters
-                ? "translate-x-0"
-                : "-translate-x-full lg:translate-x-0"
+            className={`fixed inset-y-0 left-0 z-50 w-72 transform overflow-y-auto bg-white p-6 shadow-2xl transition-transform duration-300 lg:static lg:z-0 lg:w-64 lg:shrink-0 lg:translate-x-0 lg:rounded-2xl lg:border lg:border-[#333333]/10 lg:p-5 lg:shadow-sm ${
+              showMobileFilters ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
             }`}
           >
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-[#333333]">
-                Filtres
-              </h2>
-              {hasActiveFilters && (
-                <button
-                  type="button"
-                  onClick={handleResetFilters}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-[#D4A396] transition-colors hover:text-[#333333]"
-                >
-                  <RotateCcw className="h-3 w-3" />
-                  Effacer
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setShowMobileFilters(false)}
-                className="rounded-lg p-1 text-[#333333]/60 hover:bg-gray-100 lg:hidden"
-              >
-                <X className="h-4 w-4" />
+            <div className="mb-6 flex items-center justify-between lg:hidden">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#333]">Filtres & Univers</h2>
+              <button onClick={() => setShowMobileFilters(false)} className="rounded-lg p-1 text-[#333]/60 hover:bg-gray-100">
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* CATEGORIES */}
-            <div className="mb-6">
-              <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#333333]/60">
-                Catégorie
-              </h3>
-              <ul className="space-y-1 text-xs">
-                {CATEGORIES.map((cat) => (
-                  <li key={cat}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedCategory(cat);
-                        setShowMobileFilters(false);
-                      }}
-                      className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 transition-colors ${
-                        selectedCategory === cat
-                          ? "bg-[#F5EBE6] font-semibold text-[#333333]"
-                          : "text-[#333333]/70 hover:bg-gray-50 hover:text-[#333333]"
-                      }`}
-                    >
-                      <span>{cat}</span>
-                      {selectedCategory === cat && (
-                        <Check className="h-3.5 w-3.5 text-[#D4A396]" />
-                      )}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+            {/* CARTE D'UNIVERS CAPTIVANTE */}
+            <div className="mb-6 rounded-2xl bg-gradient-to-br from-[#F5EBE6] to-[#E8C5C8]/30 p-4 border border-[#D4A396]/20">
+              <div className="flex items-center gap-2 mb-2 text-[#333]">
+                <Sparkles className="h-4 w-4 text-[#D4A396]" />
+                <span className="text-xs font-bold uppercase tracking-wider">Univers ECLOSIA</span>
+              </div>
+              <p className="text-[11px] text-[#333]/70 leading-relaxed">
+                Filtrez instantanément nos pépites pour Maman & Bébé à prix flash.
+              </p>
             </div>
 
-            <hr className="my-5 border-[#333333]/10" />
-
-            {/* RECHERCHE */}
+            {/* RECHERCHE RAPIDE DANS LA SIDEBAR */}
             <div className="mb-6">
-              <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#333333]/60">
-                Rechercher
-              </h3>
+              <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-[#333]/60">Recherche</h3>
               <div className="relative">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Chercher un produit..."
-                  className="w-full rounded-xl border border-[#333333]/15 bg-white py-2 pl-9 pr-8 text-xs text-[#333333] placeholder-[#333333]/40 focus:border-[#D4A396] focus:outline-none"
+                  placeholder="Rechercher un article..."
+                  className="w-full rounded-xl border border-[#333333]/15 bg-white py-2 pl-9 pr-8 text-xs text-[#333] placeholder-[#333]/40 focus:border-[#D4A396] focus:outline-none"
                 />
-                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#333333]/40" />
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#333]/40" />
                 {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-2.5 top-2.5 text-[#333333]/40 hover:text-[#333333]"
-                  >
+                  <button onClick={() => setSearchQuery("")} className="absolute right-2.5 top-2.5 text-[#333]/40 hover:text-[#333]">
                     <X className="h-3.5 w-3.5" />
                   </button>
                 )}
               </div>
             </div>
 
-            <hr className="my-5 border-[#333333]/10" />
+            <hr className="my-5 border-gray-100" />
 
-            {/* REMISES */}
+            {/* CATEGORIES / UNIVERS EN SIDEBAR */}
             <div className="mb-6">
-              <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#333333]/60">
-                Remise minimale
-              </h3>
-              <div className="space-y-2 text-xs">
-                {DISCOUNT_OPTIONS.map((opt) => (
-                  <label
-                    key={opt.value}
-                    className="flex cursor-pointer items-center gap-2.5 text-[#333333]/80 transition-colors hover:text-[#333333]"
-                  >
-                    <input
-                      type="radio"
-                      name="discount"
-                      checked={minDiscount === opt.value}
-                      onChange={() => setMinDiscount(opt.value)}
-                      className="h-3.5 w-3.5 accent-[#6E857B]"
-                    />
-                    <span
-                      className={
-                        minDiscount === opt.value ? "font-semibold text-[#333333]" : ""
-                      }
+              <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-[#333]/60">Filtrer par Univers</h3>
+              <div className="space-y-1.5">
+                {CATEGORIES.map((cat) => {
+                  const isActive = selectedCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => {
+                        setSelectedCategory(cat);
+                        setShowMobileFilters(false);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-all ${
+                        isActive
+                          ? "bg-[#333] text-white shadow-md shadow-[#333]/10"
+                          : "bg-gray-50 text-[#333]/80 hover:bg-[#F5EBE6]/60 hover:text-[#333]"
+                      }`}
                     >
-                      {opt.label}
-                    </span>
-                  </label>
-                ))}
+                      <span className="flex items-center gap-2">
+                        <span className={`h-2 w-2 rounded-full ${isActive ? "bg-[#D4A396]" : "bg-gray-300"}`} />
+                        {cat}
+                      </span>
+                      {isActive && <Check className="h-3.5 w-3.5 text-[#D4A396]" />}
+                    </button>
+                  );
+                })}
               </div>
             </div>
+
+            {/* BOUTON RESET FILTRES SI ACTIFS */}
+            {hasActiveFilters && (
+              <button
+                onClick={handleResetFilters}
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#D4A396] py-2.5 text-xs font-semibold text-[#333] transition-colors hover:bg-[#F5EBE6]/40"
+              >
+                <RotateCcw className="h-3.5 w-3.5 text-[#D4A396]" /> Réinitialiser les filtres
+              </button>
+            )}
           </aside>
 
+          {/* Overlay mobile pour fermer le tiroir de filtres */}
           {showMobileFilters && (
-            <div
-              className="fixed inset-0 z-40 bg-black/40 lg:hidden"
-              onClick={() => setShowMobileFilters(false)}
-            />
+            <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden" onClick={() => setShowMobileFilters(false)} />
           )}
 
-          {/* =====================================================
-              SECTION PRINCIPALE (DROITE)
-          ====================================================== */}
+          {/* ================= CONTENEUR PRINCIPAL DES PRODUITS ================= */}
           <div className="min-w-0 flex-1">
-            <div className="overflow-hidden rounded-2xl border border-[#333333]/10 bg-white shadow-sm">
-              <div className="bg-[#333333] p-4 text-white sm:p-5">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#D4A396] text-white">
-                      <Zap className="h-4 w-4 fill-current" />
-                    </span>
-                    <div>
-                      <h2 className="text-base font-bold sm:text-lg">
-                        Ventes Flash en cours
-                      </h2>
-                      <p className="text-[11px] text-white/70">
-                        {filteredProducts.length} offre(s) disponible(s)
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3.5 py-2 backdrop-blur-sm">
-                    <Clock3 className="h-4 w-4 text-[#D4A396]" />
-                    <span className="text-xs text-white/80">Termine dans :</span>
-                    <span className="font-mono text-sm font-bold tracking-wider text-white">
-                      01h : 46m : 53s
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex overflow-x-auto border-b border-[#333333]/10 bg-[#F5EBE6]/50 [scrollbar-width:none]">
-                {FLASH_SLOTS.map((slot) => (
-                  <button
-                    key={slot.id}
-                    type="button"
-                    onClick={() => setSelectedSlot(slot.id)}
-                    className={`flex min-w-[140px] flex-1 flex-col items-center border-b-2 px-4 py-3 text-center transition-all ${
-                      selectedSlot === slot.id
-                        ? "border-[#D4A396] bg-white font-bold text-[#333333]"
-                        : "border-transparent text-[#333333]/60 hover:text-[#333333]"
-                    }`}
-                  >
-                    <span className="text-xs">{slot.label}</span>
-                    <span className="mt-0.5 text-[10px] font-medium text-[#6E857B]">
-                      {slot.status}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-5 flex items-center justify-between gap-3">
+            
+            {/* BARRE DE CONTRÔLE (Bouton Filtre Mobile + Sélecteur de Tri) */}
+            <div className="mb-5 flex items-center justify-between gap-3">
               <button
-                type="button"
                 onClick={() => setShowMobileFilters(true)}
-                className="inline-flex items-center gap-2 rounded-xl border border-[#333333]/15 bg-white px-3.5 py-2 text-xs font-semibold text-[#333333] lg:hidden"
+                className="inline-flex items-center gap-2 rounded-xl border border-[#333333]/15 bg-white px-4 py-2 text-xs font-semibold text-[#333] shadow-sm lg:hidden"
               >
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                Filtres
-                {hasActiveFilters && (
-                  <span className="h-2 w-2 rounded-full bg-[#D4A396]" />
-                )}
+                <SlidersHorizontal className="h-3.5 w-3.5 text-[#D4A396]" />
+                Filtres & Univers
+                {hasActiveFilters && <span className="h-2 w-2 rounded-full bg-[#D4A396]" />}
               </button>
 
-              <p className="hidden text-xs text-[#333333]/60 sm:block">
-                Affichage de{" "}
-                <span className="font-bold text-[#333333]">
-                  {filteredProducts.length}
-                </span>{" "}
-                résultat(s)
+              <p className="hidden text-xs text-[#333]/60 sm:block">
+                Affichage de <span className="font-bold text-[#333]">{filtered.length}</span> produit(s) flash
               </p>
 
               <div className="ml-auto flex items-center gap-2">
-                <span className="hidden text-xs text-[#333333]/60 sm:inline">
-                  Trier par :
-                </span>
+                <span className="hidden text-xs text-[#333]/60 sm:inline">Trier par :</span>
                 <div className="relative">
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="appearance-none rounded-xl border border-[#333333]/15 bg-white py-2 pl-3 pr-8 text-xs font-semibold text-[#333333] focus:outline-none"
+                    className="appearance-none rounded-xl border border-[#333333]/15 bg-white py-2 pl-3 pr-8 text-xs font-semibold text-[#333] focus:outline-none"
                   >
-                    <option value="Les plus demandés">Les plus demandés</option>
-                    <option value="Prix : Croissant">Prix : Croissant</option>
-                    <option value="Prix : Décroissant">Prix : Décroissant</option>
-                    <option value="Meilleures remises">Meilleures remises</option>
+                    <option>Les plus demandés</option>
+                    <option>Prix : Croissant</option>
+                    <option>Prix : Décroissant</option>
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-2.5 top-2.5 h-3.5 w-3.5 text-[#333333]/50" />
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-2.5 h-3.5 w-3.5 text-[#333]/50" />
                 </div>
               </div>
             </div>
 
-            {/* GRILLE DES PRODUITS */}
+            {/* GRILLE PRODUITS */}
             {loading ? (
-              <div className="mt-12 flex justify-center py-12">
-                <p className="text-xs font-bold text-[#333333]/60 animate-pulse">Chargement des ventes flash...</p>
+              <div className="py-20 text-center">
+                <p className="animate-pulse text-xs font-bold text-[#333]/60">Chargement de votre sélection flash...</p>
               </div>
-            ) : filteredProducts.length > 0 ? (
-              <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredProducts.map((product) => {
-                  const stockPercentage = Math.round(
-                    ((product.stockTotal - product.stockLeft) / product.stockTotal) * 100
-                  );
-
+            ) : filtered.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-[#333]/15 bg-white p-12 text-center">
+                <p className="text-sm font-semibold text-[#333]">Aucun produit ne correspond à votre filtre.</p>
+                <button
+                  onClick={handleResetFilters}
+                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#333] px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-[#D4A396]"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" /> Voir tous les produits flash
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-3">
+                {filtered.map((product) => {
+                  const pct = Math.round(((product.stockTotal - product.stockLeft) / product.stockTotal) * 100);
                   return (
                     <article
                       key={product.id}
-                      className="group relative flex flex-col overflow-hidden rounded-2xl border border-[#333333]/10 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                      className="group relative flex flex-col overflow-hidden rounded-2xl border border-[#333]/10 bg-white transition-all hover:-translate-y-1 hover:shadow-lg"
                     >
-                      <span className="absolute left-3 top-3 z-20 rounded-full bg-[#333333] px-2.5 py-1 text-[9px] font-bold tracking-wide text-white pointer-events-none">
+                      <span className="absolute left-3 top-3 z-20 rounded-full bg-[#333] px-2.5 py-1 text-[9px] font-bold text-white">
                         {product.discount}
                       </span>
-
-                      <span
-                        className={`absolute right-3 top-3 z-20 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide pointer-events-none ${product.universeColor} ${product.universeText}`}
-                      >
+                      <span className={`absolute right-3 top-3 z-20 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase ${product.universeColor} ${product.universeText}`}>
                         {product.universe}
                       </span>
-
-                      {/* IMAGE CLIQUABLE DIRIGEANT VERS LA PAGE DE DÉTAIL */}
-                      <Link
-                        href={product.detailUrl}
-                        className="relative block aspect-square w-full overflow-hidden bg-[#F5EBE6]/45 cursor-pointer"
-                        aria-label={`Voir les détails de ${product.name}`}
-                      >
+                      
+                      <Link href={product.detailUrl} className="relative block aspect-square bg-[#F5EBE6]/45">
                         <Image
                           src={product.image}
                           alt={product.name}
                           fill
                           unoptimized
-                          sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 25vw"
-                          className="object-contain p-5 transition-transform duration-700 ease-out group-hover:scale-105"
+                          className="object-contain p-5 transition-transform duration-700 group-hover:scale-105"
                         />
                       </Link>
 
-                      <div className="flex flex-1 flex-col p-3.5 sm:p-4">
-                        <p className="mb-1 line-clamp-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#6E857B]">
-                          {product.category}
-                        </p>
-
-                        {/* TITRE CLIQUABLE DIRIGEANT VERS LA PAGE DE DÉTAIL */}
-                        <Link href={product.detailUrl}>
-                          <h3 className="line-clamp-2 min-h-[36px] text-xs font-semibold leading-4 text-[#333333] transition-colors group-hover:text-[#6E857B] hover:underline">
-                            {product.name}
-                          </h3>
-                        </Link>
-
-                        <div className="mt-2 flex items-center gap-1">
-                          <div className="flex items-center gap-0.5">
-                            {Array.from({ length: product.rating }, (_, index) => (
-                              <Star key={index} className="h-3 w-3 fill-current text-[#D4A396]" />
-                            ))}
-                          </div>
-                          <span className="text-[10px] text-[#333333]/40">({product.reviewsCount})</span>
+                      <div className="flex flex-1 flex-col p-4">
+                        <h3 className="min-h-[32px] text-xs font-semibold line-clamp-2">{product.name}</h3>
+                        <div className="mt-2 flex gap-0.5">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star key={i} className="h-3 w-3 fill-current text-[#D4A396]" />
+                          ))}
+                          <span className="ml-1 text-[10px] text-[#333]/40">({product.reviewsCount})</span>
                         </div>
-
                         <div className="mt-3 flex items-baseline gap-2">
-                          <span className="text-base font-bold text-[#333333]">{product.price}</span>
-                          <span className="text-xs text-[#333333]/40 line-through">{product.oldPrice}</span>
+                          <span className="font-bold">{product.price}</span>
+                          <span className="text-xs line-through text-[#333]/40">{product.oldPrice}</span>
                         </div>
-
                         <div className="mt-3">
-                          <div className="mb-1 flex items-center justify-between text-[10px] font-medium text-[#333333]/70">
-                            <span>Stock restant</span>
-                            <span className="font-bold text-[#D4A396]">{product.stockLeft} articles</span>
+                          <div className="mb-1 flex justify-between text-[10px]">
+                            <span>Stock</span>
+                            <span className="font-bold text-[#D4A396]">{product.stockLeft} restants</span>
                           </div>
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#333333]/10">
-                            <div
-                              className="h-full rounded-full bg-[#D4A396] transition-all duration-500"
-                              style={{ width: `${stockPercentage}%` }}
-                            />
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#333]/10">
+                            <div className="h-full bg-[#D4A396]" style={{ width: `${pct}%` }} />
                           </div>
                         </div>
-
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleAddToCart(product);
-                          }}
-                          aria-label={`Ajouter ${product.name} au panier`}
-                          className="relative z-20 mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#333333] py-2.5 text-xs font-semibold text-white transition-all hover:bg-[#D4A396] active:scale-95"
+                          onClick={() =>
+                            addItem &&
+                            addItem({
+                              id: product.id,
+                              name: product.name,
+                              slug: product.slug,
+                              price: product.numericPrice,
+                              original_price: product.originalNumeric,
+                              priceFormatted: product.price,
+                              image: product.image,
+                              quantity: 1,
+                              is_flash_sale: true,
+                            })
+                          }
+                          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#333] py-2.5 text-xs font-semibold text-white transition-all hover:bg-[#D4A396]"
                         >
-                          <ShoppingBag className="h-3.5 w-3.5" />
-                          Ajouter au panier
+                          <ShoppingBag className="h-3.5 w-3.5" /> Ajouter
                         </button>
                       </div>
                     </article>
                   );
                 })}
-              </div>
-            ) : (
-              <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#333333]/20 bg-white p-12 text-center">
-                <p className="text-sm font-semibold text-[#333333]">
-                  Aucun produit en vente flash ne correspond à vos critères.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleResetFilters}
-                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#333333] px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-[#D4A396]"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  Réinitialiser les filtres
-                </button>
               </div>
             )}
           </div>

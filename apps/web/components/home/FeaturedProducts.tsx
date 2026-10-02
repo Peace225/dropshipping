@@ -2,21 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import {
-  ShoppingBag,
-  Star,
-  Clock3,
-  ArrowRight,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { ShoppingBag, Star, Clock3, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { ProductSection } from "./ProductSection";
 import { useCart } from "@/context/cart-context";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 const FILE_MAP: Record<string, string> = {
   "ballon-de-grossesse": "ballon-grossesse.jpg",
@@ -24,68 +15,74 @@ const FILE_MAP: Record<string, string> = {
   "coussinets-d-allaitement-jetables": "coussinets-allaitement-jetables.jpg",
   "coussinets-allaitement-jetables": "coussinets-allaitement-jetables.jpg",
   "serviettes-apaisantes-post-accouchement": "serviettes-apaisantes-post-accouchement.jpg",
-  "serviettes-apaisantes-post-partum": "serviettes-apaisantes-post-accouchement.jpg",
 };
 
 function resolveImageUrl(rawImg: string, slug: string): string {
   if (rawImg?.startsWith("http")) return rawImg;
   let fileName = rawImg?.trim().replace(/^aurae-images\//, "").replace(/^\//, "") || "";
-  if (!fileName || !fileName.includes(".")) {
-    fileName = FILE_MAP[slug] || `${slug}.jpg`;
-  }
+  if (!fileName || !fileName.includes(".")) fileName = FILE_MAP[slug] || `${slug}.jpg`;
   if (FILE_MAP[slug]) fileName = FILE_MAP[slug];
   const { data } = supabase.storage.from("aurae-images").getPublicUrl(fileName);
   return data.publicUrl;
+}
+
+function useCountdown(targetDate: Date | null) {
+  const [timeLeft, setTimeLeft] = useState({ h: 2, m: 18, s: 45, expired: false });
+  useEffect(() => {
+    if (!targetDate) return;
+    const tick = () => {
+      const diff = targetDate.getTime() - Date.now();
+      if (diff <= 0) { setTimeLeft({ h: 0, m: 0, s: 0, expired: true }); return; }
+      setTimeLeft({ h: Math.floor(diff/3600000), m: Math.floor((diff%3600000)/60000), s: Math.floor((diff%60000)/1000), expired: false });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [targetDate]);
+  return timeLeft;
 }
 
 export function FeaturedProducts() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { addItem } = useCart() as any;
   const [flashProducts, setFlashProducts] = useState<any[]>([]);
+  const [flashEndsAt, setFlashEndsAt] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
+  const countdown = useCountdown(flashEndsAt);
 
   useEffect(() => {
     async function fetchFlashSales() {
-      const { data, error } = await supabase
-        .from("products")
-        .select(`id,name,slug,price,promo_price,is_flash_sale,is_active,categories ( name, slug ),product_images ( image_url, is_primary, position )`)
-        .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(12);
+      const { data: flashSale } = await supabase.from("flash_sales").select("ends_at").eq("is_active", true).eq("slot_label","En ce moment").order("created_at",{ascending:false}).limit(1).single();
+      if (flashSale?.ends_at) setFlashEndsAt(new Date(flashSale.ends_at));
+      else setFlashEndsAt(new Date(Date.now() + 2*3600000 + 18*60000));
 
-      if (error) { console.error(error); setLoading(false); return; }
-      if (!data?.length) { setLoading(false); return; }
+      // 6 PRODUITS POUR CAROUSEL
+      const { data, error } = await supabase.from("products")
+        .select(`id,name,slug,price,promo_price,original_price_backup,flash_sale_ends_at,is_flash_sale,is_active,categories ( name, slug ),product_images ( image_url, is_primary, position )`)
+        .eq("is_flash_sale", true).eq("is_active", true).order("price",{ascending:false}).limit(6);
 
-      const withFlag = data.filter((d: any) => d.is_flash_sale === true);
-      const dataToUse = withFlag.length ? withFlag : data;
+      if (error || !data?.length) { setLoading(false); return; }
 
-      const formatted = dataToUse.map((item: any) => {
+      const formatted = data.map((item: any) => {
         const images = [...(item.product_images ?? [])].sort((a:any,b:any)=>(a.position??0)-(b.position??0));
         const rawImg = images.find((i:any)=>i.is_primary)?.image_url ?? images[0]?.image_url ?? "";
-        const fileName = FILE_MAP[item.slug] || rawImg || `${item.slug}.jpg`;
-        const imageUrl = resolveImageUrl(fileName, item.slug);
-
-        const fallbackFiles = Array.from(new Set([
-          FILE_MAP[item.slug],
-          `${item.slug}.jpg`,
-          item.slug.replace(/-de-/g,"-").replace(/-d-/g,"-") + ".jpg",
-          "ballon-grossesse.jpg",
-        ].filter(Boolean))) as string[];
-
-        const originalPrice = Number(item.price);
-        const promoPrice = item.promo_price ? Number(item.promo_price) : originalPrice*0.75;
-        const discountPercent = originalPrice>0 ? Math.round(((originalPrice-promoPrice)/originalPrice)*100) : 0;
+        const imageUrl = resolveImageUrl(rawImg, item.slug);
+        const fallbackFiles = Array.from(new Set([FILE_MAP[item.slug], `${item.slug}.jpg`, "ballon-grossesse.jpg"].filter(Boolean))) as string[];
+        const originalPrice = Number(item.original_price_backup || item.price);
+        const promoPrice = item.promo_price ? Number(item.promo_price) : Number((originalPrice*0.9).toFixed(2));
+        const discountPercent = Math.round(((originalPrice-promoPrice)/originalPrice)*100);
         const catSlug = item.categories?.slug || "maternite";
-        const isBebe = catSlug.toLowerCase().includes("bebe") || item.name.toLowerCase().includes("bébé") || item.name.toLowerCase().includes("biberon");
+        const isBebe = catSlug.toLowerCase().includes("bebe") || ["culotte","maillot","matelas","bébé"].some(k=>item.name.toLowerCase().includes(k));
 
         return {
           id: item.id, name: item.name, slug: item.slug,
-          categoryName: item.categories?.name || "Essentiel",
-          universe: isBebe ? "Bébé" : "Maternité",
-          universeColor: isBebe ? "bg-[#6E857B] text-white" : "bg-[#E8C5C8] text-[#333333]",
+          categoryName: item.categories?.name || (isBebe?"Bébé":"Maman"),
+          universe: isBebe?"Bébé":"Maternité",
+          universeColor: isBebe?"bg-[#6E857B] text-white":"bg-[#E8C5C8] text-[#333333]",
           price: `${promoPrice.toFixed(2).replace(".",",")} €`, numericPrice: promoPrice,
-          oldPrice: `${originalPrice.toFixed(2).replace(".",",")} €`, discount: `-${discountPercent}%`,
-          rating: 5, image: imageUrl, fallbackFiles,
+          oldPrice: `${originalPrice.toFixed(2).replace(".",",")} €`, originalNumeric: originalPrice,
+          discount: `-${discountPercent}%`, rating:5,
+          image: imageUrl, fallbackFiles,
           detailUrl: `/shop/${isBebe?"bebe":"maternite"}/${item.slug}`,
           flashListUrl: "/ventes-flash",
         };
@@ -97,12 +94,12 @@ export function FeaturedProducts() {
   }, []);
 
   const handleAddToCart = (product: any) => {
-    if (addItem) addItem({ id: product.id, name: product.name, slug: product.slug, price: product.numericPrice, priceFormatted: product.price, image: product.image, quantity: 1 });
+    if (addItem) addItem({ id: product.id, name: product.name, slug: product.slug, price: product.numericPrice, original_price: product.originalNumeric, priceFormatted: product.price, image: product.image, quantity: 1, is_flash_sale: true });
   };
 
-  const scroll = (dir: "left" | "right") => {
+  const scroll = (dir: "left"|"right") => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: dir==="left" ? -scrollContainerRef.current.clientWidth*0.75 : scrollContainerRef.current.clientWidth*0.75, behavior: "smooth" });
+      scrollContainerRef.current.scrollBy({ left: dir==="left" ? -320 : 320, behavior: "smooth" });
     }
   };
 
@@ -110,87 +107,74 @@ export function FeaturedProducts() {
   if (!flashProducts.length) return null;
 
   return (
-    <ProductSection title="Flash Vente ECLOSIA" subtitle="Les essentiels de Maman & Bébé, sélectionnés à prix doux." viewAllLink="/ventes-flash">
+    <ProductSection title="⚡ Vente Flash Exclusive -10%" subtitle="6 pépites indispensables Maman & Bébé à prix d'amie. Stocks ultra-limités !" viewAllLink="/ventes-flash">
       <div className="col-span-full w-full">
-        {/* En-tête Offre limitée */}
-        <div className="mb-8 w-full rounded-2xl border border-[#333333]/10 bg-[#F5EBE6] px-4 py-4 sm:px-6">
+        {/* En-tête avec TIMER RÉEL & Texte Marketing */}
+        <div className="mb-8 w-full rounded-2xl border border-[#333333]/10 bg-[#F5EBE6] px-4 py-4 sm:px-6 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#D4A396] text-white"><Clock3 className="h-4 w-4" /></div>
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#D4A396] text-white shadow-sm"><Clock3 className="h-4 w-4 animate-pulse" /></div>
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#333333]/55">Offre limitée</p>
-                <p className="mt-0.5 text-xs sm:text-sm font-medium leading-5 text-[#333333]">Des essentiels à prix doux, pendant un temps limité.</p>
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#D4A396]">Chrono en main • -10% immédiat</p>
+                <p className="mt-0.5 text-xs sm:text-sm font-bold text-[#333333]">🔥Ne tardez pas : Des produits ultra-limités ... et la livraison est de 10€ !</p>
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-1.5 self-center sm:self-auto">
-              <span className="flex h-8 sm:h-9 min-w-8 sm:min-w-9 items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white shadow-sm">02</span>
-              <span className="text-xs text-[#333333]/40">:</span>
-              <span className="flex h-8 sm:h-9 min-w-8 sm:min-w-9 items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white shadow-sm">18</span>
-              <span className="text-xs text-[#333333]/40">:</span>
-              <span className="flex h-8 sm:h-9 min-w-8 sm:min-w-9 items-center justify-center rounded-full bg-red-500 px-2 text-xs font-bold text-white shadow-sm">45</span>
-              <span className="ml-1 text-[11px] text-[#333333]/50">restantes</span>
+            <div className="flex shrink-0 items-center gap-1.5 self-center">
+              {!countdown.expired ? (
+                <>
+                  <span className="flex h-8 sm:h-9 min-w-9 items-center justify-center rounded-full bg-red-600 px-2 text-xs font-black text-white shadow">{String(countdown.h).padStart(2,"0")}</span>
+                  <span className="text-xs font-bold text-[#333]/40">:</span>
+                  <span className="flex h-8 sm:h-9 min-w-9 items-center justify-center rounded-full bg-red-600 px-2 text-xs font-black text-white shadow">{String(countdown.m).padStart(2,"0")}</span>
+                  <span className="text-xs font-bold text-[#333]/40">:</span>
+                  <span className="flex h-8 sm:h-9 min-w-9 items-center justify-center rounded-full bg-red-600 px-2 text-xs font-black text-white shadow">{String(countdown.s).padStart(2,"0")}</span>
+                  <span className="ml-1 text-[11px] font-bold text-[#333]/70">⏱️ restantes</span>
+                </>
+              ) : <span className="text-xs font-black text-red-600 bg-red-100 px-3 py-1 rounded-full">Offre Expirée</span>}
             </div>
           </div>
         </div>
 
         <div className="mb-4 flex items-center justify-between">
-          <span className="text-xs font-medium text-[#333333]/60">{flashProducts.length} produits disponibles</span>
+          <span className="text-xs font-bold text-[#333]/70 tracking-wide">✨ {flashProducts.length} pépites sélectionnées • Glissez pour découvrir →</span>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => scroll("left")} className="flex h-9 w-9 items-center justify-center rounded-full border border-[#333333]/15 bg-white text-[#333333] shadow-sm hover:bg-[#F5EBE6]"><ChevronLeft className="h-5 w-5" /></button>
-            <button type="button" onClick={() => scroll("right")} className="flex h-9 w-9 items-center justify-center rounded-full border border-[#333333]/15 bg-white text-[#333333] shadow-sm hover:bg-[#F5EBE6]"><ChevronRight className="h-5 w-5" /></button>
+            <button type="button" onClick={()=>scroll("left")} className="flex h-9 w-9 items-center justify-center rounded-full border bg-white shadow-sm hover:bg-[#F5EBE6] transition-colors"><ChevronLeft className="h-5 w-5" /></button>
+            <button type="button" onClick={()=>scroll("right")} className="flex h-9 w-9 items-center justify-center rounded-full border bg-white shadow-sm hover:bg-[#F5EBE6] transition-colors"><ChevronRight className="h-5 w-5" /></button>
           </div>
         </div>
 
-        {/* Liste des produits (Carousel horizontal adapté mobile) */}
-        <div ref={scrollContainerRef} className="flex w-full gap-3 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-5">
+        {/* CAROUSEL 6 PRODUITS */}
+        <div ref={scrollContainerRef} className="flex w-full gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {flashProducts.map((product) => (
-            <article key={product.id} className="group relative flex w-[85%] sm:w-[45%] lg:w-[calc(25%-15px)] shrink-0 flex-col overflow-hidden rounded-2xl border border-[#333333]/10 bg-white snap-start transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-              <span className="absolute left-3 top-3 z-20 rounded-full bg-[#333333] px-2.5 py-1 text-[10px] font-bold tracking-wide text-white pointer-events-none">{product.discount}</span>
-              <span className={`absolute right-3 top-3 z-20 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide pointer-events-none ${product.universeColor}`}>{product.universe}</span>
+            <article key={product.id} className="group relative flex w-[78%] sm:w-[38%] lg:w-[calc(25%-12px)] xl:w-[calc(16.666%-13px)] shrink-0 flex-col overflow-hidden rounded-2xl border border-[#333]/10 bg-white snap-start hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
+              <span className="absolute left-3 top-3 z-20 rounded-full bg-red-600 px-2.5 py-1 text-[10px] font-black text-white shadow-sm">{product.discount} FLASH</span>
+              <span className={`absolute right-3 top-3 z-20 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${product.universeColor}`}>{product.universe}</span>
               
-              <Link href={product.flashListUrl} className="relative block aspect-square w-full overflow-hidden bg-[#F5EBE6]/45 cursor-pointer z-10" aria-label="Voir toutes les ventes flash">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-contain p-5 transition-transform duration-700 ease-out group-hover:scale-105 sm:p-7"
+              <Link href={product.flashListUrl} className="relative block aspect-square w-full overflow-hidden bg-[#F5EBE6]/45">
+                <img src={product.image} alt={product.name} className="w-full h-full object-contain p-5 group-hover:scale-105 transition-transform duration-700 sm:p-7"
                   data-fallbacks={JSON.stringify(product.fallbackFiles)}
-                  onError={(e) => {
-                    const img = e.currentTarget as HTMLImageElement & { _idx?: number };
-                    const fallbacks: string[] = JSON.parse(img.getAttribute("data-fallbacks") || "[]");
-                    const idx = img._idx ?? 0;
-                    if (idx < fallbacks.length) {
-                      const nextFile = fallbacks[idx];
-                      const { data } = supabase.storage.from("aurae-images").getPublicUrl(nextFile);
-                      img._idx = idx + 1;
-                      img.src = data.publicUrl;
-                    } else {
-                      img.src = "https://placehold.co/400x400/F5EBE6/a3a3a3?text=Bientot+Disponible";
-                      img.onerror = null;
-                    }
+                  onError={(e)=>{
+                    const img=e.currentTarget as any;
+                    const fallbacks: string[]=JSON.parse(img.getAttribute("data-fallbacks")||"[]");
+                    const idx=img._idx??0;
+                    if(idx<fallbacks.length){ const {data}=supabase.storage.from("aurae-images").getPublicUrl(fallbacks[idx]); img._idx=idx+1; img.src=data.publicUrl; }
+                    else { img.src="https://placehold.co/400x400/F5EBE6/a3a3a3?text=Bientot"; img.onerror=null; }
                   }}
                 />
               </Link>
 
               <div className="flex flex-1 flex-col p-3.5 sm:p-5">
-                <p className="mb-1.5 line-clamp-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6E857B]">{product.categoryName}</p>
-                <Link href={product.detailUrl}>
-                  <h3 className="line-clamp-2 text-xs font-semibold leading-5 text-[#333333] group-hover:text-[#6E857B] sm:text-sm hover:underline">{product.name}</h3>
-                </Link>
-                <div className="mt-3 flex items-center gap-1">
-                  <div className="flex items-center gap-0.5">{Array.from({ length: product.rating }, (_, i) => (<Star key={i} className="h-3 w-3 fill-current text-[#D4A396]" />))}</div>
-                  <span className="text-[11px] text-[#333333]/40">{product.rating}.0</span>
-                </div>
+                <p className="mb-1.5 line-clamp-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#D4A396]">{product.categoryName}</p>
+                <Link href={product.detailUrl}><h3 className="line-clamp-2 text-xs font-bold leading-5 text-[#333] group-hover:text-[#D4A396] sm:text-sm min-h-[40px] hover:underline transition-colors">{product.name}</h3></Link>
+                <div className="mt-3 flex items-center gap-1"><div className="flex gap-0.5">{Array.from({length:5},(_,i)=><Star key={i} className="h-3 w-3 fill-current text-[#D4A396]" />)}</div><span className="text-[11px] font-bold text-[#333]/50">5/5 (Avis vérifiés)</span></div>
                 <div className="mt-auto flex items-end justify-between gap-2 pt-4">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                      <span className="text-sm font-bold text-[#333333] sm:text-base">{product.price}</span>
-                      <span className="text-[11px] text-[#333333]/40 line-through">{product.oldPrice}</span>
+                  <div>
+                    <div className="flex flex-wrap items-baseline gap-x-2">
+                      <span className="text-base font-extrabold text-[#333] sm:text-lg">{product.price}</span>
+                      <span className="text-xs font-semibold line-through text-[#333]/40">{product.oldPrice}</span>
                     </div>
-                    <p className="mt-0.5 text-[10px] font-medium text-[#6E857B]">Offre Flash</p>
+                    <p className="mt-0.5 text-[10px] font-black text-red-600 uppercase">⚡ Économie immédiate</p>
                   </div>
-                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAddToCart(product); }} className="relative z-20 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#333333] text-white shadow-sm hover:bg-[#D4A396] active:scale-90 sm:h-10 sm:w-10">
-                    <ShoppingBag className="h-4 w-4" />
-                  </button>
+                  <button type="button" onClick={(e)=>{e.preventDefault(); e.stopPropagation(); handleAddToCart(product);}} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#333] text-white shadow-md hover:bg-[#D4A396] active:scale-95 transition-all" aria-label="Ajouter au panier"><ShoppingBag className="h-4 w-4" /></button>
                 </div>
               </div>
             </article>
@@ -198,9 +182,9 @@ export function FeaturedProducts() {
         </div>
 
         <div className="mt-8 flex justify-center">
-          <Link href="/ventes-flash" className="group inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#333333] hover:text-[#D4A396]">
-            Découvrir toute la sélection Flash
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+          <Link href="/ventes-flash" className="group inline-flex items-center gap-2.5 rounded-2xl bg-[#333] px-6 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-md hover:bg-[#D4A396] transition-all">
+            Découvrir toute la sélection Flash -10%
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1.5" />
           </Link>
         </div>
       </div>

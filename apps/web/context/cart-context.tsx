@@ -1,90 +1,197 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+
+const PLACEHOLDER = "https://cbvpxrhiurdjhzdpyceb.supabase.co/storage/v1/object/public/aurae-images/placeholder.jpg";
+
+// Sécurité pour nettoyer les images Supabase qui contiennent des pipelines "|"
+function cleanImageUrl(raw?: string): string {
+  if (!raw) return PLACEHOLDER;
+  const first = raw.includes("|") ? raw.split("|")[0].trim() : raw.trim();
+  if (!first) return PLACEHOLDER;
+  if (first.startsWith("http")) return first;
+  const f = first.split("/").pop() || first;
+  return `https://cbvpxrhiurdjhzdpyceb.supabase.co/storage/v1/object/public/aurae-images/${f}`;
+}
 
 export interface CartItem {
   id: string;
   name: string;
+  slug: string;
   price: number;
   image: string;
   quantity: number;
   category?: string;
-  isFreeShipping?: boolean; // <-- Décidé par l'admin pour ce produit précis
+  isFreeShipping?: boolean;
+  priceFormatted?: string;
+  delivery?: {
+    method: string;
+    region: string;
+    city: string;
+    priceStr: string;
+  };
 }
 
 interface CartContextType {
+  // Compatibilité universelle (pour Panier, Checkout, Header)
   cart: CartItem[];
-  addToCart: (product: Omit<CartItem, "quantity">) => void;
+  items: CartItem[];
+  addToCart: (product: Omit<CartItem, "quantity"> | CartItem) => void;
+  addItem: (product: Omit<CartItem, "quantity"> | CartItem) => void;
+  add: (product: Omit<CartItem, "quantity"> | CartItem) => void;
   removeFromCart: (id: string) => void;
+  removeItem: (id: string) => void;
+  remove: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
-  totalItems: number;
-  totalPrice: number;
+  clear: () => void;
   
-  shippingFee: number;             // Tarif de base défini par l'admin
-  calculatedShippingFee: number;   // Montant final calculé selon les produits
-  globalFreeShipping: boolean;     // Option globale si l'admin veut tout offrir
-  freeShippingThreshold: number; // Seuil pour livraison gratuite
+  // Variables de totaux
+  totalItems: number;
+  count: number;
+  totalQty: number;
+  totalPrice: number;
+  total: number;
+  subtotal: number;
+  shippingFee: number;
+  calculatedShippingFee: number;
+  deliveryTotal: number;
+  
+  // Configuration
+  globalFreeShipping: boolean;
+  freeShippingThreshold: number;
   setShippingConfig: (config: { shippingFee?: number; globalFreeShipping?: boolean; freeShippingThreshold?: number }) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+// Unification de toutes les clés historiques utilisées pour éviter le bug des fantômes
+const STORAGE_KEYS = ["aurae_cart", "cart", "panier", "shopping_cart", "checkout_items"];
+
+// 1. Fonction de chargement unique depuis le stockage
+function loadFromStorage(): CartItem[] {
+  if (typeof window === "undefined") return [];
+  
+  for (const key of STORAGE_KEYS) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Normalisation et sécurisation des données trouvées
+        return parsed.map((it: any) => ({
+          id: String(it.id),
+          name: it.name || "Produit ECLOSIA",
+          slug: it.slug || String(it.id),
+          price: Number(it.price) || 0,
+          image: cleanImageUrl(it.image || it.image_url),
+          quantity: Number(it.quantity) || 1,
+          category: it.category,
+          isFreeShipping: it.isFreeShipping,
+          priceFormatted: it.priceFormatted,
+          delivery: it.delivery,
+        }));
+      }
+    } catch (e) {
+      console.error(`Erreur de lecture du panier (${key}):`, e);
+    }
+  }
+  return [];
+}
+
+// 2. Fonction de sauvegarde globale (écrase toutes les clés)
+function saveToStorage(items: CartItem[]) {
+  if (typeof window === "undefined") return;
+  const str = JSON.stringify(items);
+  // Sauve dans toutes les clés pour forcer la synchronisation partout (Header, Checkout, Panier)
+  for (const k of STORAGE_KEYS) {
+    localStorage.setItem(k, str);
+  }
+}
+
+export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
-
-  // Configuration admin globale
-  const [shippingFee, setShippingFee] = useState<number>(5.00);
+  
+  // Paramètres ECLOSIA (Livraison offerte dès 60 €)
+  const [shippingFee, setShippingFee] = useState<number>(10.0); // 10€ par défaut, ou 5.90€ selon votre choix final
   const [globalFreeShipping, setGlobalFreeShipping] = useState<boolean>(false);
-  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(150);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(60);
 
+  // Initialisation au montage
   useEffect(() => {
-    const savedCart = localStorage.getItem("aurae_cart");
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart));
-      } catch (e) {
-        console.error("Erreur lecture localStorage:", e);
-      }
-    }
+    setCart(loadFromStorage());
     setIsInitialized(true);
   }, []);
 
+  // Sauvegarde automatique à chaque changement du panier
   useEffect(() => {
     if (isInitialized) {
-      localStorage.setItem("aurae_cart", JSON.stringify(cart));
+      saveToStorage(cart);
     }
   }, [cart, isInitialized]);
 
-  const addToCart = (product: Omit<CartItem, "quantity">) => {
-    setCart((prevCart) => {
-      const existingIndex = prevCart.findIndex((item) => item.id === product.id);
-      if (existingIndex > -1) {
-        const updated = [...prevCart];
-        updated[existingIndex].quantity += 1;
-        return updated;
+  // Synchronisation inter-onglets et Focus Window
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      // Si une des clés du panier change dans un autre onglet
+      if (e.key && STORAGE_KEYS.includes(e.key)) {
+        setCart(loadFromStorage());
       }
-      return [...prevCart, { ...product, quantity: 1 }];
+    };
+    
+    // Recharge le panier quand l'utilisateur revient sur la fenêtre
+    const onFocus = () => setCart(loadFromStorage()); 
+    
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", onFocus);
+    
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []);
+
+  // Méthodes d'action
+  const addToCart = (product: Omit<CartItem, "quantity"> | CartItem) => {
+    setCart((prev) => {
+      const id = String((product as any).id);
+      const existing = prev.find((it) => it.id === id);
+      
+      if (existing) {
+        return prev.map((it) => 
+          it.id === id ? { ...it, quantity: it.quantity + ((product as any).quantity || 1) } : it
+        );
+      }
+      
+      return [...prev, { 
+        ...(product as any), 
+        id, 
+        quantity: (product as any).quantity || 1, 
+        image: cleanImageUrl((product as any).image), 
+        slug: (product as any).slug || id 
+      }];
     });
   };
 
   const removeFromCart = (id: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
+    setCart((prev) => prev.filter((it) => it.id !== String(id)));
   };
 
   const updateQuantity = (id: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(id);
-      return;
+    if (quantity <= 0) { 
+      removeFromCart(id); 
+      return; 
     }
-    setCart((prevCart) =>
-      prevCart.map((item) => (item.id === id ? { ...item, quantity } : item))
-    );
+    setCart((prev) => prev.map((it) => it.id === String(id) ? { ...it, quantity } : it));
   };
 
   const clearCart = () => {
     setCart([]);
+    if (typeof window !== "undefined") {
+      STORAGE_KEYS.forEach((k) => localStorage.removeItem(k));
+    }
   };
 
   const setShippingConfig = (config: { shippingFee?: number; globalFreeShipping?: boolean; freeShippingThreshold?: number }) => {
@@ -93,47 +200,48 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (config.freeShippingThreshold !== undefined) setFreeShippingThreshold(config.freeShippingThreshold);
   };
 
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  // Calculs finaux
+  const totalItems = cart.reduce((s, it) => s + it.quantity, 0);
+  const totalPrice = cart.reduce((s, it) => s + it.price * it.quantity, 0);
+  const hasOnlyFreeShippingItems = cart.length > 0 && cart.every((it) => it.isFreeShipping === true);
 
-  // LOGIQUE PAR PRODUIT / ADMIN :
-  // Si le panier est vide -> 0
-  // Si l'admin a activé la gratuité globale sur le site -> 0
-  // Sinon, est-ce que TOUS les articles du panier ont la livraison gratuite décidée par l'admin ?
-  // -> Si un seul article est payant selon l'admin, les frais de port s'appliquent.
-  const hasOnlyFreeShippingItems = cart.length > 0 && cart.every((item) => item.isFreeShipping === true);
+  // Livraison gratuite si le panier dépasse 60€, sinon 10€
+  const calculatedShippingFee = (cart.length === 0 || globalFreeShipping || hasOnlyFreeShippingItems || totalPrice >= freeShippingThreshold) ? 0 : shippingFee;
 
-  const calculatedShippingFee = 
-    cart.length === 0 || globalFreeShipping || hasOnlyFreeShippingItems || totalPrice >= freeShippingThreshold
-      ? 0 
-      : shippingFee;
+  const value: CartContextType = {
+    cart,
+    items: cart, // alias
+    addToCart,
+    addItem: addToCart, // alias
+    add: addToCart, // alias
+    removeFromCart,
+    removeItem: removeFromCart, // alias
+    remove: removeFromCart, // alias
+    updateQuantity,
+    clearCart,
+    clear: clearCart, // alias
+    
+    totalItems,
+    count: totalItems, // alias pour le Header
+    totalQty: totalItems, // alias
+    totalPrice,
+    total: totalPrice + calculatedShippingFee, 
+    subtotal: totalPrice, // alias
+    
+    shippingFee,
+    calculatedShippingFee,
+    deliveryTotal: calculatedShippingFee, // alias
+    
+    globalFreeShipping,
+    freeShippingThreshold,
+    setShippingConfig,
+  };
 
-  return (
-    <CartContext.Provider
-      value={{
-        cart,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        totalItems,
-        totalPrice,
-        shippingFee,
-        calculatedShippingFee,
-        globalFreeShipping,
-        freeShippingThreshold,
-        setShippingConfig,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
 export function useCart() {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error("useCart doit être utilisé à l'intérieur d'un CartProvider");
-  }
-  return context;
+  const ctx = useContext(CartContext);
+  if (!ctx) throw new Error("useCart doit être utilisé à l'intérieur d'un CartProvider");
+  return ctx;
 }

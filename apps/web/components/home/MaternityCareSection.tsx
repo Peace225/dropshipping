@@ -8,7 +8,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const BUCKET = "https://cbvpxrhiurdjhzdpyceb.supabase.co/storage/v1/object/public/aurae-images";
-const PLACEHOLDER = `${BUCKET}/placeholder.jpg`; // mets un placeholder dans ton bucket
+const PLACEHOLDER = `${BUCKET}/placeholder.jpg`;
 
 const FILE_MAP: Record<string, string> = {
   "sac-de-maternite-organisateur-valise": "sac-maternite-organisateur.jpg",
@@ -26,16 +26,11 @@ const FILE_MAP: Record<string, string> = {
 };
 
 function getImageUrl(slug: string, rawImage?: string): string {
-  // 1. Si image DB valide, on la prend direct
-  if (rawImage && rawImage.trim()!== "") {
-    // si c'est déjà une URL complète
+  if (rawImage && rawImage.trim() !== "") {
     if (rawImage.startsWith("http")) return rawImage;
-    // si c'est un chemin /aurae-images/xxx.jpg
     if (rawImage.includes("aurae-images")) return `${BUCKET}/${rawImage.split("/").pop()}`;
-    // si c'est juste le nom de fichier
     return `${BUCKET}/${rawImage}`;
   }
-  // 2. Fallback FILE_MAP
   const fileName = FILE_MAP[slug] || `${slug}.jpg`;
   return `${BUCKET}/${fileName}`;
 }
@@ -74,30 +69,25 @@ export async function MaternityCareSection() {
         return (
           <div key={p.id} className="group bg-white rounded-2xl border border-[#333333]/10 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col h-full">
             <Link href={`/shop/maternite/${p.slug}`} className="relative w-full h-40 sm:h-52 bg-[#F5EBE6]/50 flex items-center justify-center p-3 sm:p-4 shrink-0 block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imageUrl}
                 alt={p.name}
                 className="w-full h-full object-contain p-2 sm:p-4 group-hover:scale-105 transition-transform duration-300"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  if (target.src!== PLACEHOLDER) {
-                    target.src = FILE_MAP[p.slug]? `${BUCKET}/${FILE_MAP[p.slug]}` : PLACEHOLDER;
-                  }
-                }}
               />
-              <span className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-white/90 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text- sm:text- font-bold uppercase flex items-center gap-1">
-                <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+              <span className="absolute top-2 left-2 sm:top-3 sm:left-3 bg-white/90 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase flex items-center gap-1 text-[#333333]">
+                <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#6E857B]" />
                 <span className="line-clamp-1">{p.categories?.name || "MAMAN"}</span>
               </span>
             </Link>
 
             <div className="p-3 sm:p-4 flex flex-col flex-grow">
               <Link href={`/shop/maternite/${p.slug}`}>
-                <h3 className="font-semibold text-xs sm:text-sm line-clamp-2 hover:underline">{p.name}</h3>
+                <h3 className="font-bold text-xs sm:text-sm line-clamp-2 hover:underline text-[#333333]">{p.name}</h3>
               </Link>
 
-              <div className="mt-auto pt-3 flex items-center justify-between">
-                <span className="font-bold text-sm sm:text-base">{Number(p.price).toFixed(2)} €</span>
+              <div className="mt-auto pt-3 flex items-center justify-between border-t border-[#333333]/5 mt-3">
+                <span className="font-extrabold text-[#333333] text-sm sm:text-base">{Number(p.price).toFixed(2)} €</span>
                 <Link href={`/shop/maternite/${p.slug}`} className="h-7 w-7 sm:h-8 sm:w-8 flex items-center justify-center rounded-full bg-[#333333] text-white hover:bg-black transition-colors shrink-0">
                   <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Link>

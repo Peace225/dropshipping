@@ -9,10 +9,10 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 function normalizeKey(name: string): string {
   return name.toLowerCase()
-  .replace(/\(.*?\)/g, "")
-  .replace(/coton mixte|bio|blanc|mixte/gi, "")
-  .replace(/\s+/g, " ")
-  .trim();
+    .replace(/\(.*?\)/g, "")
+    .replace(/coton mixte|bio|blanc|mixte/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 // Fonction pour déterminer la grande famille du produit et forcer la diversité
@@ -22,8 +22,10 @@ function getProductFamily(name: string): string {
   if (n.includes("drap")) return "drap";
   if (n.includes("alèse") || n.includes("alese") || n.includes("protège")) return "alese";
   if (n.includes("couche") || n.includes("culotte") || n.includes("protect")) return "couche";
-  if (n.includes("coussin")) return "coussin";
+  if (n.includes("coussin") || n.includes("chaise")) return "repas_chaise";
   if (n.includes("bain") || n.includes("bumbuns")) return "bain";
+  if (n.includes("tapis")) return "tapis";
+  if (n.includes("plan")) return "plan_incline";
   return "autre";
 }
 
@@ -37,32 +39,34 @@ export async function BabyCareSection() {
   const { data: cat } = await supabase.from("categories").select("id").ilike("slug", "%bebe%").single();
   if (!cat) return null;
 
-  // On retire l'order par prix pour avoir un mix naturel, tout en gardant la rentabilité >= 24.90
+  // Récupération de tous les produits actifs (sans limite de prix pour inclure les accessoires)
   const { data: rawProducts } = await supabase
-  .from("products")
-  .select(`id, name, slug, price, image_url, product_images(image_url, is_primary, position)`)
-  .eq("is_active", true)
-  .eq("category_id", cat.id)
-  .gte("price", 24.90)
-  .limit(100); // On élargit la recherche pour être sûr de trouver 4 familles différentes
+    .from("products")
+    .select(`id, name, slug, price, image_url, product_images(image_url, is_primary, position)`)
+    .eq("is_active", true)
+    .eq("category_id", cat.id)
+    .limit(100); 
 
   if (!rawProducts || rawProducts.length === 0) return null;
 
   const map = new Map<string, any>();
   const usedImages = new Set<string>();
-  const usedFamilies = new Set<string>(); // Nouveau Set pour empêcher les familles en double
+  
+  // On utilise une Map pour compter les familles et autoriser jusqu'à 2 produits max par famille
+  const familyCounts = new Map<string, number>();
 
   rawProducts.forEach((p: any) => {
     const key = normalizeKey(p.name);
     const family = getProductFamily(p.name);
+    const currentFamilyCount = familyCounts.get(family) || 0;
 
-    // Si on a déjà ce nom exact OU si on a déjà un produit de cette famille (ex: 2ème matelas), on ignore
-    if (map.has(key) || (usedFamilies.has(family) && family !== "autre")) return;
+    // Si le nom exact existe déjà OU si on a déjà 2 produits de cette famille, on l'ignore
+    if (map.has(key) || (currentFamilyCount >= 2 && family !== "autre")) return;
 
     const all = [...(p.product_images || [])]
-    .sort((a:any,b:any)=>(a.position||0)-(b.position||0))
-    .map((i:any)=> getBBLAImage(i.image_url))
-    .filter(Boolean);
+      .sort((a:any, b:any) => (a.position || 0) - (b.position || 0))
+      .map((i:any) => getBBLAImage(i.image_url))
+      .filter(Boolean);
 
     if (p.image_url) all.unshift(getBBLAImage(p.image_url));
 
@@ -70,7 +74,7 @@ export async function BabyCareSection() {
     if (!img) return;
 
     usedImages.add(img);
-    usedFamilies.add(family); // On verrouille cette famille de produit
+    familyCounts.set(family, currentFamilyCount + 1);
 
     map.set(key, {
       id: p.id,
@@ -81,6 +85,7 @@ export async function BabyCareSection() {
     });
   });
 
+  // On slice à 4 pour afficher exactement 4 produits sur la page d'accueil
   const uniqueProducts = Array.from(map.values()).slice(0, 4);
   if (uniqueProducts.length === 0) return null;
 

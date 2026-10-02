@@ -12,7 +12,7 @@ const paymentMethods = [
   {
     id: "card",
     name: "Carte bancaire",
-    description: "Paiement sécurisé par Visa, Mastercard",
+    description: "Paiement sécurisé par Visa, Mastercard, CB",
     logos: [
       { name: "Visa", src: "/images/payments/visa.jpg" },
       { name: "Mastercard", src: "/images/payments/mastercard.jpg" },
@@ -51,14 +51,19 @@ export function PaymentOptions({ selectedMethod = "card", onSelectMethod }: Paym
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-extrabold text-[#333333]">
-          Mode de paiement en ligne
-        </h3>
-        <div className="flex items-center gap-1 text-xs text-green-700 font-semibold">
+        <div>
+          <h2 className="text-lg font-extrabold text-[#333333] mb-1">
+            Mode de paiement
+          </h2>
+          <p className="text-xs sm:text-sm text-[#333333]/60">
+            Sélectionnez votre méthode de paiement sécurisée.
+          </p>
+        </div>
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-[#6E857B] font-bold bg-[#6E857B]/10 px-3 py-1.5 rounded-full shadow-sm">
           <ShieldCheck className="w-4 h-4" />
-          <span>100% Sécurisé par Stripe</span>
+          <span>100% Sécurisé</span>
         </div>
       </div>
 
@@ -68,33 +73,31 @@ export function PaymentOptions({ selectedMethod = "card", onSelectMethod }: Paym
 
           return (
             <div key={method.id} className="space-y-3">
-              <div
+              <label
                 onClick={() => handleSelect(method.id, method.name)}
-                className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${
+                className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${
                   isSelected
-                    ? "border-orange-500 bg-orange-50/30 shadow-sm"
-                    : "border-gray-200 bg-white hover:border-gray-300"
+                    ? "border-[#333333] bg-[#333333]/5 shadow-sm"
+                    : "border-[#333333]/15 bg-white hover:border-[#333333]/30 hover:bg-[#333333]/5"
                 }`}
               >
                 <div className="flex items-start sm:items-center gap-3.5 w-full">
-                  <div
-                    className={`w-5 h-5 mt-0.5 sm:mt-0 rounded-full border flex items-center justify-center transition-all shrink-0 ${
-                      isSelected
-                        ? "border-orange-500 bg-orange-500 text-white"
-                        : "border-gray-300 bg-transparent"
-                    }`}
-                  >
-                    {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
-                  </div>
+                  <input 
+                    type="radio" 
+                    name="payment_method" 
+                    checked={isSelected} 
+                    onChange={() => handleSelect(method.id, method.name)} 
+                    className="accent-[#333333] w-4 h-4 mt-0.5 sm:mt-0 cursor-pointer" 
+                  />
 
                   <div className="flex-1">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
                         <p className="text-sm font-bold text-[#333333]">{method.name}</p>
-                        <p className="text-xs text-gray-500">{method.description}</p>
+                        <p className="text-xs text-[#333333]/60 mt-0.5">{method.description}</p>
                       </div>
 
-                      <div className="flex items-center gap-2 bg-white px-2.5 py-1.5 rounded-lg border border-gray-100 w-fit">
+                      <div className="flex items-center gap-2 bg-white px-2.5 py-1.5 rounded-xl border border-[#333333]/10 w-fit shrink-0 shadow-sm">
                         {method.logos.map((logo, idx) => (
                           <img
                             key={idx}
@@ -107,17 +110,17 @@ export function PaymentOptions({ selectedMethod = "card", onSelectMethod }: Paym
                     </div>
                   </div>
                 </div>
-              </div>
+              </label>
 
-              {/* Affichage conditionnel : si "Carte bancaire" est sélectionné, on invite le client à renseigner sa carte sur la page sécurisée Stripe */}
+              {/* Affichage conditionnel avec l'identité visuelle ECLOSIA */}
               {isSelected && method.id === "card" && (
-                <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-600 space-y-2 animate-fadeIn">
-                  <div className="flex items-center gap-2 font-bold text-[#333333]">
-                    <CreditCard className="w-4 h-4 text-orange-600" />
+                <div className="p-5 rounded-2xl bg-[#F5EBE6]/30 border border-[#333333]/10 text-xs text-[#333333]/80 space-y-2.5 transition-all">
+                  <div className="flex items-center gap-2 font-bold text-[#333333] text-sm">
+                    <CreditCard className="w-4 h-4 text-[#6E857B]" />
                     <span>Saisie sécurisée de la carte</span>
                   </div>
-                  <p>
-                    En cliquant sur <strong>"Procéder au paiement en ligne"</strong>, vous serez redirigé vers notre interface de paiement Stripe chiffrée pour saisir votre numéro de carte, votre date d'expiration et votre code CVC en toute sécurité. Stripe vérifiera instantanément si votre compte est approvisionné et opérationnel.
+                  <p className="leading-relaxed">
+                    En cliquant sur <strong>"Procéder au paiement en ligne"</strong>, vous serez redirigé vers notre interface de paiement Stripe chiffrée de bout en bout (SSL) pour saisir votre numéro de carte en toute sécurité. Aucune donnée bancaire n'est stockée sur nos serveurs.
                   </p>
                 </div>
               )}

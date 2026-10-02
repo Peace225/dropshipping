@@ -16,26 +16,27 @@ interface ShippingSelectorProps {
   onSelectShipping?: (option: ShippingOption) => void;
 }
 
+// Tarifs mis à jour (Standard à 10€ comme demandé)
 const shippingOptions: ShippingOption[] = [
   {
     id: "standard",
     name: "Livraison Standard à domicile",
-    delay: "3 à 5 jours ouvrés",
-    price: 5.00,
+    delay: "7 à 10 jours ouvrés",
+    price: 10.00, 
     icon: Truck,
   },
   {
     id: "relay",
     name: "Point Relais Colis",
-    delay: "3 à 4 jours ouvrés",
-    price: 3.50,
+    delay: "7 à 10 jours ouvrés",
+    price: 7.90,
     icon: MapPin,
   },
   {
     id: "express",
     name: "Livraison Express",
     delay: "24 à 48 heures",
-    price: 12.00,
+    price: 15.00,
     icon: Zap,
   },
 ];
@@ -72,12 +73,14 @@ export function ShippingSelector({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-base font-bold font-serif text-[#333333]">
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-extrabold text-[#333333] mb-1">
           Mode de livraison
-        </h3>
-        <span className="text-xs text-[#333333]/60">Expédition France</span>
+        </h2>
+        <p className="text-xs sm:text-sm text-[#333333]/60">
+          Sélectionnez votre mode d'expédition (Abidjan et expédition nationale).
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-3">
@@ -86,46 +89,45 @@ export function ShippingSelector({
           const isSelected = activeId === option.id;
 
           return (
-            <div
+            <label
               key={option.id}
-              onClick={() => handleSelect(option)}
-              className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${
+              className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${
                 isSelected
-                  ? "border-[#6E857B] bg-[#6E857B]/5 shadow-sm"
-                  : "border-[#333333]/10 bg-white hover:border-[#333333]/30"
+                  ? "border-[#333333] bg-[#333333]/5 shadow-sm"
+                  : "border-[#333333]/15 bg-white hover:border-[#333333]/30 hover:bg-[#333333]/5"
               }`}
             >
-              <div className="flex items-center gap-3.5">
+              <div className="flex items-center gap-4">
+                <input 
+                  type="radio" 
+                  name="shipping_method" 
+                  checked={isSelected} 
+                  onChange={() => handleSelect(option)} 
+                  className="accent-[#333333] w-4 h-4 cursor-pointer shrink-0" 
+                />
+                
                 <div
-                  className={`p-2.5 rounded-lg transition-colors ${
+                  className={`p-2.5 rounded-xl transition-colors shrink-0 ${
                     isSelected
-                      ? "bg-[#6E857B] text-white"
-                      : "bg-[#333333]/5 text-[#333333]/70"
+                      ? "bg-[#333333] text-white shadow-sm"
+                      : "bg-[#F5EBE6]/50 text-[#333333]/60 border border-[#333333]/5"
                   }`}
                 >
                   <Icon className="w-5 h-5" />
                 </div>
+                
                 <div>
                   <p className="text-sm font-bold text-[#333333]">{option.name}</p>
-                  <p className="text-xs text-[#333333]/60">{option.delay}</p>
+                  <p className="text-xs text-[#333333]/60 mt-0.5">{option.delay}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-bold text-[#333333] whitespace-nowrap">
-                  {option.price === 0 ? "Offerte" : `${option.price.toFixed(2)} €`}
+              <div className="flex items-center gap-3 shrink-0 ml-2">
+                <span className="text-sm font-extrabold text-[#333333] whitespace-nowrap bg-white px-3 py-1.5 rounded-lg border border-[#333333]/10 shadow-sm">
+                  {option.price === 0 ? "Offerte" : `${option.price.toFixed(2).replace(".", ",")} €`}
                 </span>
-                <div
-                  className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
-                    isSelected
-                      ? "border-[#6E857B] bg-[#6E857B] text-white"
-                      : "border-[#333333]/20 bg-transparent"
-                  }`}
-                >
-                  {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
-                </div>
               </div>
-            </div>
+            </label>
           );
         })}
       </div>

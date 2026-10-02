@@ -14,7 +14,7 @@ export default function CommunityPage() {
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#333333]/70 hover:text-[#333333] mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Retour à l'accueil AURAE</span>
+          <span>Retour à l'accueil ECLOSIA</span>
         </Link>
 
         {/* En-tête de la communauté */}
@@ -23,7 +23,7 @@ export default function CommunityPage() {
             <Users className="w-6 h-6" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#333333] tracking-tight">
-            Communauté AURAE
+            Communauté ECLOSIA
           </h1>
           <p className="text-xs sm:text-sm text-[#333333]/70 font-medium mt-1 max-w-lg mx-auto">
             Un espace d'échange bienveillant dédié aux futurs et jeunes parents. Partagez vos expériences, posez vos questions et soutenez-vous au quotidien.

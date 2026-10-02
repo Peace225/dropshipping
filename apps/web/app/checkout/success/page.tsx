@@ -1,136 +1,236 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle, ShoppingBag, ArrowRight, Mail } from "lucide-react";
+import { CheckCircle, ShoppingBag, ArrowRight, Mail, MapPin, Package } from "lucide-react";
 import { OrderTimeline } from "@/components/orders/OrderTimeline";
+import { createClient } from "@supabase/supabase-js";
 
-export default function CheckoutSuccessPage() {
-  const [orderData, setOrderData] = useState<any>(null);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+function SuccessContent() {
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("order_id");
+  const sessionId = searchParams.get("session_id");
+  const [order, setOrder] = useState<any>(null);
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const savedOrder = localStorage.getItem("final_order");
-      if (savedOrder) {
-        setOrderData(JSON.parse(savedOrder));
+    const fetchOrder = async () => {
+      if (!orderId) {
+        // Fallback localStorage uniquement si pas d'order_id (dev)
+        try {
+          const saved = localStorage.getItem("final_order");
+          if (saved) setOrder(JSON.parse(saved));
+        } catch {}
+        setLoading(false);
+        return;
       }
-    } catch (e) {
-      console.error("Erreur de lecture de la commande", e);
-    }
-  }, []);
 
-  // Événements de suivi de la commande
-  const initialHistoryEvents = [
+      // VRAIE source: Supabase
+      const { data: orderData, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("id", orderId)
+        .single();
+
+      if (error) {
+        console.error("Erreur fetch order:", error);
+        setLoading(false);
+        return;
+      }
+
+      setOrder(orderData);
+
+      // Fetch order_items (structure 8 colonnes)
+      const { data: itemsData } = await supabase
+        .from("order_items")
+        .select("*")
+        .eq("order_id", orderId);
+
+      if (itemsData) setItems(itemsData);
+
+      // Nettoyage
+      localStorage.removeItem("cart");
+      localStorage.removeItem("final_order");
+      setLoading(false);
+    };
+
+    fetchOrder();
+  }, [orderId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#F5EBE6]/20 via-white to-[#6E857B]/10 flex items-center justify-center pt-24">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6E857B] mx-auto mb-4"></div>
+          <p className="text-[#333333] font-bold">Chargement de votre commande ECLOSIA...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si pas de commande
+  if (!order && !orderId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#F5EBE6]/20 via-white to-[#6E857B]/10 py-12 px-4 flex items-center justify-center pt-24">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-sm border border-[#333333]/10 p-8 text-center">
+          <h2 className="text-xl font-extrabold text-[#333333] mb-4">Aucune commande trouvée</h2>
+          <Link href="/shop" className="text-[#6E857B] font-bold hover:underline">Retour boutique</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const customerName = order 
+    ? `${order.customer_firstname || ""} ${order.customer_lastname || ""}`.trim()
+    : "";
+
+  const historyEvents = [
     {
       status: "order_received",
-      created_at: new Date().toISOString(),
-      description: "Votre commande a été bien enregistrée.",
+      created_at: order?.created_at || new Date().toISOString(),
+      description: `Commande ${order?.order_number || ""} enregistrée.`,
     },
     {
       status: "payment_confirmed",
       created_at: new Date().toISOString(),
-      description: `Paiement validé via ${orderData?.paymentMethod || "Carte bancaire"}.`,
+      description: `Paiement validé - ${order?.payment_method || "Carte"} - ${order?.total_amount ? Number(order.total_amount).toFixed(2).replace(".", ",") : ""} €`,
+    },
+    {
+      status: "processing",
+      created_at: new Date().toISOString(),
+      description: `Préparation en cours - Livraison ${order?.shipping_city || "standard"} via ${order?.shipping_method || "Standard"}`,
     },
   ];
 
-  // Extraction sécurisée du nom du client
-  const customerName = orderData?.customer
-    ? `${orderData.customer.firstName || orderData.customer.name || ""} ${orderData.customer.lastName || ""}`.trim()
-    : "";
-
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center pt-24">
-      <div className="max-w-4xl w-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        
-        {/* En-tête de succès */}
-        <div className="bg-orange-50/50 p-8 text-center border-b border-gray-200">
-          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-orange-100 mb-6">
-            <CheckCircle className="h-8 w-8 text-orange-600" />
+    <div className="min-h-screen bg-gradient-to-b from-[#F5EBE6]/20 via-white to-[#6E857B]/10 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center pt-24">
+      <div className="max-w-5xl w-full bg-white rounded-3xl shadow-sm border border-[#333333]/10 overflow-hidden">
+                
+        {/* En-tête */}
+        <div className="bg-[#F5EBE6]/30 p-8 sm:p-10 text-center border-b border-[#333333]/10">
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-[#6E857B]/10 mb-6 shadow-sm border border-[#6E857B]/20">
+            <CheckCircle className="h-8 w-8 text-[#6E857B]" />
           </div>
-          <h1 className="text-3xl font-extrabold text-[#333333] mb-2">
-            Merci pour votre commande !
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#333333] mb-2">
+            Merci {customerName ? customerName.split(" ")[0] : ""} !
           </h1>
-          <p className="text-gray-500 text-sm max-w-md mx-auto">
-            Votre paiement a été traité avec succès. Nous préparons actuellement vos articles pour l'expédition.
+          <p className="text-[#333333]/60 text-sm max-w-md mx-auto leading-relaxed">
+            Votre commande <strong className="text-[#333333]">{order?.order_number}</strong> est confirmée. 
+            Nous préparons vos articles avec soin.
           </p>
         </div>
 
-        <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-12">
-          
-          {/* Colonne de gauche : Informations et prochaines étapes */}
-          <div className="space-y-8">
+        <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-10">
+                    
+          {/* Gauche */}
+          <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-extrabold text-[#333333] border-b border-gray-100 pb-3 mb-4">
-                Détails de la commande
+              <h2 className="text-lg font-extrabold text-[#333333] border-b border-[#333333]/10 pb-3 mb-4 flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5 text-[#6E857B]" /> Détails commande
               </h2>
-              <ul className="space-y-3 text-sm text-gray-600">
+              <ul className="space-y-3 text-sm text-[#333333]/80 font-medium">
                 <li className="flex justify-between">
-                  <span className="font-medium">Client</span>
+                  <span className="text-[#333333]/60">Numéro</span>
+                  <span className="font-mono font-bold text-[#333333]">{order?.order_number || "--"}</span>
+                </li>
+                <li className="flex justify-between">
+                  <span className="text-[#333333]/60">Client</span>
+                  <span className="font-bold text-[#333333]">{customerName || order?.customer_email || "Client ECLOSIA"}</span>
+                </li>
+                <li className="flex justify-between">
+                  <span className="text-[#333333]/60 flex items-center gap-1"><MapPin className="w-3 h-3 text-[#6E857B]" /> Livraison</span>
                   <span className="font-bold text-[#333333]">
-                    {customerName !== "" ? customerName : (orderData?.customer?.email || "Client ECLOSIA")}
+                    {order?.customer_city || ""} {order?.customer_postal_code ? `(${order.customer_postal_code})` : ""} - {order?.customer_country || "France"}
                   </span>
                 </li>
                 <li className="flex justify-between">
-                  <span className="font-medium">Mode de livraison</span>
-                  <span className="font-bold text-[#333333]">{orderData?.shippingMethod || "Standard"}</span>
+                  <span className="text-[#333333]/60">Méthode</span>
+                  <span className="font-bold text-[#333333]">{order?.shipping_method || "Standard"} / {order?.payment_method || "Carte"}</span>
                 </li>
-                <li className="flex justify-between">
-                  <span className="font-medium">Mode de paiement</span>
-                  <span className="font-bold text-[#333333]">{orderData?.paymentMethod || "Carte bancaire"}</span>
+                <li className="flex justify-between pt-3 border-t border-[#333333]/5 items-center">
+                  <span className="font-extrabold text-sm text-[#333333]">Total TTC</span>
+                  <span className="font-black text-lg text-[#333333]">
+                    {order?.total_amount ? `${Number(order.total_amount).toFixed(2).replace(".", ",")} €` : "--"}
+                  </span>
                 </li>
-                <li className="flex justify-between">
-                  <span className="font-medium">Montant total</span>
-                  <span className="font-extrabold text-orange-600">{orderData?.total ? `${orderData.total.toFixed(2)} €` : "--"}</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="font-medium">Date</span>
-                  <span>{new Date().toLocaleDateString('fr-FR')}</span>
-                </li>
+                {order?.subtotal && (
+                  <li className="flex justify-between text-xs text-[#333333]/50">
+                    <span>Sous-total + livraison</span>
+                    <span>{Number(order.subtotal).toFixed(2).replace(".", ",")}€ + {Number(order.shipping_fee || order.shipping_cost || 10).toFixed(2).replace(".", ",")}€</span>
+                  </li>
+                )}
               </ul>
+
+              {/* Produits */}
+              {items.length > 0 && (
+                <div className="mt-6 pt-4 border-t border-[#333333]/10">
+                  <h3 className="text-sm font-extrabold text-[#333333] mb-3">Articles ({items.length})</h3>
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {items.map((it: any) => (
+                      <div key={it.id} className="flex justify-between text-xs sm:text-sm bg-[#F5EBE6]/20 p-2.5 rounded-xl border border-[#333333]/5">
+                        <span className="truncate pr-2 font-medium text-[#333333]">{it.product_name} <span className="text-[#333333]/50">x{it.quantity}</span></span>
+                        <span className="font-extrabold text-[#333333]">{Number(it.total_price).toFixed(2).replace(".", ",")} €</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="bg-gray-50 p-5 rounded-xl flex items-start gap-3 border border-gray-100">
-              <Mail className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Un email de confirmation contenant votre facture et le récapitulatif de vos achats vous a été envoyé à <strong className="text-[#333333]">{orderData?.customer?.email || "votre adresse email"}</strong>. 
+            <div className="bg-[#6E857B]/10 p-4 rounded-2xl flex gap-3 border border-[#6E857B]/20">
+              <Mail className="w-5 h-5 text-[#6E857B] shrink-0 mt-0.5" />
+              <p className="text-xs sm:text-sm text-[#333333]/80 leading-relaxed font-medium">
+                Facture envoyée à <strong>{order?.customer_email}</strong>. 
               </p>
             </div>
 
-            <div className="pt-4 flex flex-col sm:flex-row gap-3">
-              <Link 
-                href="/shop/maternite"
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-sm"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                Retour à la boutique
+            <div className="flex gap-3 pt-2">
+              <Link href="/shop/maternite" className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-[#333333] hover:bg-black text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-sm">
+                <ShoppingBag className="w-4 h-4" /> Boutique
               </Link>
-              <Link 
-                href="/"
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-white border border-gray-200 hover:border-orange-500 text-[#333333] hover:text-orange-600 text-xs font-bold uppercase tracking-wider transition-all group"
-              >
-                Accueil
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              <Link href="/" className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-white border border-[#333333]/15 hover:bg-[#333333]/5 text-[#333333] text-xs font-bold uppercase tracking-wider transition-colors group">
+                Accueil <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </div>
 
-          {/* Colonne de droite : Intégration du composant de suivi */}
-          <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 flex flex-col justify-between">
+          {/* Droite Timeline */}
+          <div className="bg-white p-6 rounded-2xl border border-[#333333]/10 shadow-sm flex flex-col justify-between">
             <OrderTimeline 
-              currentStatusKey="payment_confirmed" 
-              historyEvents={initialHistoryEvents} 
+              currentStatusKey={order?.status === "processing" ? "processing" : "payment_confirmed"} 
+              historyEvents={historyEvents} 
             />
             
-            <div className="mt-8 text-xs text-center text-gray-500">
+            <div className="mt-8 p-4 bg-[#F5EBE6]/20 rounded-xl border border-[#333333]/5 text-xs text-center text-[#333333]/70 font-medium">
               <p>Une question concernant votre commande ?</p>
-              <Link href="#" className="text-orange-600 hover:underline font-medium">
-                Contactez notre support client
+              <Link href="#" className="text-[#6E857B] hover:text-[#333333] hover:underline font-bold transition-colors mt-1 inline-block">
+                Contactez notre support client ECLOSIA
               </Link>
+              <p className="mt-2 text-[11px] text-[#333333]/50">Paiement sécurisé SSL • Normes ECLOSIA</p>
             </div>
           </div>
 
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-[#F5EBE6]/20 via-white to-[#6E857B]/10 flex items-center justify-center">
+        <p className="font-bold text-[#333333] animate-pulse">Chargement de votre confirmation de commande...</p>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }
