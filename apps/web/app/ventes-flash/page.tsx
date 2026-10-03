@@ -7,13 +7,16 @@ import { createClient } from "@supabase/supabase-js";
 import { useCart } from "@/context/cart-context";
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-const PLACEHOLDER = "https://via.placeholder.com/600x600/F5EBE6/333333?text=ECLOSIA+BEBE";
+const PLACEHOLDER = "https://www.lamaisonenchiffon.com/img/p/1/6/7/9/7/16797.jpg";
 
-function cleanImageUrl(raw?: string){
-  if(!raw) return PLACEHOLDER;
+function cleanImageUrl(raw?: string) {
+  if (!raw) return PLACEHOLDER;
   const first = raw.includes("|") ? raw.split("|")[0].trim() : raw.trim();
-  return first.startsWith("http") ? first : PLACEHOLDER;
+  if (first.startsWith("http://") || first.startsWith("https://")) return first;
+  if (first.startsWith("/")) return `https://www.lamaisonenchiffon.com${first}`;
+  return PLACEHOLDER;
 }
+
 function getMarketingShort(p:any){
   const s = (p.slug + " " + p.name).toLowerCase();
   if(s.includes("50x100")) return "Matelas respirant + 3 draps ultra-doux + 2 alèses. Le kit qui sauve les nuits.";
@@ -21,8 +24,9 @@ function getMarketingShort(p:any){
   if(s.includes("32x72")) return "Lot de 3 draps housse couffin ultra-doux. Lavable 60°, OEKO-TEX.";
   if(s.includes("60x120")) return "3 draps housse + 2 alèses imperméables. Coton doux qui tient.";
   if(s.includes("90x190")) return "Matelas enfant déhoussable, mémoire de forme, anti-acariens.";
-  if(s.includes("culotte") || s.includes("couche")) return "Lavable, Oeko-Tex, fabrication UE. Douce et respirante.";
+  if(s.includes("culotte") || s.includes("couche") || s.includes("bumbuns")) return "Lavable, Oeko-Tex, fabrication UE. Douce et respirante.";
   if(s.includes("tapis") || s.includes("langer")) return "Nomade, pliable, imperméable. Fabriqué en France 🇫🇷.";
+  if(s.includes("coussin")) return "Confortable, s'essuie d'un coup d'éponge. Fabriqué en France 🇫🇷.";
   return "OEKO-TEX • Fabriqué France/UE • Lavable 60°";
 }
 
@@ -66,6 +70,7 @@ export default function VentesFlashPage8() {
         const { data: flash } = await supabase.from("flash_sales").select("ends_at").eq("is_active", true).order("created_at", {ascending:false}).limit(1).maybeSingle();
         setFlashEndsAt(flash?.ends_at || new Date(Date.now()+2*3600000).toISOString());
 
+        // 1. Cherche d'abord les produits explicitement marqués en vente flash
         const { data: prods, error } = await supabase
           .from("products")
           .select("id, name, slug, price, promo_price, stock, description, brand, manufacturer_id, rubrique, category_bebe_id, image_url")
@@ -79,9 +84,23 @@ export default function VentesFlashPage8() {
           return;
         }
 
-        if (!prods || prods.length===0) {
-          const { data: fallback } = await supabase.from("products").select("id, name, slug, price, promo_price, stock, brand, manufacturer_id, rubrique, category_bebe_id, image_url").eq("is_active", true).limit(8);
-          if (fallback && fallback.length>0) {
+        // 2. Si aucun produit n'est tagué "Vente Flash", on pioche directement dans nos 13 produits officiels Bébé
+        if (!prods || prods.length === 0) {
+          const { data: fallback } = await supabase
+            .from("products")
+            .select("id, name, slug, price, promo_price, stock, brand, manufacturer_id, rubrique, category_bebe_id, image_url")
+            .eq("is_active", true)
+            .in("rubrique", [
+              "LITERIE — Matelas & draps assortis",
+              "CHANGE & ACCESSOIRES",
+              "LINGE DE LIT — Draps housse seuls",
+              "BAIN",
+              "REPAS & CHAISE HAUTE",
+              "SOMMEIL & CONFORT"
+            ])
+            .limit(8);
+
+          if (fallback && fallback.length > 0) {
             await formatProducts(fallback);
             return;
           }
@@ -119,9 +138,10 @@ export default function VentesFlashPage8() {
 
       const formatted = prods.map((item: any) => {
         const imgs = imagesByProduct[item.id] || [];
-        const sorted = [...imgs].sort((a:any,b:any)=>a.position-b.position);
-        const raw = sorted.find((i:any)=>i.is_primary)?.image_url ?? sorted[0]?.image_url ?? item.image_url ?? "";
+        const sorted = [...imgs].sort((a:any,b:any)=> (b.is_primary?1:0) - (a.is_primary?1:0) || a.position-b.position);
+        const raw = sorted[0]?.image_url ?? item.image_url ?? "";
         const imageUrl = cleanImageUrl(raw);
+        
         const original = Number(item.price);
         const promo = Number(item.promo_price || (original*0.9).toFixed(2));
         const manuf = item.manufacturer_id ? manufById[item.manufacturer_id] : null;
@@ -189,7 +209,7 @@ export default function VentesFlashPage8() {
             <div className="sticky top-24 rounded-[20px] border border-[#333333]/10 bg-white p-5 shadow-sm">
               <div className="mb-6 rounded-2xl bg-gradient-to-br from-[#F5EBE6] via-[#F5EBE6] to-[#E8C5C8]/30 p-4 border border-[#D4A396]/20">
                 <div className="flex items-center gap-2 mb-2"><Sparkles className="h-4 w-4 text-[#D4A396]"/><span className="text-xs font-extrabold uppercase tracking-wide">Univers ECLOSIA</span></div>
-                <p className="text-[11px] text-[#333333]/70 leading-relaxed">8 pépites Maman & Bébé à prix flash -10%. Coton BIO, bambou naturel, fabrication France/UE.</p>
+                <p className="text-[11px] text-[#333333]/70 leading-relaxed">8 pépites Bébé à prix flash -10%. Coton BIO, bambou naturel, fabrication France/UE.</p>
               </div>
               <div className="relative mb-6">
                 <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Rechercher..." className="w-full rounded-xl border border-[#333333]/15 py-2.5 pl-9 pr-8 text-xs font-medium focus:outline-none focus:border-[#333333]"/>
@@ -207,7 +227,7 @@ export default function VentesFlashPage8() {
           </aside>
 
           <div className="flex-1">
-            {loading ? <div className="py-20 text-center animate-pulse text-xs font-bold text-[#333333]/50">Chargement des 8 produits flash...</div>
+            {loading ? <div className="py-20 text-center animate-pulse text-xs font-bold text-[#333333]/50">Chargement des produits flash...</div>
             : filtered.length===0 ? (
               <div className="py-20 bg-white rounded-[20px] border border-dashed text-center">
                 <p className="font-bold">Aucun produit flash</p>

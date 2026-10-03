@@ -2,35 +2,20 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ShoppingBag, Star, Clock3, ArrowRight, ChevronLeft, ChevronRight, Zap, ShieldCheck, Truck } from "lucide-react";
+import { ShoppingBag, Star, Clock3, ArrowRight, ChevronLeft, ChevronRight, Zap, ShieldCheck, Truck, Heart } from "lucide-react";
 import { ProductSection } from "./ProductSection";
 import { useCart } from "@/context/cart-context";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-const PLACEHOLDER = "https://via.placeholder.com/600x600/F5EBE6/333333?text=ECLOSIA+BEBE";
+const PLACEHOLDER = "https://www.lamaisonenchiffon.com/img/p/1/6/7/9/7/16797.jpg";
 
-const FILE_MAP: Record<string, string> = {
-  "ballon-de-grossesse": "ballon-grossesse.jpg",
-  "ballon-grossesse": "ballon-grossesse.jpg",
-  "coussinets-d-allaitement-jetables": "coussinets-allaitement-jetables.jpg",
-  "coussinets-allaitement-jetables": "coussinets-allaitement-jetables.jpg",
-  "serviettes-apaisantes-post-accouchement": "serviettes-apaisantes-post-accouchement.jpg",
-};
-
-function cleanImageUrl(raw?: string){
-  if(!raw) return PLACEHOLDER;
+function cleanImageUrl(raw?: string) {
+  if (!raw) return PLACEHOLDER;
   const first = raw.includes("|") ? raw.split("|")[0].trim() : raw.trim();
-  return first.startsWith("http") ? first : PLACEHOLDER;
-}
-
-function resolveImageUrl(rawImg: string, slug: string): string {
-  if (rawImg?.startsWith("http")) return rawImg;
-  let fileName = rawImg?.trim().replace(/^aurae-images\//, "").replace(/^\//, "") || "";
-  if (!fileName || !fileName.includes(".")) fileName = FILE_MAP[slug] || `${slug}.jpg`;
-  if (FILE_MAP[slug]) fileName = FILE_MAP[slug];
-  const { data } = supabase.storage.from("aurae-images").getPublicUrl(fileName);
-  return data.publicUrl;
+  if (first.startsWith("http://") || first.startsWith("https://")) return first;
+  if (first.startsWith("/")) return `https://www.lamaisonenchiffon.com${first}`;
+  return PLACEHOLDER;
 }
 
 function getMarketingShort(p:any){
@@ -40,8 +25,9 @@ function getMarketingShort(p:any){
   if(s.includes("32x72")) return "Lot de 3 draps housse couffin ultra-doux.";
   if(s.includes("60x120")) return "3 draps housse + 2 alèses imperméables.";
   if(s.includes("90x190")) return "Matelas enfant déhoussable, mémoire de forme.";
-  if(s.includes("culotte") || s.includes("couche")) return "Lavable, Oeko-Tex, fabrication UE.";
+  if(s.includes("culotte") || s.includes("couche") || s.includes("bumbuns")) return "Lavable, Oeko-Tex, fabrication UE.";
   if(s.includes("tapis") || s.includes("langer")) return "Nomade, pliable, imperméable. 🇫🇷";
+  if(s.includes("coussin")) return "Confortable, s'essuie d'un coup d'éponge. 🇫🇷";
   return "OEKO-TEX • Fabriqué France/UE • Lavable 60°";
 }
 
@@ -79,8 +65,21 @@ export function FeaturedProducts() {
         .select(`id,name,slug,price,promo_price,original_price_backup,manufacturer_id,rubrique,brand,image_url,categories ( name, slug ),product_images ( image_url, is_primary, position )`)
         .eq("is_flash_sale", true).eq("is_active", true).order("price",{ascending:false}).limit(6);
 
-      if (error) {
-        const { data: fallback } = await supabase.from("products").select(`id,name,slug,price,promo_price,original_price_backup,manufacturer_id,rubrique,brand,image_url,product_images ( image_url, is_primary, position )`).eq("is_flash_sale", true).eq("is_active", true).limit(6);
+      if (error || !data || data.length === 0) {
+        // Fallback ciblé uniquement sur les rubriques officielles de Bébé
+        const { data: fallback } = await supabase
+          .from("products")
+          .select(`id,name,slug,price,promo_price,original_price_backup,manufacturer_id,rubrique,brand,image_url,product_images ( image_url, is_primary, position )`)
+          .eq("is_active", true)
+          .in("rubrique", [
+            "LITERIE — Matelas & draps assortis",
+            "CHANGE & ACCESSOIRES",
+            "LINGE DE LIT — Draps housse seuls",
+            "BAIN",
+            "REPAS & CHAISE HAUTE",
+            "SOMMEIL & CONFORT"
+          ])
+          .limit(6);
         data = fallback as any;
       }
 
@@ -94,15 +93,15 @@ export function FeaturedProducts() {
       }
 
       const formatted = data.map((item: any) => {
-        const images = [...(item.product_images ?? [])].sort((a:any,b:any)=>(a.position??0)-(b.position??0));
-        const rawImg = images.find((i:any)=>i.is_primary)?.image_url ?? images[0]?.image_url ?? item.image_url ?? "";
-        const imageUrl = rawImg.startsWith("http") ? cleanImageUrl(rawImg) : resolveImageUrl(rawImg, item.slug);
-        const fallbackFiles = Array.from(new Set([FILE_MAP[item.slug], `${item.slug}.jpg`, "ballon-grossesse.jpg"].filter(Boolean))) as string[];
+        const images = [...(item.product_images ?? [])].sort((a:any,b:any)=>(b.is_primary?1:0)-(a.is_primary?1:0) || (a.position??0)-(b.position??0));
+        const rawImg = images[0]?.image_url ?? item.image_url ?? "";
+        const imageUrl = cleanImageUrl(rawImg);
+        
         const originalPrice = Number(item.original_price_backup || item.price);
         const promoPrice = item.promo_price ? Number(item.promo_price) : Number((originalPrice*0.9).toFixed(2));
         const discountPercent = Math.round(((originalPrice-promoPrice)/originalPrice)*100);
-        const catSlug = item.categories?.slug || "bebe";
-        const isBebe = catSlug.toLowerCase().includes("bebe") || ["culotte","maillot","matelas","bébé","couche","tapis"].some(k=>item.name.toLowerCase().includes(k));
+        
+        const isBebe = item.rubrique && !item.rubrique.toLowerCase().includes("maman");
         const manuf = item.manufacturer_id ? manufById[item.manufacturer_id] : null;
         const fabLabel = manuf?.label_fr || item.brand || "Fabriqué en France/UE";
         const flag = manuf?.flag_emoji || "🇫🇷 🇪🇺";
@@ -110,13 +109,13 @@ export function FeaturedProducts() {
 
         return {
           id: item.id, name: item.name, slug: item.slug, shortDesc: short,
-          categoryName: item.categories?.name || (isBebe?"Bébé":"Maman"),
-          universe: isBebe?"Bébé":"Maman",
+          categoryName: item.rubrique?.split("—")[0].trim() || "Bébé",
+          universe: isBebe ? "Bébé" : "Maman",
           price: `${promoPrice.toFixed(2).replace(".",",")} €`, numericPrice: promoPrice,
           oldPrice: `${originalPrice.toFixed(2).replace(".",",")} €`, originalNumeric: originalPrice,
           discount: `-${discountPercent || 10}%`,
-          image: imageUrl, fallbackFiles,
-          detailUrl: `/shop/${isBebe?"bebe":"maternite"}/${item.slug}`,
+          image: imageUrl,
+          detailUrl: `/shop/bebe/${item.slug}`,
           flashListUrl: "/ventes-flash",
           fabrication: fabLabel,
           flag,
@@ -209,14 +208,7 @@ export function FeaturedProducts() {
 
                 <Link href={product.detailUrl} className="relative block aspect-square w-full overflow-hidden bg-gradient-to-b from-[#F5EBE6]/40 via-[#F5EBE6]/20 to-white pt-12">
                   <img src={product.image} alt={product.name} className="w-full h-full object-contain p-4 group-hover:scale-[1.08] transition-transform duration-700 mix-blend-multiply"
-                    data-fallbacks={JSON.stringify(product.fallbackFiles)}
-                    onError={(e)=>{
-                      const img=e.currentTarget as any;
-                      const fallbacks: string[]=JSON.parse(img.getAttribute("data-fallbacks")||"[]");
-                      const idx=img._idx??0;
-                      if(idx<fallbacks.length){ const {data}=supabase.storage.from("aurae-images").getPublicUrl(fallbacks[idx]); img._idx=idx+1; img.src=data.publicUrl; }
-                      else { img.src=PLACEHOLDER; img.onerror=null; }
-                    }}
+                    onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = PLACEHOLDER; }}
                   />
                 </Link>
 
