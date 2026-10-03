@@ -1,13 +1,12 @@
 import Link from "next/link";
-import { ShoppingBag, Heart, Sparkles, ShieldCheck, Star, Truck } from "lucide-react";
+import { ShoppingBag, Heart, Sparkles, ShieldCheck, Star, Truck, ArrowRight } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
-import { ProductSection } from "./ProductSection";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const PLACEHOLDER = "https://via.placeholder.com/400x400/F5EBE6/333333?text=ECLOSIA+BEBE";
+const PLACEHOLDER = "https://www.lamaisonenchiffon.com/img/p/1/6/7/9/7/16797.jpg";
 
 function cleanImageUrl(raw?: string) { 
   if(!raw) return PLACEHOLDER; 
@@ -44,9 +43,9 @@ function getMarketingShort(p: any) {
   if(s.includes("60x120")) return "3 draps housse + 2 alèses. Coton doux, extensible, qui tient au matelas.";
   if(s.includes("matelas")) return "Matelas respirant, déhoussable, anti-acariens. OEKO-TEX, fabrication UE.";
   if(s.includes("drap")) return "Coton BIO doux, extensible, qui reste en place. Lavable 60°.";
-  if(s.includes("culotte") || s.includes("couche")) return "Lavable, Oeko-Tex, fabrication UE. Douce et respirante.";
+  if(s.includes("culotte") || s.includes("couche") || s.includes("bumbuns")) return "Lavable, Oeko-Tex, fabrication UE. Douce et respirante.";
   if(s.includes("coussin")) return "Fabriqué en France 🇫🇷. S'essuie d'un coup d'éponge.";
-  if(s.includes("tapis") || s.includes("nomade")) return "Nomade, pliable, imperméable. Fabriqué en France.";
+  if(s.includes("tapis") || s.includes("nomade")) return "Nomade, pliable, imperméable. Fabriqué en France 🇫🇷.";
   return "OEKO-TEX • Fabriqué France/UE • Lavable 60°";
 }
 
@@ -60,11 +59,11 @@ export async function BabyCareSection() {
 
   if (error) {
     console.error("Erreur critique Supabase :", error);
-    return <div className="p-8 text-center text-red-500 bg-red-50 m-4 rounded-xl border border-red-200">Erreur de base de données : {error.message}</div>;
+    return <div className="p-4 sm:p-8 text-center text-red-500 bg-red-50 m-4 rounded-xl border border-red-200 text-xs sm:text-sm">Erreur de base de données : {error.message}</div>;
   }
 
   if (!rawProducts || rawProducts.length === 0) {
-    return <div className="p-8 text-center text-gray-500">Aucun produit bébé actif trouvé dans la base.</div>;
+    return <div className="p-8 text-center text-gray-500 text-sm">Aucun produit bébé actif trouvé dans la base.</div>;
   }
 
   const map = new Map<string, any>();
@@ -131,37 +130,37 @@ export async function BabyCareSection() {
   }));
 
   return (
-    <section className="relative py-12 sm:py-16 bg-gradient-to-b from-[#F5EBE6]/30 via-white to-[#F5EBE6]/20 overflow-hidden">
+    <section className="relative py-10 sm:py-16 bg-gradient-to-b from-[#F5EBE6]/30 via-white to-[#F5EBE6]/20 overflow-hidden">
       {/* Décors floutés ECLOSIA */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-[#6E857B]/10 rounded-full blur-[80px] -ml-48 -mt-48 pointer-events-none"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#E8DCC8]/40 rounded-full blur-[80px] -mr-48 -mb-48 pointer-events-none"></div>
+      <div className="absolute top-0 left-0 w-64 h-64 sm:w-96 sm:h-96 bg-[#6E857B]/10 rounded-full blur-[60px] sm:blur-[80px] -ml-32 -mt-32 sm:-ml-48 sm:-mt-48 pointer-events-none"></div>
+      <div className="absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-[#E8DCC8]/40 rounded-full blur-[60px] sm:blur-[80px] -mr-32 -mb-32 sm:-mr-48 sm:-mb-48 pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         
         {/* HEADER MARKETING ECLOSIA */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 sm:gap-4 mb-6 sm:mb-8">
           <div>
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#333333] text-white text-xs font-extrabold uppercase tracking-wide mb-3 shadow-sm">
-              <Sparkles className="w-3.5 h-3.5"/> Le Cocon de Bébé
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#333333] text-white text-[10px] sm:text-xs font-extrabold uppercase tracking-wide mb-3 shadow-sm">
+              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5"/> Le Cocon de Bébé
             </div>
-            <h2 className="text-[28px] sm:text-[34px] font-extrabold leading-[0.95] tracking-tight text-[#333333]">
+            <h2 className="text-[24px] sm:text-[34px] font-extrabold leading-[1.05] sm:leading-[0.95] tracking-tight text-[#333333]">
               Soins & Tendresse,<br/>
               <span className="text-[#6E857B]">certifiés Oeko-Tex®</span>
             </h2>
-            <p className="text-sm text-[#333333]/70 mt-2.5 max-w-xl leading-relaxed">
+            <p className="text-[12px] sm:text-sm text-[#333333]/70 mt-2 sm:mt-2.5 max-w-xl leading-relaxed">
               Une sélection délicate pensée pour les parents exigeants. <span className="font-bold text-[#333333]">Coton BIO, bambou naturel, fabrication France & UE.</span> Doux pour la peau de bébé, facile à entretenir pour vous.
             </p>
           </div>
-          <div className="flex flex-col items-start md:items-end gap-3">
-            <div className="flex items-center gap-2 text-xs font-bold text-[#333333]">
-              <span className="flex items-center gap-1.5 bg-white border border-[#333333]/10 px-3 py-1.5 rounded-full shadow-sm">
-                <ShieldCheck className="w-4 h-4 text-[#6E857B]"/> OEKO-TEX
+          <div className="flex flex-col items-start md:items-end gap-3 mt-1 sm:mt-0">
+            <div className="flex flex-wrap items-center gap-2 text-[10px] sm:text-xs font-bold text-[#333333]">
+              <span className="flex items-center gap-1.5 bg-white border border-[#333333]/10 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-full shadow-sm">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#6E857B]"/> OEKO-TEX
               </span>
-              <span className="flex items-center gap-1.5 bg-white border border-[#333333]/10 px-3 py-1.5 rounded-full shadow-sm">
+              <span className="flex items-center gap-1.5 bg-white border border-[#333333]/10 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-full shadow-sm">
                 🇫🇷 🇪🇺 France/UE
               </span>
             </div>
-            <Link href="/shop/bebe" className="inline-flex items-center gap-2 text-sm font-extrabold text-[#333333] hover:text-[#6E857B] group transition-colors mt-1">
+            <Link href="/shop/bebe" className="hidden sm:inline-flex items-center gap-2 text-sm font-extrabold text-[#333333] hover:text-[#6E857B] group transition-colors mt-1">
               Voir tout l'univers Bébé
               <span className="w-7 h-7 rounded-full bg-[#333333] text-white flex items-center justify-center group-hover:bg-[#6E857B] transition-colors shadow-sm">→</span>
             </Link>
@@ -169,60 +168,66 @@ export async function BabyCareSection() {
         </div>
 
         {/* GRID 4 PRODUITS MARKETING */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {finalProducts.map((p: any) => (
-            <div key={p.id} className="group bg-white rounded-[20px] border border-[#333333]/10 overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.10)] hover:-translate-y-1.5 transition-all duration-500 flex flex-col h-full">
+            <div key={p.id} className="group bg-white rounded-[16px] sm:rounded-[20px] border border-[#333333]/10 overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.10)] sm:hover:-translate-y-1.5 transition-all duration-500 flex flex-col h-full">
               
-              <Link href={`/shop/bebe/${p.slug}`} className="relative w-full aspect-[4/3] sm:aspect-square bg-gradient-to-b from-[#6E857B]/5 via-[#F5EBE6]/20 to-[#F5EBE6]/30 p-5 sm:p-6 block overflow-hidden">
+              <Link href={`/shop/bebe/${p.slug}`} className="relative w-full aspect-[4/4] sm:aspect-square bg-gradient-to-b from-[#6E857B]/5 via-[#F5EBE6]/20 to-[#F5EBE6]/30 p-4 sm:p-6 block overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.image} alt={p.name} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-[1.08] transition-transform duration-700" />
+                <img src={p.image} alt={p.name} className="w-full h-full object-contain mix-blend-multiply sm:group-hover:scale-[1.08] transition-transform duration-700" />
                 
-                <span className="absolute top-3 left-3 bg-white/95 backdrop-blur px-2.5 py-1 rounded-full text-[10px] font-extrabold text-[#333333] uppercase tracking-wide border border-[#333333]/10 shadow-sm">
-                  {p.category.split("—")[0].trim()}
+                {/* Badges Haut (Rubrique + Coeur) */}
+                <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
+                  <span className="bg-white/95 backdrop-blur px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-extrabold text-[#333333] uppercase tracking-wide border border-[#333333]/10 shadow-sm">
+                    {p.category.split("—")[0].trim().substring(0, 12)}{p.category.split("—")[0].trim().length > 12 ? "..." : ""}
+                  </span>
+                </div>
+                
+                <span className="absolute top-2 right-2 sm:top-3 sm:right-3 w-6 h-6 sm:w-8 sm:h-8 bg-white/90 backdrop-blur rounded-full flex items-center justify-center border border-[#333333]/10 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-sm">
+                  <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-[#333333]"/>
                 </span>
                 
-                <span className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur rounded-full flex items-center justify-center border border-[#333333]/10 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Heart className="w-4 h-4 text-[#333333]"/>
-                </span>
+                {/* Badges Bas (Drapeau + Promo) */}
+                <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 z-10 max-w-[70%]">
+                  <span className="bg-[#333333] text-white px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold flex items-center gap-1 shadow-sm">
+                    {p.flag && <span className="text-[9px] sm:text-[11px]">{p.flag}</span>}
+                    <span className="truncate">{p.fabrication.split(" ").slice(0, 3).join(" ")}</span>
+                  </span>
+                </div>
                 
-                <span className="absolute bottom-3 left-3 bg-[#333333] text-white px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-sm">
-                  {p.flag && <span className="text-[11px]">{p.flag}</span>}
-                  <span className="truncate max-w-[110px]">{p.fabrication.split(" ").slice(0, 3).join(" ")}</span>
-                </span>
-                
-                <span className="absolute bottom-3 right-3 bg-white text-[#333333] px-2 py-1 rounded-md text-[10px] font-extrabold border border-[#333333]/10 shadow-sm">
+                <span className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 bg-white text-[#333333] px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md text-[8px] sm:text-[10px] font-extrabold border border-[#333333]/10 shadow-sm z-10">
                   -20%
                 </span>
               </Link>
 
-              <div className="p-4 flex flex-col flex-grow">
-                <Link href={`/shop/bebe/${p.slug}`} className="font-extrabold text-[#333333] text-[13px] sm:text-sm leading-snug line-clamp-2 hover:text-[#6E857B] transition-colors">
+              <div className="p-3 sm:p-4 flex flex-col flex-grow">
+                <Link href={`/shop/bebe/${p.slug}`} className="font-extrabold text-[#333333] text-[12px] sm:text-sm leading-snug line-clamp-2 sm:hover:text-[#6E857B] transition-colors min-h-[34px] sm:min-h-0">
                   {p.name}
                 </Link>
                 
-                <p className="text-[11px] text-[#333333]/60 mt-1.5 line-clamp-2 leading-relaxed">
+                <p className="text-[10px] sm:text-[11px] text-[#333333]/60 mt-1 sm:mt-1.5 line-clamp-2 leading-relaxed">
                   {p.shortDesc}
                 </p>
                 
-                <div className="flex items-center gap-1 mt-2.5 text-amber-500">
-                  {[...Array(4)].map((_, i) => <Star key={i} className="w-3 h-3 fill-current"/>)}
-                  <Star className="w-3 h-3 text-gray-200"/>
-                  <span className="text-[10px] text-[#333333]/50 ml-1 font-medium">({p.reviews})</span>
+                <div className="flex items-center gap-1 mt-1.5 sm:mt-2.5 text-amber-500">
+                  {[...Array(4)].map((_, i) => <Star key={i} className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current"/>)}
+                  <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-200"/>
+                  <span className="text-[9px] sm:text-[10px] text-[#333333]/50 ml-0.5 sm:ml-1 font-medium">({p.reviews})</span>
                 </div>
 
-                <div className="mt-auto pt-3.5 flex items-center justify-between border-t border-[#333333]/5">
+                <div className="mt-auto pt-2.5 sm:pt-3.5 flex items-center justify-between border-t border-[#333333]/5">
                   <div className="flex flex-col">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="font-extrabold text-[#333333] text-[16px]">{p.priceFormatted}</span>
-                      <span className="text-[11px] text-gray-400 line-through">{p.oldPrice}</span>
+                    <div className="flex items-baseline gap-1 sm:gap-1.5">
+                      <span className="font-extrabold text-[#333333] text-[14px] sm:text-[16px]">{p.priceFormatted}</span>
+                      <span className="text-[9px] sm:text-[11px] text-gray-400 line-through">{p.oldPrice}</span>
                     </div>
-                    <span className="text-[10px] text-[#31A039] font-bold flex items-center gap-1 mt-0.5">
-                      <span className="w-1.5 h-1.5 bg-[#31A039] rounded-full"></span>En stock
+                    <span className="text-[9px] sm:text-[10px] text-[#31A039] font-bold flex items-center gap-1 mt-0.5">
+                      <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-[#31A039] rounded-full"></span>En stock
                     </span>
                   </div>
                   
-                  <Link href={`/shop/bebe/${p.slug}`} className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-full bg-[#333333] text-white hover:bg-black transition-colors shrink-0 shadow-sm">
-                    <ShoppingBag className="w-4 h-4" />
+                  <Link href={`/shop/bebe/${p.slug}`} className="h-7 w-7 sm:h-9 sm:w-9 flex items-center justify-center rounded-full bg-[#333333] text-white active:scale-95 sm:hover:bg-black transition-all shrink-0 shadow-sm">
+                    <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </Link>
                 </div>
               </div>
@@ -230,18 +235,25 @@ export async function BabyCareSection() {
           ))}
         </div>
 
+        {/* BOUTON VOIR TOUT MOBILE */}
+        <div className="mt-6 flex justify-center sm:hidden">
+           <Link href="/shop/bebe" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[14px] bg-[#333333] text-white text-[11px] font-bold uppercase tracking-wider shadow-md active:scale-95 transition-all">
+              Voir tout l'univers Bébé <ArrowRight className="w-3.5 h-3.5"/>
+           </Link>
+        </div>
+
         {/* FOOTER TRUST BAR MARKETING */}
-        <div className="mt-8 bg-white rounded-2xl border border-[#333333]/10 p-4 sm:p-5 flex flex-wrap justify-center sm:justify-between items-center gap-4 text-xs font-bold text-[#333333]/80 shadow-sm">
-          <span className="flex items-center gap-2">
-            <Truck className="w-4 h-4 text-[#6E857B]"/> Livraison dès 10,00 € • Expédition rapide
+        <div className="mt-6 sm:mt-8 bg-white rounded-[16px] sm:rounded-2xl border border-[#333333]/10 p-3 sm:p-5 flex flex-wrap justify-center sm:justify-between items-center gap-3 sm:gap-4 text-[10px] sm:text-xs font-bold text-[#333333]/80 shadow-sm">
+          <span className="flex items-center gap-1.5 sm:gap-2">
+            <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B]"/> Livraison dès 10,00 € <span className="hidden sm:inline">• Expédition rapide</span>
           </span>
-          <span className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#6E857B]"/> OEKO-TEX® & Fabriqué France/UE
+          <span className="hidden sm:flex items-center gap-1.5 sm:gap-2">
+            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B]"/> OEKO-TEX® & Fabriqué France/UE
           </span>
-          <span className="hidden md:flex items-center gap-2">
-            Retour gratuit 10 jours • Garantie 12 mois
+          <span className="flex items-center gap-1.5 sm:gap-2">
+            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B] sm:hidden"/> Retour gratuit 10 jours <span className="hidden sm:inline">• Garantie 12 mois</span>
           </span>
-          <Link href="/shop/bebe" className="px-5 py-2.5 rounded-full bg-[#F9F6F4] text-[#333333] hover:bg-[#333333] hover:text-white transition-colors border border-[#333333]/5">
+          <Link href="/shop/bebe" className="hidden lg:inline-flex px-5 py-2.5 rounded-full bg-[#F9F6F4] text-[#333333] hover:bg-[#333333] hover:text-white transition-colors border border-[#333333]/5">
             Découvrir toute la collection →
           </Link>
         </div>

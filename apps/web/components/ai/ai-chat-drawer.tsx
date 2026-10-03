@@ -13,9 +13,9 @@ interface Message {
 
 export default function AiChatDrawer() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isDismissed, setIsDismissed] = useState(false) // NOUVEL ÉTAT pour masquer la bulle
   const [conversationId] = useState(() => `session-drawer-${Date.now()}`)
   
-  // État pour gérer l'animation de saut (bounce)
   const [shouldBounce, setShouldBounce] = useState(true)
   
   const [messages, setMessages] = useState<Message[]>([
@@ -27,7 +27,7 @@ export default function AiChatDrawer() {
   ])
   const [loading, setLoading] = useState(false)
 
-  // Arrêter l'animation de saut après l'ouverture pour ne pas gêner
+  // Arrête le petit saut de la bulle une fois cliquée
   useEffect(() => {
     if (isOpen) {
       setShouldBounce(false)
@@ -77,88 +77,95 @@ export default function AiChatDrawer() {
   }
 
   const counselorImage = "/images/conseillere.png"
+
+  // Si l'utilisateur a fermé la bulle, on ne rend plus rien
+  if (isDismissed) return null;
   
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className={`fixed z-50 pointer-events-none flex flex-col items-end justify-end transition-all ${
+      isOpen ? "inset-3 sm:inset-auto sm:bottom-6 sm:right-6" : "bottom-4 right-4 sm:bottom-6 sm:right-6"
+    }`}>
       
-      {/* Bouton d'ouverture (Design Ultra-Attractif avec Animation Bounce) */}
+      {/* BOUTON D'OUVERTURE DE LA BULLE */}
       {!isOpen && (
-        <div className={`relative ${shouldBounce ? 'animate-bounce' : ''}`}>
+        <div className={`relative pointer-events-auto ${shouldBounce ? 'animate-bounce' : ''}`}>
           
-          {/* Bulle de notification clignotante ("Nouveau Message") */}
-          <div className="absolute -top-3 -right-2 z-30 animate-pulse">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 border-2 border-white shadow-sm">
-              <span className="text-white text-[10px] font-bold">1</span>
+          {/* NOUVEAU : Bouton pour fermer (masquer) la bulle elle-même */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation(); // Évite d'ouvrir le chat en cliquant sur la croix
+              setIsDismissed(true);
+            }}
+            className="absolute -top-2 -left-2 z-40 bg-white text-gray-400 hover:text-[#333333] rounded-full p-1 shadow-md border border-gray-200 active:scale-95 transition-all"
+            aria-label="Masquer la bulle"
+          >
+            <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+          </button>
+
+          {/* Bulle de notification clignotante */}
+          <div className="absolute -top-2 -right-1 sm:-top-3 sm:-right-2 z-30 animate-pulse pointer-events-none">
+            <span className="flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-500 border-2 border-white shadow-sm">
+              <span className="text-white text-[9px] sm:text-[10px] font-bold">1</span>
             </span>
           </div>
 
           <button
             onClick={() => setIsOpen(true)}
-            className="group relative flex items-center gap-3 bg-gradient-to-br from-[#333333] to-[#1a1a1a] hover:from-black hover:to-[#222222] text-white pl-2 pr-5 py-2.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.4)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.6)] transition-all duration-500 transform border border-white/10"
+            className="group relative flex items-center gap-2 sm:gap-3 bg-gradient-to-br from-[#333333] to-[#1a1a1a] hover:from-black hover:to-[#222222] text-white pl-1.5 sm:pl-2 pr-4 sm:pr-5 py-2 sm:py-2.5 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.4)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.6)] transition-all duration-500 transform border border-white/10"
           >
-            {/* Effet de lueur animée en arrière-plan (Pulse Glow) */}
             <div className="absolute inset-0 rounded-full bg-white/5 animate-pulse group-hover:bg-transparent transition-colors" />
 
             <div className="relative flex items-center justify-center">
-              {/* Anneau rotatif décoratif */}
               <div className="absolute inset-0 rounded-full border border-dashed border-white/30 animate-[spin_10s_linear_infinite] group-hover:border-white/60" />
-              
-              {/* Photo de la conseillère */}
               <img 
                 src={counselorImage} 
                 alt="Conseillère" 
-                className="relative w-12 h-12 rounded-full object-cover border-2 border-[#333333] shadow-md z-10"
+                className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-[#333333] shadow-md z-10"
               />
-              
-              {/* Pastille de disponibilité (Émeraude éclatant) */}
-              <span className="absolute bottom-0 right-0 flex h-4 w-4 z-20">
+              <span className="absolute bottom-0 right-0 flex h-3.5 w-3.5 sm:h-4 sm:w-4 z-20">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-[#1a1a1a] group-hover:border-[#222222] transition-colors shadow-sm"></span>
+                <span className="relative inline-flex rounded-full h-full w-full bg-emerald-500 border-2 border-[#1a1a1a] group-hover:border-[#222222] transition-colors shadow-sm"></span>
               </span>
             </div>
             
             <div className="flex flex-col items-start justify-center ml-1 z-10">
-              <span className="font-extrabold text-sm tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
+              <span className="font-extrabold text-[12px] sm:text-sm tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
                 Conseillère ECLOSIA
               </span>
-              <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1 group-hover:text-emerald-300 transition-colors">
-                <MessageCircleHeart className="w-3 h-3" />
+              <span className="text-[9px] sm:text-[10px] text-gray-400 font-medium flex items-center gap-1 group-hover:text-emerald-300 transition-colors">
+                <MessageCircleHeart className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 Posez une question
               </span>
             </div>
 
-            {/* Sparkle flottant */}
-            <Sparkles className="absolute -top-2 -right-2 w-5 h-5 text-amber-200 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse" />
+            <Sparkles className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-5 sm:h-5 text-amber-200 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse" />
           </button>
         </div>
       )}
 
-      {/* Fenêtre de chat flottante */}
+      {/* FENÊTRE DE CHAT OUVERTE */}
       {isOpen && (
-        <div className="flex flex-col h-[560px] w-[380px] bg-white border border-[#333333]/20 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 transform origin-bottom-right">
+        <div className="pointer-events-auto flex flex-col w-full h-full sm:h-[560px] sm:w-[380px] bg-white border border-[#333333]/20 rounded-[20px] sm:rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 transform origin-bottom sm:origin-bottom-right">
           
-          {/* En-tête de la fenêtre (Noir Anthracite Premium) */}
-          <div className="px-5 py-4 bg-gradient-to-r from-[#333333] to-[#1a1a1a] text-white flex items-center justify-between border-b border-white/10 relative overflow-hidden">
-            
-            {/* Effet de lumière subtil dans le header */}
+          {/* En-tête avec bouton de FERMETURE DU CHAT */}
+          <div className="px-4 sm:px-5 py-3 sm:py-4 bg-gradient-to-r from-[#333333] to-[#1a1a1a] text-white flex items-center justify-between border-b border-white/10 relative overflow-hidden shrink-0">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-            <div className="flex items-center gap-4 relative z-10">
+            <div className="flex items-center gap-3 sm:gap-4 relative z-10">
               <div className="relative">
-                <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center shadow-lg overflow-hidden border-[2.5px] border-white/20">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/10 flex items-center justify-center shadow-lg overflow-hidden border-[2px] sm:border-[2.5px] border-white/20">
                   <img 
                     src={counselorImage} 
                     alt="Clara - ECLOSIA" 
                     className="w-full h-full object-cover"
                   />
                 </div>
-                {/* Pastille status header */}
-                <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-[#1a1a1a] shadow-sm"></span>
+                <span className="absolute bottom-0.5 right-0.5 h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full bg-emerald-500 border-2 border-[#1a1a1a] shadow-sm"></span>
               </div>
               
               <div className="flex flex-col">
-                <h3 className="font-extrabold text-[15px] tracking-wide text-white">Clara d'ECLOSIA</h3>
-                <div className="flex items-center gap-1.5 text-[11px] text-emerald-300 font-medium mt-0.5">
+                <h3 className="font-extrabold text-[14px] sm:text-[15px] tracking-wide text-white">Clara d'ECLOSIA</h3>
+                <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-emerald-300 font-medium mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                   En ligne • À votre écoute
                 </div>
@@ -170,23 +177,24 @@ export default function AiChatDrawer() {
               className="relative z-10 text-white/50 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all duration-200 active:scale-95"
               aria-label="Fermer le chat"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </button>
           </div>
 
-          {/* Avertissement Médical Clair & Intégré */}
-          <div className="bg-[#F5EBE6] border-b border-[#333333]/10 px-3 py-2 flex items-start gap-2 text-[11px] text-[#333333]">
-            <AlertCircle className="w-4 h-4 text-[#6E857B] shrink-0 mt-0.5" />
+          <div className="bg-[#F5EBE6] border-b border-[#333333]/10 px-3 py-2 flex items-start gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] text-[#333333] shrink-0">
+            <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B] shrink-0 mt-0.5" />
             <p className="leading-tight">
               <strong className="font-bold">Info :</strong> Cet assistant ne remplace pas un professionnel de santé.
             </p>
           </div>
 
-          {/* Liste des messages */}
-          <ChatMessageList messages={messages} loading={loading} />
+          <div className="flex-1 overflow-y-auto">
+            <ChatMessageList messages={messages} loading={loading} />
+          </div>
 
-          {/* Zone de saisie */}
-          <ChatInput onSend={handleSendMessage} disabled={loading} />
+          <div className="shrink-0">
+            <ChatInput onSend={handleSendMessage} disabled={loading} />
+          </div>
           
         </div>
       )}

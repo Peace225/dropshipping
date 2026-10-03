@@ -136,7 +136,9 @@ export function FeaturedProducts() {
 
   const scroll = (dir: "left"|"right") => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: dir==="left" ? -320 : 320, behavior: "smooth" });
+      // Ajustement dynamique du défilement selon l'appareil
+      const scrollAmount = window.innerWidth < 640 ? 280 : 320;
+      scrollContainerRef.current.scrollBy({ left: dir==="left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
     }
   };
 
@@ -148,90 +150,124 @@ export function FeaturedProducts() {
       <div className="col-span-full w-full">
         
         {/* HEADER MARKETING ECLOSIA */}
-        <div className="mb-8 w-full overflow-hidden rounded-2xl border border-[#333333]/10 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)] relative">
-          <div className="absolute top-0 right-0 w-72 h-72 bg-[#D4A396]/20 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-gradient-to-r from-[#333333] to-[#3D3D3D] p-5 sm:p-6 text-white gap-4 relative">
-            <div className="flex items-center gap-4">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#D4A396] shadow-[0_0_20px_rgba(212,163,150,0.5)]"><Zap className="h-6 w-6 fill-current"/></span>
+        <div className="mb-6 sm:mb-8 w-full overflow-hidden rounded-[20px] sm:rounded-2xl border border-[#333333]/10 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)] relative">
+          <div className="absolute top-0 right-0 w-48 sm:w-72 h-48 sm:h-72 bg-[#D4A396]/20 rounded-full blur-[40px] sm:blur-3xl -mr-20 -mt-20 sm:-mr-32 sm:-mt-32 pointer-events-none"></div>
+          
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-gradient-to-r from-[#333333] to-[#3D3D3D] p-4 sm:p-6 text-white gap-4 relative">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <span className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full bg-[#D4A396] shadow-[0_0_20px_rgba(212,163,150,0.5)]">
+                <Zap className="h-5 w-5 sm:h-6 sm:w-6 fill-current"/>
+              </span>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="font-extrabold text-base sm:text-lg tracking-tight">Vente Flash -10%</h2>
-                  <span className="bg-white/15 border border-white/20 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide">Des produits • Stock limité</span>
-                  <span className="hidden sm:inline-flex items-center gap-1 bg-[#6E857B] px-2.5 py-0.5 rounded-full text-xs font-bold"><ShieldCheck className="w-3 h-3"/> OEKO-TEX</span>
+                  <h2 className="font-extrabold text-[15px] sm:text-lg tracking-tight">Vente Flash -10%</h2>
+                  <span className="bg-white/15 border border-white/20 px-2 py-0.5 sm:px-2.5 rounded-full text-[9px] sm:text-xs font-bold uppercase tracking-wide">Des produits • Stock limité</span>
+                  <span className="hidden sm:inline-flex items-center gap-1 bg-[#6E857B] px-2.5 py-0.5 rounded-full text-xs font-bold">
+                    <ShieldCheck className="w-3 h-3"/> OEKO-TEX
+                  </span>
                 </div>
-                <p className="text-xs text-white/70 mt-1 flex items-center gap-2"><span>🔥 Ne tardez pas : livraison 10€ seulement !</span><span className="w-1 h-1 bg-white/30 rounded-full"></span><span>🇫🇷 🇪🇺 France/UE</span></p>
+                <p className="text-[11px] sm:text-xs text-white/70 mt-1 flex items-center gap-1.5 sm:gap-2">
+                  <span>🔥 Livraison 10€ !</span>
+                  <span className="w-1 h-1 bg-white/30 rounded-full"></span>
+                  <span>🇫🇷 🇪🇺 France/UE</span>
+                </p>
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-1.5 rounded-2xl bg-white/10 px-5 py-3 border border-white/10 backdrop-blur">
-              <Clock3 className="h-5 w-5 text-[#D4A396]"/>
+
+            <div className="w-full md:w-auto flex shrink-0 items-center justify-between gap-1.5 rounded-xl sm:rounded-2xl bg-white/10 px-4 py-2.5 sm:px-5 sm:py-3 border border-white/10 backdrop-blur">
+              <div className="flex items-center gap-2">
+                <Clock3 className="h-4 w-4 sm:h-5 sm:w-5 text-[#D4A396]"/>
+                <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-white/80 hidden sm:block">Termine dans</span>
+              </div>
               {!countdown.expired ? (
                 <div className="flex items-center gap-1">
-                  <span className="bg-white text-[#333333] px-2 py-1 rounded-md font-mono text-xs font-extrabold">{String(countdown.h).padStart(2,"0")}</span>
-                  <span className="text-white/50">:</span>
-                  <span className="bg-white text-[#333333] px-2 py-1 rounded-md font-mono text-xs font-extrabold">{String(countdown.m).padStart(2,"0")}</span>
-                  <span className="text-white/50">:</span>
-                  <span className="bg-[#D4A396] text-white px-2 py-1 rounded-md font-mono text-xs font-extrabold">{String(countdown.s).padStart(2,"0")}</span>
+                  <span className="bg-white text-[#333333] px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md font-mono text-[10px] sm:text-xs font-extrabold">{String(countdown.h).padStart(2,"0")}</span>
+                  <span className="text-white/50 text-[10px] sm:text-xs">:</span>
+                  <span className="bg-white text-[#333333] px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md font-mono text-[10px] sm:text-xs font-extrabold">{String(countdown.m).padStart(2,"0")}</span>
+                  <span className="text-white/50 text-[10px] sm:text-xs">:</span>
+                  <span className="bg-[#D4A396] text-white px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md font-mono text-[10px] sm:text-xs font-extrabold">{String(countdown.s).padStart(2,"0")}</span>
                 </div>
-              ) : <span className="text-xs font-black text-red-300">Expirée</span>}
+              ) : <span className="text-[10px] sm:text-xs font-black text-red-300">Expirée</span>}
             </div>
           </div>
-          <div className="bg-[#F5EBE6]/40 px-5 py-3 flex flex-wrap items-center gap-3 text-xs font-bold text-[#333333]/70">
-            <span className="flex items-center gap-1.5"><Truck className="w-4 h-4 text-[#6E857B]"/>Livraison rapide dès 10,00 €</span>
+          
+          <div className="bg-[#F5EBE6]/40 px-4 py-2.5 sm:px-5 sm:py-3 flex flex-wrap items-center justify-between sm:justify-start gap-2 sm:gap-3 text-[10px] sm:text-xs font-bold text-[#333333]/70">
+            <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B]"/>Livraison rapide dès 10,00 €</span>
             <span className="w-px h-3 bg-[#333333]/15 hidden sm:block"></span>
-            <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-[#6E857B]"/>OEKO-TEX & Fabriqué France/UE</span>
+            <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B]"/>OEKO-TEX & Fabriqué France/UE</span>
           </div>
         </div>
 
-        <div className="mb-4 flex items-center justify-between">
-          <span className="text-xs font-bold text-[#333]/60 tracking-wide">Des pépites • Glissez pour découvrir →</span>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={()=>scroll("left")} className="flex h-9 w-9 items-center justify-center rounded-full border border-[#333]/15 bg-white shadow-sm hover:bg-[#F5EBE6] text-[#333] transition-colors cursor-pointer"><ChevronLeft className="h-5 w-5" /></button>
-            <button type="button" onClick={()=>scroll("right")} className="flex h-9 w-9 items-center justify-center rounded-full border border-[#333]/15 bg-white shadow-sm hover:bg-[#F5EBE6] text-[#333] transition-colors cursor-pointer"><ChevronRight className="h-5 w-5" /></button>
+        <div className="mb-3 sm:mb-4 flex items-center justify-between">
+          <span className="text-[10px] sm:text-xs font-bold text-[#333]/60 tracking-wide">Des pépites • Glissez pour découvrir →</span>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button type="button" onClick={()=>scroll("left")} className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border border-[#333]/15 bg-white shadow-sm hover:bg-[#F5EBE6] text-[#333] transition-colors cursor-pointer"><ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" /></button>
+            <button type="button" onClick={()=>scroll("right")} className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border border-[#333]/15 bg-white shadow-sm hover:bg-[#F5EBE6] text-[#333] transition-colors cursor-pointer"><ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" /></button>
           </div>
         </div>
 
         {/* CAROUSEL SLIDE HORIZONTAL FLUIDE */}
-        <div ref={scrollContainerRef} className="flex w-full gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-6 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div ref={scrollContainerRef} className="flex w-full gap-3 sm:gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 sm:pb-6 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-4 px-4 sm:mx-0 sm:px-0">
           {flashProducts.map((product) => {
             const pct = Math.round(((product.stockTotal-product.stockLeft)/product.stockTotal)*100);
             return (
-              <article key={product.id} className="group relative flex w-[82%] sm:w-[42%] lg:w-[calc(33%-14px)] xl:w-[calc(25%-15px)] shrink-0 flex-col overflow-hidden rounded-2xl border border-[#333333]/10 bg-white snap-start shadow-[0_2px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.10)] hover:-translate-y-1.5 transition-all duration-500">
+              <article key={product.id} className="group relative flex w-[80%] sm:w-[45%] md:w-[calc(33%-14px)] xl:w-[calc(25%-15px)] shrink-0 flex-col overflow-hidden rounded-[16px] sm:rounded-2xl border border-[#333333]/10 bg-white snap-start shadow-[0_2px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.10)] sm:hover:-translate-y-1.5 transition-all duration-500">
                 
                 {/* TOP BADGES - SÉCURISÉS EN HAUT */}
-                <div className="absolute left-0 right-0 top-0 z-20 flex justify-between items-start p-3 pointer-events-none">
+                <div className="absolute left-0 right-0 top-0 z-20 flex justify-between items-start p-2.5 sm:p-3 pointer-events-none">
                   <div className="flex flex-col gap-1.5 items-start">
-                    <span className="pointer-events-auto rounded-full bg-[#333333] px-2.5 py-1 text-[10px] font-extrabold text-white shadow-sm">{product.discount} FLASH</span>
-                    <span className="pointer-events-auto rounded-full bg-white/95 backdrop-blur border border-[#333333]/10 px-2 py-0.5 text-[9px] font-bold flex items-center gap-1 shadow-sm text-[#333333]"><span>{product.flag}</span><span className="truncate max-w-[70px]">{product.fabrication.split(" ").slice(0,2).join(" ")}</span></span>
+                    <span className="pointer-events-auto rounded-full bg-[#333333] px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-extrabold text-white shadow-sm">{product.discount} FLASH</span>
+                    <span className="pointer-events-auto rounded-full bg-white/95 backdrop-blur border border-[#333333]/10 px-2 py-0.5 text-[8px] sm:text-[9px] font-bold flex items-center gap-1 shadow-sm text-[#333333]"><span>{product.flag}</span><span className="truncate max-w-[60px] sm:max-w-[70px]">{product.fabrication.split(" ").slice(0,2).join(" ")}</span></span>
                   </div>
-                  <span className="pointer-events-auto rounded-full bg-white/95 backdrop-blur border border-[#333333]/10 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wide text-[#333333] shadow-sm">{product.universe}</span>
+                  <span className="pointer-events-auto rounded-full bg-white/95 backdrop-blur border border-[#333333]/10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wide text-[#333333] shadow-sm">{product.universe}</span>
                 </div>
 
-                <Link href={product.detailUrl} className="relative block aspect-square w-full overflow-hidden bg-gradient-to-b from-[#F5EBE6]/40 via-[#F5EBE6]/20 to-white pt-12">
-                  <img src={product.image} alt={product.name} className="w-full h-full object-contain p-4 group-hover:scale-[1.08] transition-transform duration-700 mix-blend-multiply"
+                <Link href={product.detailUrl} className="relative block aspect-square w-full overflow-hidden bg-gradient-to-b from-[#F5EBE6]/40 via-[#F5EBE6]/20 to-white pt-10 sm:pt-12">
+                  <img src={product.image} alt={product.name} className="w-full h-full object-contain p-3 sm:p-4 group-hover:scale-[1.05] sm:group-hover:scale-[1.08] transition-transform duration-700 mix-blend-multiply"
                     onError={(e)=>{ (e.currentTarget as HTMLImageElement).src = PLACEHOLDER; }}
                   />
                 </Link>
 
-                <div className="flex flex-1 flex-col p-4">
-                  <p className="mb-1 text-[10px] font-extrabold uppercase tracking-widest text-[#6E857B]">{product.categoryName}</p>
-                  <Link href={product.detailUrl}><h3 className="line-clamp-2 text-xs font-extrabold leading-snug text-[#333333] group-hover:text-[#6E857B] transition-colors min-h-[32px]">{product.name}</h3></Link>
-                  <p className="text-[11px] text-[#333333]/60 mt-1 line-clamp-2 leading-relaxed">{product.shortDesc}</p>
-                  <div className="mt-2.5 flex items-center gap-1 text-amber-500">{Array.from({length:4},(_,i)=><Star key={i} className="w-3 h-3 fill-current"/>)}<Star className="w-3 h-3 text-gray-200"/><span className="ml-1 text-[10px] text-[#333333]/50 font-medium">({product.reviewsCount})</span></div>
-                  <div className="mt-3 flex items-baseline gap-2"><span className="font-extrabold text-sm text-[#333333]">{product.price}</span><span className="text-xs line-through text-[#333333]/40">{product.oldPrice}</span></div>
-                  <div className="mt-3"><div className="mb-1.5 flex justify-between text-[10px] font-bold"><span className="text-[#333333]/60">Stock flash</span><span className="text-[#D4A396]">{product.stockLeft} restants</span></div><div className="h-1.5 w-full overflow-hidden rounded-full bg-[#333333]/10"><div className="h-full bg-gradient-to-r from-[#D4A396] to-[#C48A7D]" style={{width:`${pct}%`}}/></div></div>
+                <div className="flex flex-1 flex-col p-3.5 sm:p-4">
+                  <p className="mb-1 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest text-[#6E857B]">{product.categoryName}</p>
+                  <Link href={product.detailUrl}><h3 className="line-clamp-2 text-[11px] sm:text-xs font-extrabold leading-snug text-[#333333] group-hover:text-[#6E857B] transition-colors min-h-[30px] sm:min-h-[32px]">{product.name}</h3></Link>
+                  <p className="text-[10px] sm:text-[11px] text-[#333333]/60 mt-1 line-clamp-2 leading-relaxed">{product.shortDesc}</p>
                   
-                  {/* BOUTON AJOUTER - LIBRE ET ACCESSIBLE */}
-                  <button type="button" onClick={(e)=>{e.preventDefault(); e.stopPropagation(); handleAddToCart(product);}} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#333333] hover:bg-black py-2.5 text-xs font-extrabold text-white shadow-sm transition-colors relative z-10 cursor-pointer"><ShoppingBag className="h-4 w-4"/>Ajouter • -10%</button>
+                  <div className="mt-2 sm:mt-2.5 flex items-center gap-1 text-amber-500">
+                    {Array.from({length:4},(_,i)=><Star key={i} className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current"/>)}
+                    <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-200"/>
+                    <span className="ml-1 text-[9px] sm:text-[10px] text-[#333333]/50 font-medium">({product.reviewsCount})</span>
+                  </div>
+                  
+                  <div className="mt-2.5 sm:mt-3 flex items-baseline gap-2">
+                    <span className="font-extrabold text-sm sm:text-base text-[#333333]">{product.price}</span>
+                    <span className="text-[10px] sm:text-xs line-through text-[#333333]/40">{product.oldPrice}</span>
+                  </div>
+                  
+                  <div className="mt-2.5 sm:mt-3">
+                    <div className="mb-1.5 flex justify-between text-[9px] sm:text-[10px] font-bold">
+                      <span className="text-[#333333]/60">Stock flash</span>
+                      <span className="text-[#D4A396]">{product.stockLeft} restants</span>
+                    </div>
+                    <div className="h-1 sm:h-1.5 w-full overflow-hidden rounded-full bg-[#333333]/10">
+                      <div className="h-full bg-gradient-to-r from-[#D4A396] to-[#C48A7D]" style={{width:`${pct}%`}}/>
+                    </div>
+                  </div>
+                  
+                  {/* BOUTON AJOUTER */}
+                  <button type="button" onClick={(e)=>{e.preventDefault(); e.stopPropagation(); handleAddToCart(product);}} className="mt-3.5 sm:mt-4 flex w-full items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-[#333333] active:scale-95 sm:hover:bg-black py-2 sm:py-2.5 text-[11px] sm:text-xs font-extrabold text-white shadow-sm transition-all relative z-10 cursor-pointer">
+                    <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>Ajouter • -10%
+                  </button>
                 </div>
               </article>
             );
           })}
         </div>
 
-        <div className="mt-8 flex justify-center">
-          <Link href="/ventes-flash" className="group inline-flex items-center gap-2.5 rounded-2xl bg-[#333333] px-6 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-md hover:bg-black transition-all cursor-pointer">
-            Découvrir toute la sélection Flash -10%
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1.5" />
+        <div className="mt-4 sm:mt-8 flex justify-center">
+          <Link href="/ventes-flash" className="group inline-flex items-center gap-2 sm:gap-2.5 rounded-[14px] sm:rounded-2xl bg-[#333333] px-5 py-3 sm:px-6 sm:py-3.5 text-[10px] sm:text-xs font-bold uppercase tracking-[0.14em] text-white shadow-md active:scale-95 sm:hover:bg-black transition-all cursor-pointer">
+            Découvrir toute la sélection Flash
+            <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform group-hover:translate-x-1.5" />
           </Link>
         </div>
       </div>

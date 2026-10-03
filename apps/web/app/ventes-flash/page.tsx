@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Clock3, Star, ShoppingBag, Search, Check, Zap, X, Sparkles, ShieldCheck, Truck, MapPin, Heart } from "lucide-react";
+import { Clock3, Star, ShoppingBag, Search, Check, Zap, X, Sparkles, ShieldCheck, Truck, Heart, Filter } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { useCart } from "@/context/cart-context";
 
@@ -43,14 +43,15 @@ function LiveCountdown({ endsAt }: { endsAt: string | Date }) {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [endsAt]);
-  if (timeLeft.expired) return <span className="text-xs font-bold text-red-400">Expiré</span>;
+  
+  if (timeLeft.expired) return <span className="text-[10px] sm:text-xs font-bold text-red-400">Expiré</span>;
   return (
     <div className="flex items-center gap-1">
-      <span className="bg-white text-[#333333] px-1.5 py-1 rounded-md font-mono text-xs font-extrabold">{String(timeLeft.h).padStart(2,"0")}</span>
-      <span className="text-white/60">:</span>
-      <span className="bg-white text-[#333333] px-1.5 py-1 rounded-md font-mono text-xs font-extrabold">{String(timeLeft.m).padStart(2,"0")}</span>
-      <span className="text-white/60">:</span>
-      <span className="bg-[#D4A396] text-white px-1.5 py-1 rounded-md font-mono text-xs font-extrabold">{String(timeLeft.s).padStart(2,"0")}</span>
+      <span className="bg-white text-[#333333] px-1.5 py-1 rounded-md font-mono text-[10px] sm:text-xs font-extrabold">{String(timeLeft.h).padStart(2,"0")}</span>
+      <span className="text-white/60 text-[10px] sm:text-xs">:</span>
+      <span className="bg-white text-[#333333] px-1.5 py-1 rounded-md font-mono text-[10px] sm:text-xs font-extrabold">{String(timeLeft.m).padStart(2,"0")}</span>
+      <span className="text-white/60 text-[10px] sm:text-xs">:</span>
+      <span className="bg-[#D4A396] text-white px-1.5 py-1 rounded-md font-mono text-[10px] sm:text-xs font-extrabold">{String(timeLeft.s).padStart(2,"0")}</span>
     </div>
   );
 }
@@ -62,6 +63,7 @@ export default function VentesFlashPage8() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("Tous les produits");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [debug, setDebug] = useState("");
 
   useEffect(() => {
@@ -176,35 +178,79 @@ export default function VentesFlashPage8() {
   }),[flashProducts,selectedCategory,searchQuery]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#FAFAFA] via-white to-[#F5EBE6]/30 pt-24 text-[#333333]">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-gradient-to-b from-[#FAFAFA] via-white to-[#F5EBE6]/30 pt-20 sm:pt-24 text-[#333333]">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         
-        {/* HERO FLASH */}
-        <div className="mb-8 overflow-hidden rounded-[24px] border border-[#333333]/10 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)] relative">
-          <div className="absolute top-0 right-0 w-72 h-72 bg-[#D4A396]/20 rounded-full blur-[60px] -mr-32 -mt-32 pointer-events-none"></div>
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between bg-gradient-to-r from-[#333333] via-[#333333] to-[#3D3D3D] p-5 sm:p-6 text-white relative">
-            <div className="flex items-center gap-4">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#D4A396] shadow-[0_0_20px_rgba(212,163,150,0.5)]"><Zap className="h-6 w-6 fill-current"/></span>
+        {/* HERO FLASH (Responsive Mobile) */}
+        <div className="mb-6 sm:mb-8 overflow-hidden rounded-[20px] sm:rounded-[24px] border border-[#333333]/10 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)] relative">
+          <div className="absolute top-0 right-0 w-48 sm:w-72 h-48 sm:h-72 bg-[#D4A396]/20 rounded-full blur-[40px] sm:blur-[60px] -mr-20 -mt-20 sm:-mr-32 sm:-mt-32 pointer-events-none"></div>
+          
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-gradient-to-r from-[#333333] via-[#333333] to-[#3D3D3D] p-4 sm:p-6 text-white relative gap-4">
+            
+            <div className="flex items-center gap-3 sm:gap-4">
+              <span className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-full bg-[#D4A396] shadow-[0_0_20px_rgba(212,163,150,0.5)]">
+                <Zap className="h-5 w-5 sm:h-6 sm:w-6 fill-current"/>
+              </span>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="font-extrabold text-[18px] sm:text-[20px] tracking-tight">Vente Flash -10%</h2>
-                  <span className="hidden sm:inline-flex items-center gap-1 bg-[#6E857B] px-2.5 py-0.5 rounded-full text-[10px] font-bold"><ShieldCheck className="w-3 h-3"/> OEKO-TEX</span>
+                  <h2 className="font-extrabold text-[16px] sm:text-[20px] tracking-tight">Vente Flash -10%</h2>
+                  <span className="hidden sm:inline-flex items-center gap-1 bg-[#6E857B] px-2.5 py-0.5 rounded-full text-[10px] font-bold">
+                    <ShieldCheck className="w-3 h-3"/> OEKO-TEX
+                  </span>
                 </div>
-                <p className="text-[12px] text-white/70 mt-1 flex items-center gap-2"><span>{filtered.length} pépites Maman & Bébé</span><span className="w-1 h-1 bg-white/30 rounded-full"></span><span>🇫🇷 🇪🇺 Fabriqué France/UE</span></p>
+                <p className="text-[11px] sm:text-[12px] text-white/70 mt-0.5 sm:mt-1 flex items-center gap-1.5 sm:gap-2">
+                  <span>{filtered.length} pépites Bébé</span>
+                  <span className="w-1 h-1 bg-white/30 rounded-full"></span>
+                  <span>🇫🇷 🇪🇺 France/UE</span>
+                </p>
               </div>
             </div>
-            <div className="mt-4 lg:mt-0 flex items-center gap-3 rounded-2xl bg-white/10 px-5 py-3 border border-white/10 backdrop-blur">
-              <Clock3 className="h-5 w-5 text-[#D4A396]"/><div className="flex flex-col"><span className="text-[10px] uppercase font-bold tracking-widest text-white/60">Termine dans</span><div className="mt-1">{flashEndsAt && <LiveCountdown endsAt={flashEndsAt}/>}</div></div>
+
+            <div className="w-full md:w-auto flex items-center justify-between gap-3 rounded-xl sm:rounded-2xl bg-white/10 px-4 sm:px-5 py-2.5 sm:py-3 border border-white/10 backdrop-blur">
+              <div className="flex items-center gap-2">
+                <Clock3 className="h-4 w-4 sm:h-5 sm:w-5 text-[#D4A396]"/>
+                <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-widest text-white/80 md:text-white/60 hidden sm:block">Termine dans</span>
+              </div>
+              <div className="mt-0">{flashEndsAt && <LiveCountdown endsAt={flashEndsAt}/>}</div>
             </div>
           </div>
-          <div className="bg-[#F5EBE6]/40 px-5 py-3 flex flex-wrap items-center gap-3 text-[11px] font-bold text-[#333333]/70">
-            <span className="flex items-center gap-1.5"><Truck className="w-4 h-4 text-[#6E857B]"/>Livraison rapide dès 10,00 €</span>
+
+          <div className="bg-[#F5EBE6]/40 px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between sm:justify-start sm:gap-3 text-[10px] sm:text-[11px] font-bold text-[#333333]/70">
+            <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-[#6E857B]"/>Livraison 10,00 €</span>
             <span className="w-px h-3 bg-[#333333]/15 hidden sm:block"></span>
-            <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-[#6E857B]"/>OEKO-TEX & Fabriqué France/UE</span>
+            <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-[#6E857B]"/>OEKO-TEX / France</span>
           </div>
         </div>
 
+        {/* BARRE DE FILTRES MOBILE */}
+        <div className="lg:hidden mb-6 flex gap-2">
+          <div className="relative flex-1">
+            <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Rechercher..." className="w-full rounded-xl border border-[#333333]/15 py-2.5 pl-9 pr-8 text-xs font-medium focus:outline-none focus:border-[#333333]"/>
+            <Search className="absolute left-3 top-3 h-3.5 w-3.5 text-[#333333]/40"/>
+            {searchQuery && <button onClick={()=>setSearchQuery("")} className="absolute right-3 top-3"><X className="w-3.5 h-3.5 text-[#333333]/50"/></button>}
+          </div>
+          <button onClick={() => setShowMobileFilters(!showMobileFilters)} className="flex h-[38px] px-4 items-center justify-center gap-2 rounded-xl bg-[#F5EBE6] border border-[#333333]/10 text-xs font-bold text-[#333333]">
+            <Filter className="w-3.5 h-3.5"/> Filtres
+          </button>
+        </div>
+
+        {/* MENU FILTRES MOBILE (DÉROULANT) */}
+        {showMobileFilters && (
+          <div className="lg:hidden mb-6 p-4 rounded-xl border border-[#333333]/10 bg-white shadow-sm flex flex-wrap gap-2">
+            {["Tous les produits","Bébé","Maman"].map(cat=>{
+              const active = selectedCategory===cat;
+              return (
+                <button key={cat} onClick={()=>{ setSelectedCategory(cat); setShowMobileFilters(false); }} className={`px-4 py-2 rounded-lg text-[11px] font-bold transition-all ${active?"bg-[#333333] text-white shadow-md":"bg-[#F9F6F4] border border-[#333333]/5 text-[#333333]"}`}>
+                  {cat}
+                </button>
+              )
+            })}
+          </div>
+        )}
+
         <div className="flex gap-8">
+          
+          {/* SIDEBAR PC */}
           <aside className="hidden lg:block w-72 shrink-0">
             <div className="sticky top-24 rounded-[20px] border border-[#333333]/10 bg-white p-5 shadow-sm">
               <div className="mb-6 rounded-2xl bg-gradient-to-br from-[#F5EBE6] via-[#F5EBE6] to-[#E8C5C8]/30 p-4 border border-[#D4A396]/20">
@@ -226,67 +272,75 @@ export default function VentesFlashPage8() {
             </div>
           </aside>
 
-          <div className="flex-1">
+          <div className="flex-1 w-full">
             {loading ? <div className="py-20 text-center animate-pulse text-xs font-bold text-[#333333]/50">Chargement des produits flash...</div>
             : filtered.length===0 ? (
               <div className="py-20 bg-white rounded-[20px] border border-dashed text-center">
                 <p className="font-bold">Aucun produit flash</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              // GRID ADAPTÉE : 1 colonne mobile, 2 tablettes, 4 sur grands écrans
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {filtered.map(product=>{
                   const pct = Math.round(((product.stockTotal-product.stockLeft)/product.stockTotal)*100);
                   return (
-                    <article key={product.id} className="group relative flex flex-col overflow-hidden rounded-[20px] border border-[#333333]/10 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.10)] hover:-translate-y-1.5 transition-all duration-500">
+                    <article key={product.id} className="group relative flex flex-col overflow-hidden rounded-[16px] sm:rounded-[20px] border border-[#333333]/10 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.10)] sm:hover:-translate-y-1.5 transition-all duration-500">
                       
-                      {/* BADGES EN HAUT DE L'IMAGE (Drapeau + Rubrique + -10%) */}
-                      <span className="absolute left-3 top-3 z-20 rounded-full bg-[#333333] px-2.5 py-1 text-[10px] font-extrabold text-white shadow-sm">
-                        {product.discount}
-                      </span>
-                      
-                      <span className="absolute top-3 left-14 z-20 rounded-full bg-white/95 backdrop-blur border border-[#333333]/10 px-2 py-1 text-[9px] font-bold flex items-center gap-1 shadow-sm text-[#333333]">
-                        <span>{product.flag}</span>
-                        <span className="truncate max-w-[70px]">{product.fabrication.split(" ").slice(0,2).join(" ")}</span>
-                      </span>
+                      {/* CONTENEUR DES BADGES HAUT */}
+                      <div className="absolute left-0 right-0 top-0 z-20 flex justify-between items-start p-2.5 pointer-events-none">
+                        
+                        {/* GAUCHE : PASTILLE PROMO + DRAPEAU */}
+                        <div className="flex flex-col gap-1.5 items-start">
+                          <span className="pointer-events-auto rounded-full bg-[#333333] px-2.5 py-1 text-[9px] sm:text-[10px] font-extrabold text-white shadow-sm">
+                            {product.discount}
+                          </span>
+                          <span className="pointer-events-auto rounded-full bg-white/95 backdrop-blur border border-[#333333]/10 px-2 py-0.5 text-[8px] sm:text-[9px] font-bold flex items-center gap-1 shadow-sm text-[#333333]">
+                            <span>{product.flag}</span>
+                            <span className="truncate max-w-[60px] sm:max-w-[70px]">{product.fabrication.split(" ").slice(0,2).join(" ")}</span>
+                          </span>
+                        </div>
 
-                      <span className="absolute right-3 top-3 z-20 rounded-full bg-white/95 backdrop-blur border border-[#333333]/10 px-2 py-1 text-[9px] font-extrabold uppercase tracking-wide text-[#333333] shadow-sm">
-                        {product.rubrique}
-                      </span>
-
-                      <span className="absolute bottom-3 right-3 z-20 w-8 h-8 bg-white/90 backdrop-blur rounded-full flex items-center justify-center border border-[#333333]/10 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Heart className="w-4 h-4 text-[#333333]"/>
-                      </span>
+                        {/* DROITE : RUBRIQUE + COEUR */}
+                        <div className="flex flex-col gap-1.5 items-end">
+                           <span className="pointer-events-auto rounded-full bg-white/95 backdrop-blur border border-[#333333]/10 px-2 py-1 text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wide text-[#333333] shadow-sm">
+                             {product.rubrique.substring(0, 15)}{product.rubrique.length > 15 ? "..." : ""}
+                           </span>
+                           <span className="pointer-events-auto w-7 h-7 sm:w-8 sm:h-8 bg-white/90 backdrop-blur rounded-full flex items-center justify-center border border-[#333333]/10 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                             <Heart className="w-3.5 h-3.5 text-[#333333]"/>
+                           </span>
+                        </div>
+                      </div>
                       
-                      <Link href={product.detailUrl} className="relative block aspect-square bg-gradient-to-b from-[#F5EBE6]/40 via-[#F5EBE6]/20 to-white p-5">
-                        <Image src={product.image} alt={product.name} fill unoptimized className="object-contain p-2 mix-blend-multiply group-hover:scale-[1.08] transition-transform duration-700"/>
+                      <Link href={product.detailUrl} className="relative block aspect-square bg-gradient-to-b from-[#F5EBE6]/40 via-[#F5EBE6]/20 to-white pt-10 sm:pt-14 p-4 sm:p-5">
+                        <Image src={product.image} alt={product.name} fill unoptimized className="object-contain p-2 mix-blend-multiply sm:group-hover:scale-[1.08] transition-transform duration-700"/>
                       </Link>
 
-                      <div className="p-4 flex flex-col flex-grow">
-                        <Link href={product.detailUrl} className="font-extrabold text-[13px] leading-snug line-clamp-2 hover:text-[#6E857B] transition-colors text-[#333333]">
+                      <div className="p-3.5 sm:p-4 flex flex-col flex-grow">
+                        <Link href={product.detailUrl} className="font-extrabold text-[12px] sm:text-[13px] leading-snug line-clamp-2 hover:text-[#6E857B] transition-colors text-[#333333] min-h-[36px]">
                           {product.name}
                         </Link>
                         
-                        <p className="text-[11px] text-[#333333]/60 mt-1.5 line-clamp-2 leading-relaxed">
+                        <p className="text-[10px] sm:text-[11px] text-[#333333]/60 mt-1.5 line-clamp-2 leading-relaxed">
                           {product.shortDesc}
                         </p>
                         
-                        <div className="mt-2.5 flex items-center gap-1 text-amber-500">
-                          {Array.from({length:4}).map((_,i)=><Star key={i} className="w-3 h-3 fill-current"/>)}
-                          <Star className="w-3 h-3 text-gray-200"/>
-                          <span className="ml-1 text-[10px] text-[#333333]/50 font-medium">({product.reviewsCount})</span>
+                        <div className="mt-2 flex items-center gap-1 text-amber-500">
+                          {Array.from({length:4}).map((_,i)=><Star key={i} className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current"/>)}
+                          <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-200"/>
+                          <span className="ml-1 text-[9px] sm:text-[10px] text-[#333333]/50 font-medium">({product.reviewsCount})</span>
                         </div>
 
-                        <div className="mt-3 flex items-baseline gap-2">
-                          <span className="font-extrabold text-[18px] text-[#333333]">{product.price}</span>
-                          <span className="text-xs line-through text-[#333333]/40">{product.oldPrice}</span>
+                        <div className="mt-2.5 sm:mt-3 flex items-baseline gap-2">
+                          <span className="font-extrabold text-[16px] sm:text-[18px] text-[#333333]">{product.price}</span>
+                          <span className="text-[10px] sm:text-xs line-through text-[#333333]/40">{product.oldPrice}</span>
                         </div>
 
-                        <div className="mt-3">
-                          <div className="mb-1.5 flex justify-between text-[10px] font-bold">
+                        <div className="mt-2.5 sm:mt-3">
+                          <div className="mb-1.5 flex justify-between text-[9px] sm:text-[10px] font-bold">
                             <span className="text-[#333333]/60">Stock flash</span>
                             <span className="text-[#D4A396]">{product.stockLeft} restants</span>
                           </div>
-                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#333333]/10">
+                          <div className="h-1 sm:h-1.5 w-full overflow-hidden rounded-full bg-[#333333]/10">
                             <div className="h-full bg-gradient-to-r from-[#D4A396] to-[#C48A7D]" style={{width:`${pct}%`}}/>
                           </div>
                         </div>
@@ -302,9 +356,9 @@ export default function VentesFlashPage8() {
                             quantity:1,
                             is_flash_sale:true
                           })} 
-                          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#333333] hover:bg-black py-2.5 text-xs font-extrabold text-white shadow-sm transition-colors cursor-pointer"
+                          className="mt-3.5 sm:mt-4 flex w-full items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-[#333333] active:scale-95 sm:hover:bg-black py-2 sm:py-2.5 text-[11px] sm:text-xs font-extrabold text-white shadow-sm transition-all cursor-pointer"
                         >
-                          <ShoppingBag className="h-4 w-4"/>Ajouter • -10%
+                          <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>Ajouter • -10%
                         </button>
                       </div>
                     </article>

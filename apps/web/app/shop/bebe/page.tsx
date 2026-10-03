@@ -215,20 +215,46 @@ export default function BebeShopPage() {
           </div>
         )}
 
-        <div className="bg-gradient-to-r from-[#F5EBE6] via-[#E8DCC8] to-[#F5EBE6] rounded-[24px] p-6 sm:p-10 border border-[#333333]/10 flex flex-col lg:flex-row justify-between gap-8 mb-8">
+        {/* HEADER MARKETING */}
+        <div className="bg-gradient-to-r from-[#F5EBE6] via-[#E8DCC8] to-[#F5EBE6] rounded-[20px] sm:rounded-[24px] p-5 sm:p-10 border border-[#333333]/10 flex flex-col lg:flex-row justify-between gap-6 sm:gap-8 mb-6 sm:mb-8">
           <div className="max-w-2xl">
-            <div className="flex gap-2 mb-4"><span className="px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-[#333333] text-white flex items-center gap-1"><Sparkles className="w-3.5 h-3.5"/> Univers Bébé</span><span className="px-3 py-1 rounded-full text-xs font-bold bg-white border">{products.length} produits • OEKO-TEX • France/UE</span></div>
-            <h1 className="text-[32px] sm:text-[42px] font-extrabold leading-[0.95] text-[#333333] mb-4">L'essentiel pour<br/><span className="text-[#6E857B]">grandir en toute sécurité</span></h1>
-            <p className="text-[15px] text-[#333333]/75 mb-6">Matelas respirants, draps housse qui tiennent, alèses qui sauvent les nuits. <b>Coton BIO, bambou, France & UE.</b></p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              <span className="px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-[#333333] text-white flex items-center gap-1"><Sparkles className="w-3.5 h-3.5"/> Univers Bébé</span>
+              <span className="px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold bg-white border">{products.length} produits • OEKO-TEX</span>
+            </div>
+            <h1 className="text-[28px] sm:text-[32px] md:text-[42px] font-extrabold leading-[1.05] sm:leading-[0.95] text-[#333333] mb-4">L'essentiel pour<br/><span className="text-[#6E857B]">grandir en toute sécurité</span></h1>
+            <p className="text-[13px] sm:text-[15px] text-[#333333]/75 mb-4 sm:mb-6 leading-relaxed">Matelas respirants, draps housse qui tiennent, alèses qui sauvent les nuits. <b>Coton BIO, bambou, France & UE.</b></p>
           </div>
-          <div className="bg-white/90 p-5 rounded-2xl border min-w-[300px] flex flex-col gap-3">
-            <h3 className="font-extrabold text-sm flex items-center gap-2"><Baby className="w-4 h-4 text-[#6E857B]"/> Pourquoi ECLOSIA ?</h3>
-            <div className="space-y-2 text-xs"><div className="flex gap-2"><ShieldCheck className="w-4 h-4 text-[#6E857B]"/>Matières sûres BIO GOTS</div><div className="flex gap-2"><MapPin className="w-4 h-4 text-[#6E857B]"/>Fabrication France & UE</div><div className="flex gap-2"><RotateCcw className="w-4 h-4 text-[#6E857B]"/>Retour 10j gratuits + garantie 12 mois</div></div>
+          <div className="bg-white/90 p-4 sm:p-5 rounded-2xl border min-w-[280px] lg:min-w-[300px] flex flex-col gap-3 h-fit">
+            <h3 className="font-extrabold text-xs sm:text-sm flex items-center gap-2"><Baby className="w-4 h-4 text-[#6E857B]"/> Pourquoi ECLOSIA ?</h3>
+            <div className="space-y-2 text-[11px] sm:text-xs">
+              <div className="flex gap-2 items-center"><ShieldCheck className="w-3.5 h-3.5 text-[#6E857B]"/>Matières sûres BIO GOTS</div>
+              <div className="flex gap-2 items-center"><MapPin className="w-3.5 h-3.5 text-[#6E857B]"/>Fabrication France & UE</div>
+              <div className="flex gap-2 items-center"><RotateCcw className="w-3.5 h-3.5 text-[#6E857B]"/>Retour 10j gratuits + garantie 12 mois</div>
+            </div>
           </div>
         </div>
 
+        {/* SCROLL HORIZONTAL DES FILTRES SUR MOBILE */}
+        <div className="lg:hidden w-full overflow-x-auto pb-4 mb-2 -mx-4 px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex gap-2 snap-x">
+          {CATEGORIES.map(c => {
+            const isActive = selectedCategory === c.id;
+            return (
+              <button 
+                key={c.id} 
+                onClick={() => setSelectedCategory(c.id)} 
+                className={`snap-start shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-full text-[11px] sm:text-xs font-bold transition-colors whitespace-nowrap ${isActive ? "bg-[#333333] text-white" : "bg-white border border-[#333333]/10 text-[#333333]"}`}
+              >
+                {c.label} <span className={`text-[9px] px-1.5 rounded-full ${isActive ? 'bg-white/20' : 'bg-black/5'}`}>{counts[c.id]||0}</span>
+              </button>
+            )
+          })}
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-8">
-          <div className="w-full lg:w-80 shrink-0">
+          
+          {/* SIDEBAR FILTRES PC */}
+          <div className="hidden lg:block w-80 shrink-0">
             <div className="sticky top-24 bg-white rounded-2xl border p-5">
               <h3 className="font-extrabold text-sm mb-4">Filtrer par univers</h3>
               <div className="space-y-1.5">
@@ -236,33 +262,57 @@ export default function BebeShopPage() {
                   const Icon = c.icon;
                   const isActive = selectedCategory === c.id;
                   return (
-                    <button key={c.id} onClick={() => setSelectedCategory(c.id)} className={`w-full flex justify-between px-4 py-3 rounded-xl text-sm font-bold ${isActive ? "bg-[#333333] text-white" : "bg-[#F9F6F4] border text-[#333333]"}`}>
-                      <span className="flex items-center gap-2"><Icon className="w-4 h-4"/>{c.label}</span><span className="text-[11px] bg-black/10 px-2 rounded-full">{counts[c.id]||0}</span>
+                    <button key={c.id} onClick={() => setSelectedCategory(c.id)} className={`w-full flex justify-between px-4 py-3 rounded-xl text-sm font-bold transition-colors ${isActive ? "bg-[#333333] text-white" : "bg-[#F9F6F4] border border-transparent hover:border-[#333333]/10 text-[#333333]"}`}>
+                      <span className="flex items-center gap-2"><Icon className="w-4 h-4"/>{c.label}</span><span className={`text-[11px] px-2 rounded-full flex items-center ${isActive ? 'bg-white/20' : 'bg-black/10'}`}>{counts[c.id]||0}</span>
                     </button>
                   )
                 })}
               </div>
             </div>
           </div>
-          <div className="flex-1">
+          
+          <div className="flex-1 w-full">
             {loading ? (
-              <div className="grid grid-cols-3 gap-6">{[...Array(6)].map((_, i) => (<div key={i} className="h-[420px] bg-white rounded-2xl border animate-pulse"/> ))}</div>
+              // Squelettes adaptés 1 colonne mobile / 3 pc
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                {[...Array(6)].map((_, i) => (<div key={i} className="h-[380px] sm:h-[420px] bg-white rounded-[20px] border animate-pulse"/> ))}
+              </div>
             ) : filtered.length === 0 ? (
-              <div className="py-20 bg-white rounded-2xl border border-dashed text-center"><p className="font-bold">Aucun produit dans {selectedCategory}</p><button onClick={()=>setSelectedCategory("Tous")} className="mt-3 px-4 py-2 bg-[#333] text-white rounded-full text-xs">Voir tous</button></div>
+              <div className="py-16 sm:py-20 bg-white rounded-2xl border border-dashed text-center">
+                <p className="font-bold text-sm sm:text-base">Aucun produit dans cet univers</p>
+                <button onClick={()=>setSelectedCategory("Tous")} className="mt-4 px-5 py-2.5 bg-[#333] text-white rounded-full text-xs font-bold">Voir tous les produits</button>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              // GRID PRODUITS : 1 mobile / 2 tablette / 3 pc
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                 {filtered.map((p: any) => (
-                  <div key={p.id} className="group bg-white rounded-[20px] border overflow-hidden hover:shadow-lg transition-all flex flex-col">
-                    <Link href={p.detailUrl} className="relative w-full aspect-square bg-[#F5EBE6]/30 p-7 block">
-                      <img src={p.image} alt={p.name} loading="lazy" referrerPolicy="no-referrer" className="w-full h-full object-contain group-hover:scale-105 transition-transform" onError={e => {(e.target as HTMLImageElement).src = PLACEHOLDER}}/>
-                      <span className="absolute top-3 left-3 bg-white px-3 py-1 rounded-full text-[10px] font-bold border">{p.category.split("—")[0]}</span>
+                  <div key={p.id} className="group bg-white rounded-[16px] sm:rounded-[20px] border border-[#333333]/10 overflow-hidden hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] sm:hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                    
+                    <Link href={p.detailUrl} className="relative w-full aspect-square bg-gradient-to-b from-[#F5EBE6]/40 to-white p-5 sm:p-7 block">
+                      <img src={p.image} alt={p.name} loading="lazy" referrerPolicy="no-referrer" className="w-full h-full object-contain mix-blend-multiply sm:group-hover:scale-[1.03] transition-transform duration-500" onError={e => {(e.target as HTMLImageElement).src = PLACEHOLDER}}/>
+                      <span className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2.5 py-1 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wide border border-[#333333]/10 text-[#333333]">
+                        {p.category.split("—")[0]}
+                      </span>
                     </Link>
-                    <div className="p-5 flex flex-col flex-grow gap-3">
-                      <Link href={p.detailUrl} className="font-extrabold text-[14px] line-clamp-2 hover:text-[#6E857B]">{p.name}</Link>
-                      <p className="text-[12px] text-[#333]/70 line-clamp-2">{p.description}</p>
-                      <div className="flex items-center justify-between pt-4 border-t mt-auto">
-                        <div><span className="font-extrabold text-[20px]">{p.priceFormatted}</span><div className="text-[10px] text-green-600 font-bold">En stock</div></div>
-                        <Link href={p.detailUrl} className="px-4 py-2.5 rounded-xl bg-[#333333] text-white text-xs font-bold flex items-center gap-1"><ShoppingBag className="w-4 h-4"/>Voir détail</Link>
+                    
+                    <div className="p-4 sm:p-5 flex flex-col flex-grow gap-2 sm:gap-3">
+                      <Link href={p.detailUrl} className="font-extrabold text-[13px] sm:text-[14px] leading-snug line-clamp-2 hover:text-[#6E857B] transition-colors min-h-[38px] sm:min-h-[42px]">
+                        {p.name}
+                      </Link>
+                      
+                      <p className="text-[11px] sm:text-[12px] text-[#333]/60 line-clamp-2 leading-relaxed">
+                        {p.description}
+                      </p>
+                      
+                      <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-[#333333]/5 mt-auto">
+                        <div>
+                          <span className="font-extrabold text-[18px] sm:text-[20px] text-[#333333]">{p.priceFormatted}</span>
+                          <div className="text-[9px] sm:text-[10px] text-[#6E857B] font-extrabold uppercase tracking-wide">En stock</div>
+                        </div>
+                        <Link href={p.detailUrl} className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-[#333333] hover:bg-black text-white text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition-colors active:scale-95">
+                          <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4"/>
+                          <span className="hidden sm:inline">Détails</span>
+                        </Link>
                       </div>
                     </div>
                   </div>
