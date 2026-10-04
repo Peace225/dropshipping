@@ -1,165 +1,243 @@
-import Link from "next/link";
-import { ArrowLeft, Package, MapPin, CreditCard, Receipt } from "lucide-react";
-import { OrderTimeline } from "@/components/orders/OrderTimeline";
+"use client";
 
-export default function OrderDetailsPage({ params }: { params: { id: string } }) {
-  // Dans une vraie application, vous ferez ici une requête Supabase :
-  // const { data: order } = await supabase.from('orders').select('...').eq('id', params.id).single();
+export const dynamic = 'force-dynamic';
+
+import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+import { Package, Truck, ShoppingBag, ArrowRight, Calendar, MapPin, Eye } from "lucide-react";
+import Link from "next/link";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+const PLACEHOLDER = "https://via.placeholder.com/400x400/F5EBE6/333333?text=ECLOSIA";
+
+// Fonction de nettoyage des images pour correspondre à vos produits réels
+function getCleanImage(raw?: string, slug?: string){
+  const s = (slug||"").toLowerCase();
+  if(s.includes("40x80")) return "https://www.lamaisonenchiffon.com/img/p/1/6/7/3/9/16739.jpg";
+  if(s.includes("32x72") && s.includes("bambou")) return "https://www.lamaisonenchiffon.com/img/p/1/6/7/2/8/16728.jpg";
+  if(s.includes("32x72")) return "https://www.lamaisonenchiffon.com/img/p/1/6/7/2/8/16728.jpg";
+  if(s.includes("50x100")) return "https://www.lamaisonenchiffon.com/img/p/1/6/7/9/7/16797.jpg";
+  if(s.includes("60x120")) return "https://www.lamaisonenchiffon.com/img/p/1/6/7/9/9/16799.jpg";
+  if(s.includes("tapis") && s.includes("langer")) return "https://www.lamaisonenchiffon.com/img/p/1/5/8/0/2/15802.jpg";
+  if(s.includes("matelas") && s.includes("langer")) return "https://www.lamaisonenchiffon.com/img/p/3/8/6/5/3865.jpg";
+  if(s.includes("housse") && s.includes("langer")) return "https://www.lamaisonenchiffon.com/img/p/8/7/5/4/8754.jpg";
+  if(s.includes("drap") && s.includes("32x72")) return "https://www.lamaisonenchiffon.com/img/p/8/7/5/4/8754.jpg";
+  if(s.includes("plan") && s.includes("inclin")) return "https://www.lamaisonenchiffon.com/img/p/3/8/4/3/3843.jpg";
+  if(s.includes("coussin") && s.includes("chaise")) return "https://www.lamaisonenchiffon.com/img/p/1/6/9/7/2/16972.jpg";
+  if(s.includes("maillot") && s.includes("bain")) return "https://www.lamaisonenchiffon.com/img/p/1/4/5/2/8/14528.jpg";
   
-  // Simulation des données de la commande pour l'intégration visuelle
-  const order = {
-    id: params.id,
-    displayId: `AUR-${params.id.slice(0, 8).toUpperCase()}`,
-    date: new Date().toISOString(),
-    status: "processing", // Statut actuel
-    totalAmount: 145.90,
-    shippingFee: 4.90,
-    paymentMethod: "Carte bancaire (Stripe)",
-    shippingAddress: {
-      firstName: "Marie",
-      lastName: "Dupont",
-      address: "123 rue de la Paix",
-      postalCode: "75001",
-      city: "Paris",
-      country: "France",
-    },
-    items: [
-      { id: "1", name: "Sérum Éclat Naturel", quantity: 2, unitPrice: 45.50 },
-      { id: "2", name: "Crème Hydratante Nuit", quantity: 1, unitPrice: 50.00 },
-    ],
-    historyEvents: [
-      { status: "order_received", created_at: new Date(Date.now() - 86400000 * 2).toISOString(), description: "Commande validée" },
-      { status: "payment_confirmed", created_at: new Date(Date.now() - 86400000 * 2 + 3600000).toISOString(), description: "Paiement accepté" },
-      { status: "processing", created_at: new Date(Date.now() - 86400000).toISOString(), description: "En cours de préparation dans nos entrepôts" },
-    ]
-  };
+  if(!raw) return PLACEHOLDER;
+  let first = raw.includes("|") ? raw.split("|")[0].trim() : raw.trim();
+  if(!first.startsWith("http") && raw.includes("http")){
+    const m = raw.match(/https:\/\/[^|\s]+/);
+    if(m) return m[0];
+  }
+  return first.startsWith("http") ? first : PLACEHOLDER;
+}
+
+export default function CommandesPage() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [orderItemsMap, setOrderItemsMap] = useState<Record<string, any[]>>({});
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    async function getOrders() {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { 
+        setLoading(false); 
+        return; 
+      }
+      setUser(session.user);
+
+      // 1. Récupération des commandes de l'utilisateur connecté
+      const { data: ordersData, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Erreur lors de la récupération des commandes:", error);
+        setLoading(false);
+        return;
+      }
+
+      if (!ordersData || ordersData.length === 0) { 
+        setOrders([]); 
+        setLoading(false); 
+        return; 
+      }
+      
+      setOrders(ordersData);
+
+      // 2. Récupération des articles (order_items) liés à ces commandes avec jointure produits
+      const orderIds = ordersData.map((o: any) => o.id);
+      const { data: itemsData } = await supabase
+        .from("order_items")
+        .select("*, products(id, name, slug, image_url, sku)")
+        .in("order_id", orderIds);
+
+      // 3. Récupération des images primaires dans product_images si disponibles
+      const productIds = [...new Set((itemsData || []).map((it: any) => it.products?.id).filter(Boolean))];
+      let imagesByProduct: Record<string, string> = {};
+      
+      if (productIds.length > 0) {
+        const { data: imgs } = await supabase
+          .from("product_images")
+          .select("product_id, image_url, is_primary")
+          .in("product_id", productIds)
+          .eq("is_primary", true);
+          
+        (imgs || []).forEach((img: any) => { 
+          imagesByProduct[img.product_id] = img.image_url; 
+        });
+      }
+
+      const map: Record<string, any[]> = {};
+      (itemsData || []).forEach((it: any) => {
+        const prod = it.products;
+        const rawImg = imagesByProduct[prod?.id] || prod?.image_url || "";
+        const cleanImg = getCleanImage(rawImg, prod?.slug || "");
+        const enriched = { ...it, cleanImage: cleanImg };
+        
+        if (!map[it.order_id]) map[it.order_id] = [];
+        map[it.order_id].push(enriched);
+      });
+
+      setOrderItemsMap(map);
+      setLoading(false);
+    }
+
+    getOrders();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto space-y-6">
-        
-        {/* En-tête de navigation */}
-        <div className="flex items-center gap-4">
-          <Link 
-            href="/compte/commandes" 
-            className="p-2 rounded-full hover:bg-white border border-transparent hover:border-gray-200 transition-colors text-[#333333]/70 hover:text-[#333333]"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-serif font-bold text-[#333333]">
-              Commande {order.displayId}
-            </h1>
-            <p className="text-sm text-[#333333]/60">
-              Passée le {new Date(order.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
-          </div>
+    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#333333]/10 shadow-sm space-y-6">
+      
+      {/* En-tête de la page */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-[#333333]/10">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-[#333333]">Mes Commandes</h1>
+          <p className="text-xs text-[#333333]/60 mt-1">
+            {user ? `Connecté: ${user.email} • ` : ""}Historique et suivi de vos achats ({orders.length} commandes).
+          </p>
         </div>
+        <Link 
+          href="/shop" 
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#333333] hover:bg-black text-white text-xs font-bold shadow-sm transition-all"
+        >
+          <ShoppingBag className="w-4 h-4 text-[#6E857B]" />
+          <span>Nouvel achat</span>
+        </Link>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Colonne Principale : Articles et Résumé */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* Liste des articles */}
-            <div className="bg-white rounded-2xl shadow-sm border border-[#333333]/10 overflow-hidden">
-              <div className="p-5 border-b border-[#333333]/10 flex items-center gap-2">
-                <Package className="w-5 h-5 text-[#6E857B]" />
-                <h2 className="font-bold text-[#333333]">Articles commandés</h2>
-              </div>
-              <div className="p-5">
-                <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-[#333333]/60 uppercase bg-gray-50/50">
-                    <tr>
-                      <th className="px-4 py-3 rounded-l-lg">Produit</th>
-                      <th className="px-4 py-3 text-center">Qté</th>
-                      <th className="px-4 py-3 text-right rounded-r-lg">Prix total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {order.items.map((item) => (
-                      <tr key={item.id}>
-                        <td className="px-4 py-4 font-medium text-[#333333]">{item.name}</td>
-                        <td className="px-4 py-4 text-center text-[#333333]/80">{item.quantity}</td>
-                        <td className="px-4 py-4 text-right font-medium text-[#333333]">
-                          {(item.quantity * item.unitPrice).toFixed(2)} €
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+      {loading ? (
+        <div className="py-12 text-center text-xs text-[#333333]/60 animate-pulse">Chargement de vos commandes...</div>
+      ) : orders.length === 0 ? (
+        <div className="text-center py-16 border border-dashed border-[#333333]/15 rounded-3xl p-6 bg-[#F5EBE6]/10">
+          <Package className="w-12 h-12 text-[#333333]/30 mx-auto mb-3" />
+          <p className="text-sm font-bold text-[#333333]">Aucune commande enregistrée</p>
+          <p className="text-[11px] text-[#333333]/60 mt-1">Vos essentiels ECLOSIA vous attendent.</p>
+          <Link 
+            href="/shop" 
+            className="inline-flex items-center gap-2 mt-4 px-6 py-3 bg-[#6E857B] text-white text-xs font-bold rounded-2xl shadow-md hover:bg-[#5b6f67] transition-all"
+          >
+            <span>Explorer la boutique</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {orders.map((order) => (
+            <div key={order.id} className="rounded-2xl border border-[#333333]/10 bg-white shadow-sm overflow-hidden">
               
-              {/* Total Financier */}
-              <div className="bg-gray-50 p-5 border-t border-[#333333]/10">
-                <div className="space-y-2 text-sm max-w-xs ml-auto">
-                  <div className="flex justify-between text-[#333333]/80">
-                    <span>Sous-total</span>
-                    <span>{(order.totalAmount - order.shippingFee).toFixed(2)} €</span>
-                  </div>
-                  <div className="flex justify-between text-[#333333]/80">
-                    <span>Frais de livraison</span>
-                    <span>{order.shippingFee.toFixed(2)} €</span>
-                  </div>
-                  <div className="flex justify-between font-bold text-base text-[#333333] pt-2 border-t border-gray-200 mt-2">
-                    <span>Total payé</span>
-                    <span>{order.totalAmount.toFixed(2)} €</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Colonne Latérale : Suivi et Informations client */}
-          <div className="space-y-6">
-            
-            {/* Module de Suivi */}
-            <div className="bg-white rounded-2xl shadow-sm border border-[#333333]/10 p-6">
-              <OrderTimeline 
-                currentStatusKey={order.status} 
-                historyEvents={order.historyEvents} 
-              />
-            </div>
-
-            {/* Informations logistiques et facturation */}
-            <div className="bg-white rounded-2xl shadow-sm border border-[#333333]/10 overflow-hidden">
-              <div className="p-5 border-b border-[#333333]/10 flex items-center gap-2">
-                <Receipt className="w-5 h-5 text-[#6E857B]" />
-                <h2 className="font-bold text-[#333333]">Informations</h2>
-              </div>
-              
-              <div className="p-5 space-y-6">
-                {/* Adresse */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2 text-sm font-semibold text-[#333333]/80 uppercase tracking-wider">
-                    <MapPin className="w-4 h-4" />
-                    Adresse de livraison
-                  </div>
-                  <address className="not-italic text-sm text-[#333333] pl-6 space-y-0.5">
-                    <p className="font-medium">{order.shippingAddress.firstName} {order.shippingAddress.lastName}</p>
-                    <p>{order.shippingAddress.address}</p>
-                    <p>{order.shippingAddress.postalCode} {order.shippingAddress.city}</p>
-                    <p>{order.shippingAddress.country}</p>
-                  </address>
-                </div>
-
-                {/* Paiement */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2 text-sm font-semibold text-[#333333]/80 uppercase tracking-wider">
-                    <CreditCard className="w-4 h-4" />
-                    Méthode de paiement
-                  </div>
-                  <p className="text-sm text-[#333333] pl-6">
-                    {order.paymentMethod}
+              {/* Header de la commande */}
+              <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[#F9F6F4]">
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs font-black text-[#333333] flex items-center gap-2">
+                    <Package className="w-4 h-4"/> Commande #{order.order_number || order.id.slice(0, 8).toUpperCase()}
+                  </p>
+                  <p className="text-[11px] text-[#333333]/60 flex items-center gap-2 flex-wrap">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3"/>
+                      {new Date(order.created_at).toLocaleDateString("fr-FR", { day:"2-digit", month:"long", year:"numeric"})}
+                    </span>
+                    {order.shipping_city && (
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3"/> {order.shipping_city}
+                      </span>
+                    )}
                   </p>
                 </div>
-              </div>
-            </div>
 
-          </div>
+                <div className="flex items-center gap-3">
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 ${order.status === "paid" || order.status === "livrée" || order.status === "processing" ? "bg-green-100 text-green-700" : "bg-[#F5EBE6] text-[#333333]"}`}>
+                    <Truck className="w-3.5 h-3.5 text-[#6E857B]" />
+                    {order.status || "En préparation"}
+                  </span>
+                  <span className="text-sm font-black text-[#6E857B]">
+                    {Number(order.total_amount || 0).toFixed(2).replace(".",",")} €
+                  </span>
+                  {/* LIEN CORRIGÉ VERS LA PAGE DE DÉTAILS */}
+                  <Link 
+                    href={`/compte/commandes/${order.id}`} 
+                    className="p-2 rounded-full bg-[#333333] text-white hover:bg-black transition-colors"
+                    title="Voir les détails"
+                  >
+                    <Eye className="w-3.5 h-3.5"/>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Liste des produits de la commande */}
+              <div className="p-4 space-y-3">
+                {(orderItemsMap[order.id] || []).length === 0 ? (
+                  <p className="text-[11px] text-[#333333]/50">Détails des produits indisponibles pour cette commande.</p>
+                ) : (
+                  orderItemsMap[order.id].map((item: any) => (
+                    <div key={item.id} className="flex gap-3 items-center p-2 rounded-xl hover:bg-[#F5EBE6]/20 transition-colors">
+                      <div className="w-16 h-16 rounded-xl bg-[#F5EBE6]/40 p-1 flex items-center justify-center shrink-0 border border-[#333333]/5">
+                        <img 
+                          src={item.cleanImage} 
+                          alt={item.products?.name || item.product_name} 
+                          className="w-full h-full object-contain mix-blend-multiply" 
+                          onError={(e) => { (e.target as HTMLImageElement).src = PLACEHOLDER; }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-[#333333] line-clamp-1">
+                          {item.products?.name || item.product_name || "Produit ECLOSIA"}
+                        </p>
+                        <p className="text-[10px] text-[#333333]/60">
+                          {item.products?.sku || item.sku || "REF"} • Qté: {item.quantity || 1}
+                        </p>
+                      </div>
+                      <p className="text-xs font-black text-[#333333]">
+                        {Number(item.unit_price || item.price || 0).toFixed(2).replace(".",",")} €
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Pied de carte */}
+              <div className="px-4 py-3 bg-[#FAFAFA] border-t border-[#333333]/5 flex justify-between items-center text-[11px]">
+                <span className="text-[#333333]/60">Livraison standard ECLOSIA • 7-10 jours</span>
+                <Link href="/shop" className="font-bold text-[#6E857B] hover:underline">
+                  Recommander →
+                </Link>
+              </div>
+
+            </div>
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }
