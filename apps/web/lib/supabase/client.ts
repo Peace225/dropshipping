@@ -19,3 +19,6 @@ export function getSupabase(): SupabaseClient {
   _supabase = createBrowserClient(url, key)
   return _supabase
 }
+
+// Export direct aussi pour compat
+export const supabase = getSupabase()
