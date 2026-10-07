@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/footer";
 import { CartProvider } from "@/context/cart-context";
 import AiChatDrawer from "@/components/ai/ai-chat-drawer";
 import { ConditionalAiChat } from "@/components/ai/conditional-ai-chat";
+import OneSignalECLOSIA from '@/components/OneSignalECLOSIA';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -103,6 +104,7 @@ export default function RootLayout({
   return (
     <html lang="fr" className="h-full">
       <body className={`${inter.className} h-full bg-aurae-nude text-aurae-charcoal antialiased selection:bg-aurae-rose/30`}>
+       <OneSignalECLOSIA />
         <CartProvider>
           <div id="app-root" className="min-h-full flex flex-col relative">
             <Header />

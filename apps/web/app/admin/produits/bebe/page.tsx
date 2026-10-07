@@ -2,14 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabase } from "@/lib/supabase/client"; // ✅ Import du singleton
 import { Baby, Package, Trash2, Loader2, CheckCircle2, XCircle, ExternalLink, Plus, Save, X, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
+const supabase = getSupabase(); // ✅ Instancié en dehors du composant
 
 export default function AdminProductsBebePage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -19,47 +16,49 @@ export default function AdminProductsBebePage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   
-  // NOUVEAU : Ajout de 3 champs pour les images dans l'état du formulaire
+  // État du formulaire avec les 3 champs images
   const [newProduct, setNewProduct] = useState({ 
     name: "", sku: "", price: 0, stock: 0, 
     image1: "", image2: "", image3: "" 
   });
 
-  const fetchBebeProducts = async () => {
-    setLoading(true);
-    
-    const { data, error } = await supabase
-      .from("products")
-      .select(`
-        *,
-        product_images (*)
-      `)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Erreur lors du chargement des produits Bébé:", error);
-    } else if (data) {
-      const bebeProducts = data.filter(p => {
-        const name = (p.name || "").toLowerCase();
-        const cat = String(p.category || p.category_id || "").toLowerCase(); 
-        
-        return (
-          cat.includes("bebe") || cat.includes("bébé") || 
-          name.includes("bebe") || name.includes("bébé") || 
-          name.includes("couche") || name.includes("biberon") || name.includes("soin")
-        );
-      });
-      
-      setProducts(bebeProducts);
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
+    const fetchBebeProducts = async () => {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from("products")
+        .select(`
+          *,
+          product_images (*)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Erreur lors du chargement des produits Bébé:", error);
+      } else if (data) {
+        const bebeProducts = data.filter(p => {
+          const name = (p.name || "").toLowerCase();
+          const cat = String(p.category || p.category_id || "").toLowerCase(); 
+          const rub = String(p.rubrique || "").toLowerCase();
+          
+          return (
+            rub.includes("bebe") || rub.includes("bébé") ||
+            cat.includes("bebe") || cat.includes("bébé") || 
+            name.includes("bebe") || name.includes("bébé") || 
+            name.includes("couche") || name.includes("biberon") || name.includes("soin")
+          );
+        });
+        
+        setProducts(bebeProducts);
+      }
+      setLoading(false);
+    };
+
     fetchBebeProducts();
   }, []);
 
-  // NOUVEAU : Sauvegarde en 2 étapes (Le produit d'abord, les images ensuite)
+  // Sauvegarde en 2 étapes (Le produit d'abord, les images ensuite avec ordre)
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProduct.name || !newProduct.sku) return alert("Veuillez remplir le nom et la référence (SKU).");
@@ -75,6 +74,7 @@ export default function AdminProductsBebePage() {
         price: newProduct.price,
         stock: newProduct.stock,
         category: "Bébé", 
+        rubrique: "Bébé",
         is_active: true,
       }])
       .select();
@@ -87,12 +87,11 @@ export default function AdminProductsBebePage() {
 
     const newProductId = productData[0].id;
 
-    // ÉTAPE 2 : Ajouter les images dans product_images
+    // ÉTAPE 2 : Ajouter les images avec is_primary et position
     const imagesToInsert = [];
-    // Note: Si votre colonne d'URL dans product_images s'appelle "url" au lieu de "image_url", changez-le ci-dessous
-    if (newProduct.image1) imagesToInsert.push({ product_id: newProductId, image_url: newProduct.image1 });
-    if (newProduct.image2) imagesToInsert.push({ product_id: newProductId, image_url: newProduct.image2 });
-    if (newProduct.image3) imagesToInsert.push({ product_id: newProductId, image_url: newProduct.image3 });
+    if (newProduct.image1) imagesToInsert.push({ product_id: newProductId, image_url: newProduct.image1, is_primary: true, position: 0 });
+    if (newProduct.image2) imagesToInsert.push({ product_id: newProductId, image_url: newProduct.image2, is_primary: false, position: 1 });
+    if (newProduct.image3) imagesToInsert.push({ product_id: newProductId, image_url: newProduct.image3, is_primary: false, position: 2 });
 
     if (imagesToInsert.length > 0) {
       const { error: imageError } = await supabase
@@ -102,7 +101,7 @@ export default function AdminProductsBebePage() {
       if (imageError) console.error("Erreur sauvegarde images:", imageError);
     }
 
-    // ÉTAPE 3 : Récupérer le produit complet avec ses images pour l'afficher direct
+    // ÉTAPE 3 : Récupérer le produit complet pour l'afficher direct
     const { data: finalProductData } = await supabase
       .from("products")
       .select('*, product_images(*)')
@@ -134,14 +133,18 @@ export default function AdminProductsBebePage() {
     setUpdatingId(null);
   };
 
+  // ✅ Suppression 100% automatique (images d'abord, puis produit)
   const handleDeleteProduct = async (id: string) => {
-    if (!confirm("Voulez-vous vraiment supprimer cet article ? Cette action est irréversible.")) return;
+    const previousProducts = [...products];
+    setProducts(products.filter((p) => p.id !== id)); // Disparition immédiate de l'écran
 
-    const { error } = await supabase.from("products").delete().eq("id", id);
-    if (error) {
-      alert("Erreur lors de la suppression : " + error.message);
-    } else {
-      setProducts(products.filter((p) => p.id !== id));
+    try {
+      await supabase.from("product_images").delete().eq("product_id", id); // 1. Nettoyage des images liées
+      const { error } = await supabase.from("products").delete().eq("id", id); // 2. Suppression du produit
+      if (error) throw error;
+    } catch (err: any) {
+      setProducts(previousProducts); // Restauration en cas d'erreur
+      alert("Erreur suppression : " + err.message);
     }
   };
 

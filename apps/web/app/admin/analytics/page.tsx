@@ -1,11 +1,73 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { MetricsCard } from "@/components/admin/metrics-card";
-import { BarChart3, TrendingUp, Users, ShoppingBag, DollarSign } from "lucide-react";
+import { BarChart3 } from "lucide-react";
+import { getSupabase } from "@/lib/supabase/client";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// ✅ 1. Déplacé en dehors du composant : garanti d'être instancié une seule fois
+const supabase = getSupabase();
 
 export default function AdminAnalyticsPage() {
+  const [loading, setLoading] = useState(true);
+  
+  const [stats, setStats] = useState({
+    ca: 0,
+    panierMoyen: 0,
+    totalOrders: 0,
+    shippedOrders: 0,
+    shippedRate: 0,
+    conversionRate: 0,
+  });
+
+  useEffect(() => {
+    async function fetchAnalytics() {
+      setLoading(true);
+
+      // Récupérer les commandes
+      const { data: orders } = await supabase
+        .from("orders")
+        .select("total_amount, status, customer_email");
+
+      // Récupérer le nombre total d'inscrits
+      const { count: usersCount } = await supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true });
+
+      if (orders) {
+        // ✅ 2. Filtrage strict sur les vraies valeurs en BDD (ex: 'cancelled')
+        const paidOrders = orders.filter(o => o.status?.toLowerCase() !== 'cancelled');
+        const totalCA = paidOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+        
+        const totalOrders = paidOrders.length;
+        const panierMoyen = totalOrders > 0 ? totalCA / totalOrders : 0;
+
+        // ✅ 2. Filtrage strict sur 'shipped' et 'delivered' uniquement
+        const shipped = paidOrders.filter(o =>
+          ['shipped', 'delivered'].includes(o.status?.toLowerCase() || '')
+        ).length;
+        const shippedRate = totalOrders > 0 ? Math.round((shipped / totalOrders) * 100) : 0;
+
+        // Taux de conversion (Acheteurs uniques divisés par le nombre total de comptes)
+        const uniqueBuyers = new Set(paidOrders.map(o => o.customer_email).filter(Boolean)).size;
+        const conversion = (usersCount && usersCount > 0) ? (uniqueBuyers / usersCount) * 100 : 0;
+
+        setStats({
+          ca: totalCA,
+          panierMoyen,
+          totalOrders,
+          shippedOrders: shipped,
+          shippedRate,
+          conversionRate: conversion,
+        });
+      }
+      setLoading(false);
+    }
+
+    fetchAnalytics();
+  }, []);
+
   return (
     <div className="flex min-h-screen bg-[#FAFAFA]">
       <AdminSidebar />
@@ -26,7 +88,7 @@ export default function AdminAnalyticsPage() {
             </p>
           </div>
           <span className="px-4 py-2 bg-[#F5EBE6] text-[#333333] text-xs font-bold rounded-xl border border-[#333333]/5">
-            Période : Ce mois-ci
+            Période : Globale
           </span>
         </div>
 
@@ -34,33 +96,33 @@ export default function AdminAnalyticsPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricsCard
             title="Chiffre d'Affaires Brut"
-            value="18 450,00 €"
+            value={loading ? "..." : `${stats.ca.toFixed(2)} €`}
             iconName="dollar"
-            trend="+14.2%"
+            trend={stats.totalOrders > 0 ? "Ventes actives" : "En attente"}
             trendDirection="up"
-            description="vs mois dernier"
+            description="Total encaissé"
           />
           <MetricsCard
             title="Panier Moyen"
-            value="85,20 €"
+            value={loading ? "..." : `${stats.panierMoyen.toFixed(2)} €`}
             iconName="shopping"
-            trend="+3.1%"
+            trend="Moyenne"
             trendDirection="up"
             description="par commande"
           />
           <MetricsCard
             title="Taux de Conversion"
-            value="3.8%"
+            value={loading ? "..." : `${stats.conversionRate.toFixed(1)}%`}
             iconName="users"
-            trend="-0.5%"
-            trendDirection="down"
-            description="visiteurs / acheteurs"
+            trend={`${stats.totalOrders} achats`}
+            trendDirection="up"
+            description="acheteurs / inscrits"
           />
           <MetricsCard
             title="Commandes Expédiées"
-            value="114 / 128"
+            value={loading ? "..." : `${stats.shippedOrders} / ${stats.totalOrders}`}
             iconName="zap"
-            trend="91%"
+            trend={loading ? "..." : `${stats.shippedRate}%`}
             trendDirection="up"
             description="taux de livraison"
           />
@@ -100,7 +162,7 @@ export default function AdminAnalyticsPage() {
               </p>
             </div>
             <div className="p-4 bg-[#FAFAFA] rounded-xl border border-gray-100 flex items-center justify-between">
-              <span className="text-xs font-bold text-[#333333]">Délai moyen d'expédition</span>
+              <span className="text-xs font-bold text-[#333333]">Délai moyen d'expédition attendu</span>
               <span className="text-xs font-extrabold text-[#6E857B] bg-emerald-50 px-2.5 py-1 rounded-lg">24 - 48h max</span>
             </div>
           </div>

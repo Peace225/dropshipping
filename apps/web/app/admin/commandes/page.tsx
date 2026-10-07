@@ -1,37 +1,47 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabase } from "@/lib/supabase/client";
 import Link from "next/link";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { ShoppingBag, Eye, Loader2 } from "lucide-react";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
+// ✅ Instanciation unique en dehors du composant pour éviter les conflits GoTrue
+const supabase = getSupabase();
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchOrders = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Erreur lors de la récupération des commandes:", error);
-    } else {
-      setOrders(data || []);
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
+    const fetchOrders = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Erreur lors de la récupération des commandes:", error);
+      } else {
+        setOrders(data || []);
+      }
+      setLoading(false);
+    };
+
     fetchOrders();
+
+    // ✅ Écoute en temps réel (Realtime) pour actualiser la liste automatiquement à chaque nouvelle commande
+    const channel = supabase
+      .channel('admin-orders-room')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        fetchOrders();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Formatage des données pour le tableau

@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabase } from "@/lib/supabase/client";
 import { Package, Trash2, Loader2, CheckCircle2, XCircle, ExternalLink, Plus, Save, X, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
+// ✅ Instanciation unique en dehors du composant pour éviter les conflits GoTrue
+const supabase = getSupabase(); 
 
 export default function AdminProductsMamanPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -25,51 +23,45 @@ export default function AdminProductsMamanPage() {
     image1: "", image2: "", image3: "" 
   });
 
-  // 1. Charger et filtrer les produits Maman en JavaScript
-  const fetchMamanProducts = async () => {
-    setLoading(true);
-    
-    // Récupération globale avec jointure des images
-    const { data, error } = await supabase
-      .from("products")
-      .select(`
-        *,
-        product_images (*)
-      `)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Erreur lors du chargement des produits Maman:", error);
-    } else if (data) {
-      // Filtrage Javascript ciblé sur l'univers Maman
-      const mamanProducts = data.filter(p => {
-        const name = (p.name || "").toLowerCase();
-        const cat = String(p.category || p.category_id || "").toLowerCase(); 
-        
-        return (
-          cat.includes("maman") || cat.includes("grossesse") || cat.includes("maternité") || cat.includes("maternite") ||
-          name.includes("maman") || name.includes("grossesse") || 
-          name.includes("post-partum") || name.includes("serum") || name.includes("crème") || name.includes("creme") || name.includes("allaitement")
-        );
-      });
-      
-      setProducts(mamanProducts);
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
-    fetchMamanProducts();
-  }, []);
+    // Fonction isolée dans le useEffect pour éviter le double fetch
+    const fetchMamanProducts = async () => {
+      setLoading(true);
+      
+      // Récupération globale avec jointure des images
+      const { data, error } = await supabase
+        .from("products")
+        .select(`
+          *,
+          product_images (*)
+        `)
+        .order("created_at", { ascending: false });
 
-  // 2. Sauvegarde en 2 étapes (Le produit d'abord, les images ensuite)
+      if (error) {
+        console.error("Erreur lors du chargement des produits Maman:", error);
+      } else if (data) {
+        // Filtre strict basé sur les SKU exacts du CSV final et la rubrique
+        const mamanProducts = data.filter(p => 
+          ["SKU-COUSAL1","SKU-ABG40X80","SKU-BUM3","SKU-BBKJNG","SKU-CARREFUSCHIA"].includes(p.sku) ||
+          (p.rubrique || "").toLowerCase().includes("maman")
+        );
+        
+        setProducts(mamanProducts);
+      }
+      setLoading(false);
+    };
+
+    fetchMamanProducts();
+  }, []); 
+
+  // Sauvegarde en 2 étapes (Le produit d'abord, les images ensuite)
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProduct.name || !newProduct.sku) return alert("Veuillez remplir le nom et la référence (SKU).");
 
     setIsAdding(true);
     
-    // ÉTAPE 1 : Créer le produit (Catégorie Maman)
+    // ÉTAPE 1 : Créer le produit
     const { data: productData, error: productError } = await supabase
       .from("products")
       .insert([{
@@ -77,7 +69,8 @@ export default function AdminProductsMamanPage() {
         sku: newProduct.sku,
         price: newProduct.price,
         stock: newProduct.stock,
-        category: "Maman", 
+        category: "Maman",
+        rubrique: "Maman", 
         is_active: true,
       }])
       .select();
@@ -90,11 +83,11 @@ export default function AdminProductsMamanPage() {
 
     const newProductId = productData[0].id;
 
-    // ÉTAPE 2 : Ajouter les images dans product_images
+    // ÉTAPE 2 : Ajouter les images avec is_primary et position
     const imagesToInsert = [];
-    if (newProduct.image1) imagesToInsert.push({ product_id: newProductId, image_url: newProduct.image1 });
-    if (newProduct.image2) imagesToInsert.push({ product_id: newProductId, image_url: newProduct.image2 });
-    if (newProduct.image3) imagesToInsert.push({ product_id: newProductId, image_url: newProduct.image3 });
+    if (newProduct.image1) imagesToInsert.push({ product_id: newProductId, image_url: newProduct.image1, is_primary: true, position: 0 });
+    if (newProduct.image2) imagesToInsert.push({ product_id: newProductId, image_url: newProduct.image2, is_primary: false, position: 1 });
+    if (newProduct.image3) imagesToInsert.push({ product_id: newProductId, image_url: newProduct.image3, is_primary: false, position: 2 });
 
     if (imagesToInsert.length > 0) {
       const { error: imageError } = await supabase
@@ -115,13 +108,12 @@ export default function AdminProductsMamanPage() {
       setProducts([finalProductData, ...products]);
       setNewProduct({ name: "", sku: "", price: 0, stock: 0, image1: "", image2: "", image3: "" }); 
       setShowAddForm(false);
-      alert("Produit Maman et ses images ajoutés avec succès !");
     }
     
     setIsAdding(false);
   };
 
-  // 3. Mettre à jour un produit
+  // Mettre à jour un produit
   const handleUpdateProduct = async (id: string, newPrice: number, newStock: number, isActive: boolean) => {
     setUpdatingId(id);
     const { error } = await supabase
@@ -144,15 +136,18 @@ export default function AdminProductsMamanPage() {
     setUpdatingId(null);
   };
 
-  // 4. Supprimer un produit
+  // ✅ Suppression 100% automatique - images d'abord, puis produit
   const handleDeleteProduct = async (id: string) => {
-    if (!confirm("Voulez-vous vraiment supprimer cet article ? Cette action est irréversible.")) return;
+    const previousProducts = [...products];
+    setProducts(products.filter((p) => p.id !== id)); // disparait instantanément
 
-    const { error } = await supabase.from("products").delete().eq("id", id);
-    if (error) {
-      alert("Erreur lors de la suppression : " + error.message);
-    } else {
-      setProducts(products.filter((p) => p.id !== id));
+    try {
+      await supabase.from("product_images").delete().eq("product_id", id); // 1. images
+      const { error } = await supabase.from("products").delete().eq("id", id); // 2. produit
+      if (error) throw error;
+    } catch (err: any) {
+      setProducts(previousProducts); // restore si erreur
+      alert("Erreur suppression : " + err.message);
     }
   };
 
@@ -378,7 +373,7 @@ export default function AdminProductsMamanPage() {
                           <button
                             onClick={() => handleDeleteProduct(product.id)}
                             className="p-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100 transition-colors inline-flex items-center gap-1 text-xs font-bold"
-                            title="Supprimer définitivement"
+                            title="Supprimer instantanément"
                           >
                             <Trash2 className="w-4 h-4" />
                             <span>Supprimer</span>

@@ -7,14 +7,11 @@ import {
   ArrowLeft, Package, MapPin, CreditCard, 
   User, Mail, Phone, FileText, Truck, Save, Loader2, CheckCircle2 
 } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabase } from "@/lib/supabase/client"; // ✅ Import du singleton
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { OrderTimeline } from "@/components/orders/OrderTimeline";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
+const supabase = getSupabase(); // ✅ Client unique instancié en dehors du composant
 
 export default function AdminOrderDetailsPage() {
   const params = useParams();
@@ -97,7 +94,7 @@ export default function AdminOrderDetailsPage() {
         <AdminSidebar />
         <main className="flex-1 p-8 flex flex-col items-center justify-center gap-4">
           <p className="text-sm font-bold text-gray-500">Commande introuvable.</p>
-          <Link href="/admin/orders" className="px-4 py-2 bg-[#333333] text-white rounded-xl text-xs font-bold">
+          <Link href="/admin/commandes" className="px-4 py-2 bg-[#333333] text-white rounded-xl text-xs font-bold">
             Retour à la liste
           </Link>
         </main>
@@ -105,7 +102,7 @@ export default function AdminOrderDetailsPage() {
     );
   }
 
-  // Historique des événements simulé ou issu de la commande
+  // Historique des événements de la commande
   const historyEvents = [
     { status: "order_received", created_at: order.created_at, description: "Commande validée par le client" },
     { status: "payment_confirmed", created_at: order.created_at, description: `Paiement validé (${order.payment_method || "Carte bancaire"})` },
@@ -123,7 +120,7 @@ export default function AdminOrderDetailsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-[#333333]/10">
             <div className="flex items-center gap-4">
               <Link 
-                href="/admin/orders" 
+                href="/admin/commandes" 
                 className="p-2 rounded-xl bg-gray-50 hover:bg-gray-100 border border-transparent transition-colors text-[#333333]/70 hover:text-[#333333]"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -211,7 +208,7 @@ export default function AdminOrderDetailsPage() {
                 </form>
               </div>
 
-              {/* Liste des articles commandés (stockés sous forme de tableau JSON dans Supabase) */}
+              {/* Liste des articles commandés */}
               <div className="bg-white rounded-2xl shadow-sm border border-[#333333]/10 overflow-hidden">
                 <div className="p-5 border-b border-[#333333]/10">
                   <h2 className="font-bold text-[#333333]">Contenu de la commande</h2>

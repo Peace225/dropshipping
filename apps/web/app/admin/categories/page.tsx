@@ -2,15 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabase } from "@/lib/supabase/client"; // ✅ Import du singleton
 import { Layers, Trash2, Loader2, Plus, Save, X, Tag } from "lucide-react";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
-
 export default function AdminCategoriesPage() {
+  const supabase = getSupabase(); // ✅ Utilisation du client unique
+
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -24,26 +21,26 @@ export default function AdminCategoriesPage() {
     universe: "Bébé" // Valeur par défaut
   });
 
-  // 1. Charger les catégories
-  const fetchCategories = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("categories")
-      .select("*")
-      .order("universe", { ascending: true })
-      .order("name", { ascending: true });
-
-    if (error) {
-      console.error("Erreur chargement catégories:", error);
-    } else {
-      setCategories(data || []);
-    }
-    setLoading(false);
-  };
-
+  // 1. Charger les catégories (déplacé DANS le useEffect)
   useEffect(() => {
+    const fetchCategories = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("universe", { ascending: true })
+        .order("name", { ascending: true });
+
+      if (error) {
+        console.error("Erreur chargement catégories:", error);
+      } else {
+        setCategories(data || []);
+      }
+      setLoading(false);
+    };
+
     fetchCategories();
-  }, []);
+  }, []); // ✅ Tableau strictement vide : 1 seul appel réseau garanti
 
   // Générateur automatique de "slug" (URL amicale) basé sur le nom
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {

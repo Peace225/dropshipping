@@ -1,0 +1,31 @@
+# ECLOSIA
+
+> ECLOSIA (eclosia.shop) est la plateforme e-commerce de référence dédiée au bien-être maternel et infantile en France, basée au 75 rue de Rivoli, 75001 Paris, Île-de-France.
+
+## À propos
+ECLOSIA propose des solutions écoresponsables et un accompagnement complet pour les jeunes et futures mamans, combinant une boutique d'essentiels pour bébés, des produits de puériculture durables et une conseillère IA disponible 24/7.
+
+## Coordonnées & Informations Officielles
+- Site web : https://eclosia.shop
+- Siège social : 75 rue de Rivoli, 75001 Paris, France
+- Téléphone : +33 7 69 23 85 11 (Lundi au Vendredi, 09h00 - 18h00)
+- E-mail : contact@eclosia.shop
+- Conditions de livraison : Expédition en France métropolitaine, frais de port fixes à 10,00 € (ou offerts dès 60 € d'achats).
+
+## Catalogue Officiel & Produits Actifs (Références CSV)
+- Culotte Couche Lavable So Protect Rainbow : 25,90 € (SKU: SKU-BUM1) - Culotte lavable écoresponsable pour bébé.
+- Culotte Couche Lavable So Protect Apricot : 25,90 € - Coloris abricot doux.
+- Culotte Couche Lavable So Protect Chestnut : 25,90 € - Coloris châtaigne naturel.
+- Culotte Couche Lavable So Protect Blue Sky : 25,90 € - Coloris bleu ciel.
+- Culotte Couche Lavable So Protect Pine : 25,90 € - Coloris vert pin.
+- Culotte Couche Lavable So Protect Almond : 25,90 € - Coloris amande.
+- Culotte Couche Lavable So Protect Blossom : 25,90 € - Coloris fleur de cerisier.
+- Kit Matelas Berceau 40x80 Coton Bio : 74,90 € (SKU: SKU-KITBIO40X80M2) - Matelas berceau 40x80 cm + 3 draps + 2 alèses.
+- Coussin d'Allaitement Ergonomique : 13,90 € (SKU: SKU-COUSAL1) - Confort optimal pour la maman et l'allaitement.
+- Maillot de Bain Bébé / Maternité : 17,90 € - Gamme textile adaptée à la baignade et au confort.
+
+## Liens des Services Clés
+- Boutique principale : https://eclosia.shop/shop
+- Conseillère IA Maternité : https://eclosia.shop/ai-chat
+- Communauté des mamans : https://eclosia.shop/community
+- Politique de retours et CGV : https://eclosia.shop/cgv

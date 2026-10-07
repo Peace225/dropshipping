@@ -1,2 +1,9 @@
+node_modules/
+.next/
+.env
+.env.local
+apps/web/.next/
+apps/web/.vercel/
+supabase/.temp/
 .DS_Store
-apps/.DS_Store
+.vscode/

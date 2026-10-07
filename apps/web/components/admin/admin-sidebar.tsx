@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -18,6 +19,12 @@ import {
   Sparkles,
   Layers,
 } from "lucide-react";
+
+// Initialisation autonome et 100% sécurisée pour éviter le bug d'import
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface NavSubItem {
   title: string;
@@ -40,6 +47,7 @@ interface NavGroup {
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
     Produits: true,
@@ -52,7 +60,17 @@ export function AdminSidebar() {
     }));
   };
 
-  // Liens avec /admin/produits/... pour correspondre à votre dossier
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error(error);
+      return;
+    }
+    // L'ordre push puis refresh garantit la redirection avant la purge du cache
+    router.push("/auth/connexion");
+    router.refresh();
+  };
+
   const navigation: NavGroup[] = [
     {
       groupLabel: "Vue d'ensemble",
@@ -235,7 +253,7 @@ export function AdminSidebar() {
 
         <button
           type="button"
-          onClick={() => alert("Déconnexion...")}
+          onClick={handleLogout}
           className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50"
         >
           <LogOut className="h-4 w-4" />

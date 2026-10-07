@@ -2,40 +2,37 @@
 
 import { useState, useEffect } from "react";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabase } from "@/lib/supabase/client";
 import { Users, Search, Loader2, Mail, Phone, Calendar, UserCircle } from "lucide-react";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
-
 export default function AdminClientsPage() {
+  const supabase = getSupabase(); 
+  
   const [clients, setClients] = useState<any[]>([]);
   const [filteredClients, setFilteredClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // 1. Charger la liste des clients depuis la table 'customers'
-  const fetchClients = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("customers")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Erreur lors du chargement des clients:", error);
-    } else {
-      setClients(data || []);
-      setFilteredClients(data || []);
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
+    // 1. On déplace la fonction à l'intérieur pour éviter qu'elle soit recréée à chaque render
+    const fetchClients = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Erreur lors du chargement des clients:", error);
+      } else {
+        setClients(data || []);
+        setFilteredClients(data || []);
+      }
+      setLoading(false);
+    };
+
     fetchClients();
-  }, []);
+  }, []); // ✅ Tableau strictement vide : 1 seul appel API garanti, même en Strict Mode
 
   // 2. Filtrer les clients par nom ou email avec la barre de recherche
   useEffect(() => {
@@ -123,11 +120,11 @@ export default function AdminClientsPage() {
                       <td className="p-3">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs uppercase">
-                            {(client.first_name?.[0] || "") + (client.last_name?.[0] || "") || "?"}
+                            {(client.first_name?.[0] || "") + (client.last_name?.[0] || "") || client.email?.charAt(0).toUpperCase() || "?"}
                           </div>
                           <div>
                             <p className="font-bold text-[#333333]">
-                              {client.first_name || client.last_name ? `${client.first_name || ""} ${client.last_name || ""}` : "Client Anonyme"}
+                              {client.first_name || client.last_name ? `${client.first_name || ""} ${client.last_name || ""}` : (client.email || "Client Anonyme")}
                             </p>
                             <p className="text-[10px] text-gray-400 font-mono">ID: {String(client.id).slice(0, 8)}...</p>
                           </div>
