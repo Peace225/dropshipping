@@ -4,15 +4,19 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Star, ShieldCheck, RotateCcw, Heart, MapPin, Home, ChevronRight, ChevronLeft, Package, ShoppingCart, Truck, ZoomIn } from "lucide-react";
+
+// ✅ 1. CORRECTION SUPABASE : Utilisation du singleton
 import { getSupabase } from "@/lib/supabase/client";
 import { useCart } from "@/context/cart-context";
+
+const supabase = getSupabase(); 
 
 const PLACEHOLDER = "https://via.placeholder.com/600x600/F5EBE6/333333?text=ECLOSIA+BEBE";
 
 function cleanImageUrl(raw?: string){
   if(!raw) return PLACEHOLDER;
-  const first = raw.includes("|")? raw.split("|")[0].trim() : raw.trim();
-  return first.startsWith("http")? first : PLACEHOLDER;
+  const first = raw.includes("|") ? raw.split("|")[0].trim() : raw.trim();
+  return first.startsWith("http") ? first : PLACEHOLDER;
 }
 
 export default function BebeProductDetailPage() {
@@ -20,8 +24,6 @@ export default function BebeProductDetailPage() {
   const slug = params?.slug as string;
   const router = useRouter();
   const cart = useCart() as any;
-  const supabase = getSupabase();
-
   const [product, setProduct] = useState<any>(null);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,14 +34,14 @@ export default function BebeProductDetailPage() {
   const [selectedCity, setSelectedCity] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState<"relais"|"domicile">("relais");
   const [debugMsg, setDebugMsg] = useState("");
+  
   const sliderRef = useRef<HTMLDivElement>(null);
-
   const scrollSlider = (dir: "left" | "right") => {
     if(sliderRef.current) sliderRef.current.scrollBy({ left: dir==="left"?-250:250, behavior:"smooth" });
   };
-
+  
   const activeDeliveryPriceStr = "10,00 €";
-
+  
   const handleBuy = () => {
     if(!product) return;
     const item = {
@@ -67,38 +69,51 @@ export default function BebeProductDetailPage() {
     async function fetchData() {
       if (!slug) return;
       setLoading(true);
+      
+      // ✅ 2. CORRECTION SEO : Ajout des 3 colonnes dans la requête
+      const selectQuery = "id, name, slug, price, description, image_url, sku, rubrique, brand, category_bebe_id, manufacturer_id, meta_title, meta_description, seo_keywords";
 
       let { data: prodSimple, error } = await supabase
         .from("products")
-        .select("id, name, slug, price, description, image_url, sku, rubrique, brand, category_bebe_id, manufacturer_id")
+        .select(selectQuery)
         .eq("slug", slug)
         .maybeSingle();
-
+        
       if (!prodSimple) {
         const baseSlug = slug.split("-sku-")[0];
         const { data: fallback } = await supabase
           .from("products")
-          .select("id, name, slug, price, description, image_url, sku, rubrique, brand, category_bebe_id, manufacturer_id")
+          .select(selectQuery)
           .ilike("slug", `%${baseSlug}%`)
           .limit(1)
           .maybeSingle();
         if (fallback) prodSimple = fallback;
       }
-
+      
       if (!prodSimple && slug.includes("32x72")) {
         const { data: fb2 } = await supabase
           .from("products")
-          .select("id, name, slug, price, description, image_url, sku, rubrique, brand, category_bebe_id, manufacturer_id")
+          .select(selectQuery)
           .ilike("slug", `%32x72%`)
           .limit(1)
           .maybeSingle();
         if (fb2) prodSimple = fb2;
       }
-
-      if (error &&!prodSimple) {
+      
+      if (!prodSimple) {
+        const { data: fb3 } = await supabase
+          .from("products")
+          .select(selectQuery)
+          .ilike("name", `%32x72%`)
+          .limit(1)
+          .maybeSingle();
+        if (fb3) prodSimple = fb3;
+      }
+      
+      if (error && !prodSimple) {
         console.error("Introuvable", error, slug);
       }
-
+      
       if (!prodSimple) {
         setDebugMsg("Le produit n'existe pas en base. Exécute UPDATE products SET is_active=true WHERE slug ILIKE '%32x72%'");
         setLoading(false);
@@ -109,31 +124,37 @@ export default function BebeProductDetailPage() {
       let fabFlag = "🇫🇷 🇪🇺";
       let fabShort = "UE";
       if (prodSimple.manufacturer_id) {
-        const { data: manuf } = await supabase.from("manufacturers").select("label_fr, flag_emoji, code").eq("id", prodSimple.manufacturer_id).maybeSingle();
+        const { data: manuf } = await supabase
+          .from("manufacturers")
+          .select("label_fr, flag_emoji, code")
+          .eq("id", prodSimple.manufacturer_id)
+          .maybeSingle();
         if (manuf) {
           fabFull = manuf.label_fr || fabFull;
           fabFlag = manuf.flag_emoji || fabFlag;
           fabShort = manuf.code || fabShort;
         }
       }
-
+      
       let catName = prodSimple.rubrique || "Bébé";
       if (prodSimple.category_bebe_id) {
         const { data: cat } = await supabase.from("categories_bebe").select("name").eq("id", prodSimple.category_bebe_id).maybeSingle();
         if (cat?.name) catName = cat.name;
       }
-
+      
       let formattedImages: string[] = [];
       const { data: imgData } = await supabase.from("product_images").select("image_url, position").eq("product_id", prodSimple.id).order("position");
       if (imgData && imgData.length > 0) {
         formattedImages = imgData.map((i:any)=>cleanImageUrl(i.image_url));
       } else if (prodSimple.image_url) {
-        const parts = prodSimple.image_url.includes("|")? prodSimple.image_url.split("|") : [prodSimple.image_url];
+        const parts = prodSimple.image_url.includes("|") ? prodSimple.image_url.split("|") : [prodSimple.image_url];
         formattedImages = parts.map((p:string)=>cleanImageUrl(p));
       }
+      
       if (formattedImages.length===0) formattedImages=[PLACEHOLDER];
       if (formattedImages.length===1) formattedImages = [formattedImages[0], formattedImages[0], formattedImages[0]];
-
+      if (formattedImages.length===2) formattedImages = [...formattedImages, formattedImages[0]];
+      
       setProduct({
         ...prodSimple,
         images: formattedImages,
@@ -146,19 +167,33 @@ export default function BebeProductDetailPage() {
         reviewsCount: Math.floor(Math.random()*80)+20
       });
       setMainImage(formattedImages[0]);
-
-      const { data: sugData } = await supabase.from("products").select("id, name, slug, price, image_url, brand").eq("is_active", true).neq("id", prodSimple.id).limit(20);
+      
+      const { data: sugData } = await supabase
+        .from("products")
+        .select("id, name, slug, price, image_url, brand, product_images(image_url, is_primary, position)")
+        .eq("is_active", true)
+        .neq("id", prodSimple.id)
+        .limit(20);
+        
       if (sugData) {
         const map = new Map();
         sugData.forEach((s:any)=>{
-          const key = s.name?.trim() || s.id;
+          const key = s.name ? s.name.trim() : s.id;
           if(!map.has(key)){
-            map.set(key,{ id: s.id, name: s.name, price: `${Number(s.price||0).toFixed(2).replace(".",",")} €`, slug: `/shop/bebe/${s.slug}`, image: cleanImageUrl(s.image_url), fabrication: s.brand || "UE" });
+            const raw = s.product_images?.find((i:any)=>i.is_primary)?.image_url || s.product_images?.[0]?.image_url || s.image_url;
+            map.set(key,{ 
+               id: s.id, 
+               name: s.name, 
+               price: `${Number(s.price||0).toFixed(2).replace(".",",")} €`, 
+               slug: `/shop/bebe/${s.slug}`, 
+               image: cleanImageUrl(raw),
+              fabrication: s.brand || "Union Européenne" 
+             });
           }
         });
         setSuggestions(Array.from(map.values()).slice(0,8));
       }
-
+      
       const { data: regionsData } = await supabase.from("regions").select("name, cities(name, relais_price, home_price)").order("name");
       if (regionsData){
         const loc:Record<string,any[]>={};
@@ -172,20 +207,63 @@ export default function BebeProductDetailPage() {
     fetchData();
   }, [slug]);
 
+  // ✅ 3. CORRECTION SEO : Injection des balises dans le head
+  useEffect(() => {
+    if (product) {
+      if (product.meta_title) {
+        document.title = product.meta_title;
+      }
+
+      if (product.meta_description) {
+        let metaDesc = document.querySelector('meta[name="description"]');
+        if (!metaDesc) {
+          metaDesc = document.createElement('meta');
+          metaDesc.setAttribute('name', 'description');
+          document.head.appendChild(metaDesc);
+        }
+        metaDesc.setAttribute('content', product.meta_description);
+      }
+
+      if (product.seo_keywords) {
+        let metaKeywords = document.querySelector('meta[name="keywords"]');
+        if (!metaKeywords) {
+          metaKeywords = document.createElement('meta');
+          metaKeywords.setAttribute('name', 'keywords');
+          document.head.appendChild(metaKeywords);
+        }
+        metaKeywords.setAttribute('content', product.seo_keywords);
+      }
+    }
+  }, [product]);
+
   if (loading) return <div className="min-h-screen flex items-center justify-center pt-20"><p className="font-bold animate-pulse text-[#333333]">Chargement...</p></div>;
   if (!product) return <div className="min-h-screen flex flex-col items-center justify-center gap-4 pt-20"><h1 className="text-2xl font-extrabold text-[#333333]">Produit introuvable</h1><p className="text-xs text-gray-500">Slug: {slug}</p>{debugMsg && <p className="text-xs text-red-500">{debugMsg}</p>}<Link href="/shop/bebe" className="px-6 py-2.5 bg-[#333333] text-white rounded-full font-bold text-sm">Retour boutique bébé</Link></div>;
 
-  const rawDescription = product.description || "Un produit d'excellence ECLOSIA, conçu avec soin pour le confort et la sécurité de votre bébé.";
-  const descLines = rawDescription.split(/\r?\n/);
+  function getMarketingDescription(p:any){
+    if(p?.description && p.description.trim().length > 30) return p.description;
+    const s = (p?.slug || "" + p?.name || "").toLowerCase();
+    if(s.includes("50x100") && s.includes("3-draps")) return "Le kit malin qui vous évite 3 lessives en retard. Matelas 50x100 respirant, déhoussable, anti-acariens + 3 draps housse coton ultra-doux qui tiennent au matelas même quand bébé gigote + 2 alèses imperméables qui sauvent les nuits. Coton OEKO-TEX, lavable à 60°, fabrication France et UE. L'essentiel qui dure, pensé pour les parents débordés.";
+    if(s.includes("32x72")) return "Douceur de couffin x3. Lot de 3 draps housse 32x72 en coton naturel, extensibles et ultra-doux. Lavables à 60°, tiennent parfaitement au matelas. Le lot qui vous sauve quand tout est au sale. Coton OEKO-TEX, fabrication UE. Respirant, doux pour la peau fragile de bébé, entretien facile. L'essentiel malin qui dure.";
+    if(s.includes("40x80") || s.includes("40x90")) return "Le trio qui vous sauve les nuits. 3 draps housse 40x80/40x90 en coton doux, extensibles, qui restent en place. Lavables 60°, sèchent vite. Parfaits pour berceau et cododo. OEKO-TEX, fabrication UE. Le stock malin pour éviter les lessives d'urgence.";
+    if(s.includes("60x120")) return "Voyage léger, bébé au sec. Lot de 3 draps housse 60x120 + 2 alèses imperméables. Coton doux, extensible, qui reste en place. Lavable 60°, sèche vite. Le kit malin qui vous évite les lessives d'urgence. OEKO-TEX, fabrication UE.";
+    return "Offrez à votre bébé douceur et sécurité. Matériaux certifiés OEKO-TEX, fabrication France et Union Européenne. Entretien facile, lavable à 60°, respirant et anti-allergique. L'essentiel malin qui dure, pensé pour simplifier la vie des jeunes parents.";
+  }
+
+  const rawDesc = getMarketingDescription(product);
+  const descLines = (rawDesc||"").split("\n");
   const bulletLines = descLines.filter((l:string) => l.trim().startsWith("-") || l.trim().startsWith("•"));
-  const resumeLine = descLines.find((l:string) => l.toLowerCase().includes("très pratique") || l.toLowerCase().includes("résumé"));
-  const descText = descLines.filter((l:string) => l!== resumeLine &&!bulletLines.includes(l) && l.trim().length > 0).join("\n\n");
+  const resumeLine = descLines.find((l:string) => l.toLowerCase().includes("très pratique") || l.toLowerCase().includes("résumé")) || "";
+  
+  const descText = descLines
+    .filter((l:string) => !l.toLowerCase().includes("très pratique") && !l.toLowerCase().includes("résumé") && !l.trim().startsWith("-") && !l.trim().startsWith("•") && l.trim().length > 0)
+    .join("\n\n");
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F5EBE6]/30 via-white to-[#F5EBE6]/20 pb-16 pt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-6">
           <Link href="/shop/bebe" className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#333333]/70 hover:text-[#333333]"><ArrowLeft className="w-4 h-4"/><span>Retour à l'univers Bébé</span></Link>
+          <div className="text-xs font-bold text-[#6E857B] bg-[#6E857B]/10 px-3 py-1 rounded-full flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#6E857B]"></span>ECLOSIA Secure • {product.images.length} photos</div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
           <div className="lg:col-span-9 bg-white rounded-2xl border border-[#333333]/10 shadow-sm flex flex-col md:flex-row overflow-hidden">
@@ -199,27 +277,46 @@ export default function BebeProductDetailPage() {
                 {product.images.map((imgUrl: string, idx: number)=>(
                   <button key={idx} onClick={()=>setMainImage(imgUrl)} className={`relative aspect-square w-16 shrink-0 snap-start rounded-lg overflow-hidden border bg-white p-1 cursor-pointer ${mainImage===imgUrl?"border-[#333333] ring-2 ring-[#333333]/20":"border-[#333333]/10 hover:border-[#333333]/30"}`}>
                     <img src={imgUrl} alt={`Vue ${idx+1}`} className="w-full h-full object-contain mix-blend-multiply" />
-                    <span className="absolute bottom-0 right-0 bg-black/70 text-white text-[10px] px-1 rounded-tl">{idx+1}</span>
+                    <span className="absolute bottom-0 right-0 bg-black/70 text-white text-[8px] px-1 rounded-tl">{idx+1}</span>
                   </button>
                 ))}
               </div>
+              <p className="text-[10px] text-[#333333]/50 text-center mt-1">Clique pour zoomer</p>
             </div>
             <div className="w-full md:w-[55%] flex flex-col p-4 sm:p-6">
-              <div className="flex flex-wrap gap-2 mb-2"><span className="bg-[#6E857B] text-white text-xs font-bold px-2.5 py-1 rounded-full uppercase">{product.categoryName}</span></div>
+              <div className="flex flex-wrap gap-2 mb-2">
+                <span className="bg-[#6E857B] text-white text-xs font-bold px-2.5 py-1 rounded-full uppercase">{product.categoryName}</span>
+              </div>
               <h1 className="text-xl sm:text-2xl font-extrabold text-[#333333] leading-snug mb-3 mt-2">{product.name}</h1>
               <hr className="border-[#333333]/10 mb-4"/>
-              <div className="flex items-center gap-3 mb-1"><p className="text-3xl font-extrabold text-[#333333]">{product.priceFormatted}</p><p className="text-base text-gray-400 line-through">{product.oldPriceFormatted}</p><span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-md">-20%</span></div>
-              <div className="flex items-center gap-2 mb-4 mt-2"><span className="text-lg leading-none">{product.fabricationFlag}</span><span className="text-xs italic font-bold text-[#6E857B]">{product.fabrication}</span></div>
+              <div className="flex items-center gap-3 mb-1">
+                <p className="text-3xl font-extrabold text-[#333333]">{product.priceFormatted}</p>
+                <p className="text-base text-gray-400 line-through">{product.oldPriceFormatted}</p>
+                <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-md">-20%</span>
+              </div>
+              <div className="flex items-center gap-2 mb-4 mt-2">
+                <span className="text-lg leading-none">{product.fabricationFlag}</span>
+                <span className="text-xs italic font-bold text-[#6E857B]">{product.fabrication}</span>
+              </div>
               <div className="bg-[#F9F6F4] rounded-xl p-4 mb-4 border border-[#333333]/5">
                 <h3 className="text-xs font-extrabold uppercase tracking-wider mb-2 flex items-center gap-2 text-[#333333]"><ShieldCheck className="w-4 h-4 text-[#6E857B]"/> Description du produit</h3>
                 {resumeLine && <p className="text-xs font-bold text-[#333333] mb-3">{resumeLine}</p>}
-                <div className="text-xs text-[#333333]/80 leading-relaxed"><p className="whitespace-pre-wrap">{descText}</p>{bulletLines.length > 0 && (<ul className="mt-3 list-disc list-inside space-y-1">{bulletLines.map((b:string, i:number)=><li key={i}>{b.replace(/^[-•]\s*/,"")}</li>)}</ul>)}</div>
+                <div className="text-xs text-[#333333]/80 leading-relaxed">
+                  <p className="whitespace-pre-wrap">{descText || rawDesc}</p>
+                  {bulletLines.length > 0 && (
+                    <ul className="mt-3 list-disc list-inside space-y-1">
+                      {bulletLines.map((b:string, i:number)=><li key={i}>{b.replace(/^[-•]\s*/,"")}</li>)}
+                    </ul>
+                  )}
+                </div>
               </div>
               <p className="text-xs text-[#31A039] font-medium mb-1">En stock - Expédition rapide</p>
               <p className="text-xs text-[#333333]/80 mb-3">+ livraison à partir de <span className="font-bold">{activeDeliveryPriceStr}</span> vers <strong>{selectedCity||"votre adresse"}</strong></p>
               <div className="flex items-center gap-1.5 mb-5 text-amber-500">{[...Array(4)].map((_,i)=><Star key={i} className="w-4 h-4 fill-current"/>)}<Star className="w-4 h-4 text-gray-300"/><span className="text-xs text-[#333333]/60 ml-1">({product.reviewsCount} avis)</span></div>
               <hr className="border-[#333333]/10 mb-5"/>
-              <div className="mt-auto"><button onClick={handleBuy} className="w-full bg-[#333333] hover:bg-black text-white py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer"><ShoppingCart className="w-5 h-5"/> J'achète</button></div>
+              <div className="mt-auto">
+                <button onClick={handleBuy} className="w-full bg-[#333333] hover:bg-black text-white py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer"><ShoppingCart className="w-5 h-5"/> J'achète</button>
+              </div>
             </div>
           </div>
           <div className="lg:col-span-3 bg-white rounded-2xl border border-[#333333]/10 shadow-sm flex flex-col">
