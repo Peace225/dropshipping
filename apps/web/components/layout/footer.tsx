@@ -182,10 +182,8 @@ export function Footer() {
       <footer className="bg-[#333333] text-[#F5EBE6] pt-10 sm:pt-14 pb-6 sm:pb-8" role="contentinfo">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          {/* Grille principale enrichie en entités sémantiques */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 mb-8 sm:mb-10">
             
-            {/* Colonne 1 : À propos, GEO et Entités Clés */}
             <div className="space-y-3">
               <Link href="/" className="inline-flex items-center gap-2.5 group" title="ECLOSIA - Accueil Maternité">
                 <img 
@@ -222,7 +220,6 @@ export function Footer() {
               </div>
             </div>
 
-            {/* Colonne 2 : Navigation et Maillage Interne */}
             <nav aria-label="Navigation secondaire du site">
               <h4 className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-wider text-white mb-2.5 sm:mb-3">Navigation</h4>
               <ul className="space-y-1 text-[11px] sm:text-[12px] text-[#F5EBE6]/70">
@@ -233,7 +230,6 @@ export function Footer() {
               </ul>
             </nav>
 
-            {/* Colonne 3 : Support, Transparence et Pages Légales */}
             <nav aria-label="Informations légales et service client">
               <h4 className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-wider text-white mb-2.5 sm:mb-3">Informations & Légal</h4>
               <ul className="space-y-1 text-[11px] sm:text-[12px] text-[#F5EBE6]/70">
@@ -245,7 +241,6 @@ export function Footer() {
               </ul>
             </nav>
 
-            {/* Colonne 4 : Newsletter et Acquisition */}
             <div className="sm:col-span-2 lg:col-span-1">
               <h4 className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-wider text-white mb-2.5 sm:mb-3">Restez connectée</h4>
               <p className="text-[11px] sm:text-[12px] text-[#F5EBE6]/70 mb-2.5 sm:mb-3">Recevez nos guides d'experts, conseils post-partum et offres exclusives réservées à notre communauté en France.</p>
@@ -284,7 +279,6 @@ export function Footer() {
 
           </div>
 
-          {/* Copyright & Signaux de marque bas de page */}
           <div className="border-t border-white/10 pt-5 sm:pt-6 flex flex-col md:flex-row items-center justify-between text-[10px] sm:text-[11px] text-[#F5EBE6]/50 gap-2 text-center md:text-left">
             <p>© {new Date().getFullYear()} ECLOSIA (eclosia.shop). Tous droits réservés. E-commerce enregistré en France.</p>
             <p className="flex items-center justify-center md:justify-end gap-1.5">

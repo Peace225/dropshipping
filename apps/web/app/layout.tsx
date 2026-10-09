@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "../styles/globals.css";
 import { Header } from "@/components/layout/header";
@@ -9,15 +9,23 @@ import { ConditionalAiChat } from "@/components/ai/conditional-ai-chat";
 import OneSignalECLOSIA from '@/components/OneSignalECLOSIA';
 
 const inter = Inter({ subsets: ["latin"] });
+const siteUrl = "https://eclosia.shop";
+
+// Configuration recommandée du Viewport pour Next.js 14+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#FAF7F2",
+};
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "ECLOSIA — Bien-être Maternité & Bébé | France",
   description: "Plateforme intelligente de santé maternelle et de puériculture en France. Accompagnement par IA, soins experts, communauté et essentiels pour mamans et bébés.",
   generator: "Next.js",
   applicationName: "ECLOSIA",
   referrer: "origin-when-cross-origin",
   
-  // 👉 Configuration de votre logo personnalisé dans l'onglet
   icons: {
     icon: [
       { url: "/logo.png", type: "image/png" }
@@ -36,7 +44,7 @@ export const metadata: Metadata = {
     "coffret maternité",
     "ECLOSIA",
   ],
-  authors: [{ name: "ECLOSIA Team", url: "https://eclosia.app" }],
+  authors: [{ name: "ECLOSIA Team", url: siteUrl }],
   creator: "ECLOSIA",
   publisher: "ECLOSIA",
   formatDetection: {
@@ -44,7 +52,6 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://eclosia.app"),
   alternates: {
     canonical: "/",
     languages: {
@@ -55,11 +62,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ECLOSIA — Bien-être Maternité & Bébé",
     description: "La référence du bien-être maternel et infantile en France. Soins experts, accompagnement intelligent et essentiels pour bébés et mamans.",
-    url: "https://eclosia.app",
+    url: siteUrl,
     siteName: "ECLOSIA",
     images: [
       {
-        url: "https://eclosia.app/og-image.jpg",
+        url: "/og-image.jpg", // Automatiquement résolu vers https://eclosia.shop/og-image.jpg
         width: 1200,
         height: 630,
         alt: "ECLOSIA Bien-être Maternité & Bébé France",
@@ -72,7 +79,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "ECLOSIA — Bien-être Maternité & Bébé",
     description: "Plateforme de santé maternelle et puériculture assistée par IA en France.",
-    images: ["https://eclosia.app/twitter-image.jpg"],
+    images: ["/twitter-image.jpg"],
   },
   robots: {
     index: true,
@@ -84,9 +91,6 @@ export const metadata: Metadata = {
       "max-image-preview": "large",
       "max-snippet": -1,
     },
-  },
-  verification: {
-    google: "your-google-site-verification-code",
   },
   other: {
     "geo.region": "FR",
@@ -102,9 +106,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr" className="h-full">
+    <html lang="fr" className="h-full" suppressHydrationWarning>
       <body className={`${inter.className} h-full bg-aurae-nude text-aurae-charcoal antialiased selection:bg-aurae-rose/30`}>
-       <OneSignalECLOSIA />
+        <OneSignalECLOSIA />
         <CartProvider>
           <div id="app-root" className="min-h-full flex flex-col relative">
             <Header />

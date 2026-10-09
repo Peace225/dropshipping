@@ -6,14 +6,17 @@ import Image from "next/image";
 import { ShoppingBag, Search, User, HelpCircle, Users, Sparkles, ShieldCheck, Truck, Percent, ArrowRight, Loader2 } from "lucide-react";
 import { useCart } from "@/context/cart-context";
 import { Poppins } from "next/font/google";
-import { createClient } from "@supabase/supabase-js";
+
+// ✅ 1. Correction majeure : Utilisation du singleton global Supabase au lieu de createClient()
+import { getSupabase } from "@/lib/supabase/client";
 
 const logoFont = Poppins({ subsets: ["latin"], weight: ["700", "800"] });
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-
 export function Header() {
   const { totalItems } = useCart();
+  
+  // ✅ Instance sécurisée unique pour le client
+  const [supabase] = useState(() => getSupabase());
 
   const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
@@ -29,7 +32,8 @@ export function Header() {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user || null);
       if (session?.user) {
-        const { data } = await supabase.from("users").select("avatar_url, full_name").eq("id", session.user.id).single();
+        // ✅ Utilisation de maybeSingle() pour éviter l'erreur 406 (Not Acceptable)
+        const { data } = await supabase.from("users").select("avatar_url, full_name").eq("id", session.user.id).maybeSingle();
         if (data) setProfile(data);
       }
     }
@@ -38,7 +42,7 @@ export function Header() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user || null);
       if (session?.user) {
-        const { data } = await supabase.from("users").select("avatar_url, full_name").eq("id", session.user.id).single();
+        const { data } = await supabase.from("users").select("avatar_url, full_name").eq("id", session.user.id).maybeSingle();
         if (data) setProfile(data);
       } else {
         setProfile(null);
@@ -46,7 +50,7 @@ export function Header() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

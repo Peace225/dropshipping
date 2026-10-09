@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
+import { getSupabase } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
 
 export function LoginForm() {
@@ -10,8 +9,9 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-  const supabase = createClient();
+
+  // Singleton pour éviter la création de multiples instances GoTrueClient
+  const [supabase] = useState(() => getSupabase());
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,34 +19,48 @@ export function LoginForm() {
     setError(null);
 
     try {
-      // 1. Authentification Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
+      const cleanEmail = email.trim().toLowerCase();
+
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
         password,
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        // Redirection vers la vérification si l'email n'est pas encore confirmé
+        if (authError.message.toLowerCase().includes("email not confirmed")) {
+          localStorage.setItem("eclosia_pending_email", cleanEmail);
+          window.location.href = `/verify?email=${encodeURIComponent(cleanEmail)}`;
+          return;
+        }
+        throw authError;
+      }
 
-      const user = authData.user;
+      const user = data.user;
       if (!user) throw new Error("Utilisateur introuvable.");
 
-      // 2. Vérification du rôle dans la table "profiles"
-      const { data: profileData, error: profileError } = await supabase
+      // Synchronisation de la session côté client
+      await supabase.auth.getSession();
+
+      const { data: profile } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
-      // 3. Redirection conditionnelle selon le rôle
-      if (!profileError && profileData?.role === "admin") {
-        router.push("/admin"); // Redirection vers le dashboard admin
+      localStorage.removeItem("eclosia_pending_email");
+
+      // Pause de 100 ms pour garantir la propagation complète du cookie avant la navigation
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      if (profile?.role === "admin" || profile?.role === "super_admin") {
+        window.location.href = "/admin";
       } else {
-        router.push("/compte"); // Redirection vers l'espace client classique
+        window.location.href = "/compte";
       }
 
-      router.refresh();
-    } catch (error: any) {
-      setError(error.message || "Une erreur est survenue lors de la connexion.");
+    } catch (err: any) {
+      setError(err.message || "Email ou mot de passe incorrect.");
       setLoading(false);
     }
   };
@@ -58,28 +72,37 @@ export function LoginForm() {
           {error}
         </div>
       )}
+
       <div>
-        <label className="block text-xs font-bold text-[#333333]/80 mb-1">Email</label>
+        <label className="block text-xs font-bold text-[#333333]/80 mb-1">
+          Email
+        </label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          autoComplete="email"
           className="w-full px-4 py-3 rounded-xl border border-[#333333]/15 text-sm focus:outline-none focus:ring-2 focus:ring-[#6E857B] bg-white text-[#333333]"
           placeholder="votre@email.com"
         />
       </div>
+
       <div>
-        <label className="block text-xs font-bold text-[#333333]/80 mb-1">Mot de passe</label>
+        <label className="block text-xs font-bold text-[#333333]/80 mb-1">
+          Mot de passe
+        </label>
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          autoComplete="current-password"
           className="w-full px-4 py-3 rounded-xl border border-[#333333]/15 text-sm focus:outline-none focus:ring-2 focus:ring-[#6E857B] bg-white text-[#333333]"
           placeholder="••••••••"
         />
       </div>
+
       <button
         type="submit"
         disabled={loading}

@@ -5,11 +5,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Star, ShieldCheck, RotateCcw, Heart, MapPin, Home, ChevronRight, ChevronLeft, Package, ShoppingCart, Truck, ZoomIn } from "lucide-react";
 
-// ✅ 1. CORRECTION SUPABASE : Utilisation du singleton
 import { getSupabase } from "@/lib/supabase/client";
 import { useCart } from "@/context/cart-context";
-
-const supabase = getSupabase(); 
 
 const PLACEHOLDER = "https://via.placeholder.com/600x600/F5EBE6/333333?text=ECLOSIA+BEBE";
 
@@ -20,6 +17,9 @@ function cleanImageUrl(raw?: string){
 }
 
 export default function BebeProductDetailPage() {
+  // ✅ Instance Supabase sécurisée à l'intérieur du composant (évite le SSR prématuré)
+  const [supabase] = useState(() => getSupabase());
+
   const params = useParams();
   const slug = params?.slug as string;
   const router = useRouter();
@@ -70,7 +70,6 @@ export default function BebeProductDetailPage() {
       if (!slug) return;
       setLoading(true);
       
-      // ✅ 2. CORRECTION SEO : Ajout des 3 colonnes dans la requête
       const selectQuery = "id, name, slug, price, description, image_url, sku, rubrique, brand, category_bebe_id, manufacturer_id, meta_title, meta_description, seo_keywords";
 
       let { data: prodSimple, error } = await supabase
@@ -121,7 +120,7 @@ export default function BebeProductDetailPage() {
       }
 
       let fabFull = "Fabriqué en France et en Union Européenne";
-      let fabFlag = "🇫🇷 🇪🇺";
+      let fabFlag = "FR / EU";
       let fabShort = "UE";
       if (prodSimple.manufacturer_id) {
         const { data: manuf } = await supabase
@@ -131,7 +130,7 @@ export default function BebeProductDetailPage() {
           .maybeSingle();
         if (manuf) {
           fabFull = manuf.label_fr || fabFull;
-          fabFlag = manuf.flag_emoji || fabFlag;
+          fabFlag = manuf.code || "FR / EU";
           fabShort = manuf.code || fabShort;
         }
       }
@@ -205,35 +204,41 @@ export default function BebeProductDetailPage() {
       setLoading(false);
     }
     fetchData();
-  }, [slug]);
+  }, [slug, supabase]);
 
-  // ✅ 3. CORRECTION SEO : Injection des balises dans le head
+  // ✅ Injection SEO avec Cleanup Anti-Clignotement
   useEffect(() => {
-    if (product) {
-      if (product.meta_title) {
-        document.title = product.meta_title;
-      }
+    if (!product) return;
 
-      if (product.meta_description) {
-        let metaDesc = document.querySelector('meta[name="description"]');
-        if (!metaDesc) {
-          metaDesc = document.createElement('meta');
-          metaDesc.setAttribute('name', 'description');
-          document.head.appendChild(metaDesc);
-        }
-        metaDesc.setAttribute('content', product.meta_description);
-      }
+    const originalTitle = "ECLOSIA - Maternité & Puériculture";
 
-      if (product.seo_keywords) {
-        let metaKeywords = document.querySelector('meta[name="keywords"]');
-        if (!metaKeywords) {
-          metaKeywords = document.createElement('meta');
-          metaKeywords.setAttribute('name', 'keywords');
-          document.head.appendChild(metaKeywords);
-        }
-        metaKeywords.setAttribute('content', product.seo_keywords);
-      }
+    if (product.meta_title) {
+      document.title = product.meta_title;
     }
+
+    if (product.meta_description) {
+      let metaDesc = document.querySelector('meta[name="description"]');
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.setAttribute('name', 'description');
+        document.head.appendChild(metaDesc);
+      }
+      metaDesc.setAttribute('content', product.meta_description);
+    }
+
+    if (product.seo_keywords) {
+      let metaKeywords = document.querySelector('meta[name="keywords"]');
+      if (!metaKeywords) {
+        metaKeywords = document.createElement('meta');
+        metaKeywords.setAttribute('name', 'keywords');
+        document.head.appendChild(metaKeywords);
+      }
+      metaKeywords.setAttribute('content', product.seo_keywords);
+    }
+
+    return () => {
+      document.title = originalTitle;
+    };
   }, [product]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center pt-20"><p className="font-bold animate-pulse text-[#333333]">Chargement...</p></div>;
@@ -277,7 +282,7 @@ export default function BebeProductDetailPage() {
                 {product.images.map((imgUrl: string, idx: number)=>(
                   <button key={idx} onClick={()=>setMainImage(imgUrl)} className={`relative aspect-square w-16 shrink-0 snap-start rounded-lg overflow-hidden border bg-white p-1 cursor-pointer ${mainImage===imgUrl?"border-[#333333] ring-2 ring-[#333333]/20":"border-[#333333]/10 hover:border-[#333333]/30"}`}>
                     <img src={imgUrl} alt={`Vue ${idx+1}`} className="w-full h-full object-contain mix-blend-multiply" />
-                    <span className="absolute bottom-0 right-0 bg-black/70 text-white text-[8px] px-1 rounded-tl">{idx+1}</span>
+                    <span className="absolute bottom-0 right-0 bg-black/70 text-white text-[10px] px-1 rounded-tl">{idx+1}</span>
                   </button>
                 ))}
               </div>

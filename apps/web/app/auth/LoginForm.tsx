@@ -1,16 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { getSupabase } from "@/lib/supabase/client";
 
 export function LoginForm() {
-  const router = useRouter();
+  // Singleton propre via useState
+  const [supabase] = useState(() => getSupabase());
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -21,37 +19,64 @@ export function LoginForm() {
     setErrorMessage("");
     setIsLoading(true);
 
+    const cleanEmail = email.trim().toLowerCase();
+
     try {
-      // 1. Authentification Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
+        email: cleanEmail,
         password,
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        if (authError.message.toLowerCase().includes("email not confirmed")) {
+          if (typeof window !== "undefined") {
+            localStorage.setItem('eclosia_pending_email', cleanEmail);
+          }
+          // Redirection vers la vérification si email non confirmé
+          window.location.href = `/verify?email=${encodeURIComponent(cleanEmail)}`;
+          return;
+        }
+        throw authError;
+      }
 
       const user = authData.user;
       if (!user) throw new Error("Utilisateur introuvable.");
 
-      // 2. Vérification du rôle dans la table "profiles"
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      // 3. Redirection conditionnelle selon le rôle
-      if (!profileError && profileData?.role === "admin") {
-        router.push("/admin"); // Redirection vers le dashboard admin
-      } else {
-        router.push("/compte"); // Redirection vers l'espace client classique
+      if (typeof window !== "undefined") {
+        localStorage.setItem('eclosia_pending_email', cleanEmail);
       }
 
-      router.refresh();
+      // Synchronisation de la session
+      await supabase.auth.getSession();
+
+      let userRole = "client";
+      try {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (profileData?.role) {
+          userRole = profileData.role;
+        }
+      } catch (err) {
+        console.warn("Table profiles ignorée ou absente:", err);
+      }
+
+      // ⏱️ Attente de 100 ms pour s'assurer que le cookie est inscrit dans le navigateur
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Hard navigation pour envoyer les cookies au Middleware
+      if (userRole === "super_admin" || userRole === "admin") {
+        window.location.href = "/admin"; 
+      } else {
+        window.location.href = "/compte"; 
+      }
+
     } catch (error: any) {
       console.error("Erreur de connexion", error);
       setErrorMessage(error.message || "Email ou mot de passe incorrect.");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -107,9 +132,9 @@ export function LoginForm() {
           <input type="checkbox" className="rounded border-[#333333]/20 text-[#333333] focus:ring-0" />
           <span>Se souvenir de moi</span>
         </label>
-        <a href="/auth/mot-de-passe-oublie" className="font-bold text-[#6E857B] hover:underline">
+        <Link href="/auth/mot-de-passe-oublie" className="font-bold text-[#6E857B] hover:underline">
           Mot de passe oublié ?
-        </a>
+        </Link>
       </div>
 
       <button
