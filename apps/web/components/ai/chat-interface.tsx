@@ -21,6 +21,9 @@ export default function ChatInterface() {
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  // 1. Ajout d'un ID de conversation
+  const [conversationId] = useState(() => `session-${Date.now()}`)
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -44,10 +47,12 @@ export default function ChatInterface() {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/chat', {
+      // ✅ CORRECTION 1 : La bonne route API
+      const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage.content }),
+        // ✅ CORRECTION 2 : Ajout du conversationId requis par ton backend
+        body: JSON.stringify({ conversationId, message: userMessage.content }),
       })
 
       if (!response.ok) throw new Error('Erreur réseau')
@@ -57,7 +62,7 @@ export default function ChatInterface() {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.reply || 'Désolé, je n\'ai pas pu traiter votre demande.',
+        content: data.message?.content || data.reply || 'Désolé, je n\'ai pas pu traiter votre demande.',
       }
 
       setMessages((prev) => [...prev, assistantMessage])
@@ -108,7 +113,8 @@ export default function ChatInterface() {
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[85%] sm:max-w-[75%] px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-2xl text-[12px] sm:text-sm leading-relaxed ${
+              // ✅ CORRECTION 3 : Ajout de whitespace-pre-wrap pour garder les sauts de ligne
+              className={`max-w-[85%] sm:max-w-[75%] px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-2xl text-[12px] sm:text-sm leading-relaxed whitespace-pre-wrap ${
                 msg.role === 'user'
                   ? 'bg-[#333333] text-white rounded-br-none shadow-sm'
                   : 'bg-white text-[#333333] border border-[#EAE6E1] shadow-sm rounded-bl-none'

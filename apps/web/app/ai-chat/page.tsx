@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Send, User, Sparkles, Heart, AlertTriangle, ShieldCheck, Package, Leaf, Truck, HelpCircle } from "lucide-react";
 
 interface Message {
@@ -12,12 +12,14 @@ interface Message {
 
 export default function AiChatPage() {
   const [currentTime, setCurrentTime] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setCurrentTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   }, []);
-
-  const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
     if (currentTime) {
@@ -32,8 +34,10 @@ export default function AiChatPage() {
     }
   }, [currentTime]);
 
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  // ✅ 2. Déclenchement du scroll à chaque nouveau message ou chargement
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
 
   const quickSuggestions = [
     { label: "Matelas 40x80", icon: Package, textToSend: "En savoir plus sur le matelas 40x80" },
@@ -60,12 +64,11 @@ export default function AiChatPage() {
     setLoading(true);
 
     try {
-      // ⚠️ Appel pointant vers votre route API /api/ai/chat
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          conversationId: "default-session", // Requis par votre route API avec Supabase
+          conversationId: "default-session",
           message: content,
           messages: updatedMessages 
         }),
@@ -77,10 +80,10 @@ export default function AiChatPage() {
         throw new Error(data.error || "Une erreur est survenue.");
       }
 
-      // Adaptation selon si la route renvoie un objet message (Supabase) ou une chaîne directe
       const rawReplyText = data.message?.content || data.reply || "Réponse reçue.";
+      let formattedReply = rawReplyText.replace(/\n/g, "<br />");
       
-      const formattedReply = rawReplyText.replace(
+      formattedReply = formattedReply.replace(
         /Je ne suis pas un professionnel de santé\./g, 
         "<strong class='text-red-600 font-bold'>Je ne suis pas un professionnel de santé.</strong>"
       );
@@ -155,7 +158,7 @@ export default function AiChatPage() {
           </div>
 
           {/* Corps de la conversation */}
-          <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 bg-[#FAF7F2]/40">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 bg-[#FAF7F2]/40 scroll-smooth">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -211,6 +214,8 @@ export default function AiChatPage() {
                 </div>
               </div>
             )}
+            
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Suggestions rapides */}
@@ -221,7 +226,8 @@ export default function AiChatPage() {
                 <button
                   key={idx}
                   onClick={() => handleSend(item.textToSend)}
-                  className="whitespace-nowrap text-[11px] sm:text-xs bg-[#F5EBE6]/60 hover:bg-[#F5EBE6] text-[#333333] px-3 py-1.5 sm:py-2 rounded-full transition-all border border-[#333333]/5 font-medium shrink-0 flex items-center gap-1.5 shadow-sm active:scale-95"
+                  disabled={loading}
+                  className="whitespace-nowrap text-[11px] sm:text-xs bg-[#F5EBE6]/60 hover:bg-[#F5EBE6] text-[#333333] px-3 py-1.5 sm:py-2 rounded-full transition-all border border-[#333333]/5 font-medium shrink-0 flex items-center gap-1.5 shadow-sm active:scale-95 disabled:opacity-50"
                 >
                   <IconComponent className="w-3 h-3 text-[#6E857B]" />
                   {item.label}

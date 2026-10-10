@@ -29,7 +29,8 @@ export default function ChatMessageList({ messages, loading }: ChatMessageListPr
         >
           <div
             // max-w augmenté sur mobile (88%) pour laisser le texte respirer
-            className={`max-w-[88%] sm:max-w-[80%] px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-xl text-[13px] sm:text-sm leading-relaxed shadow-sm ${
+            // Ajout de whitespace-pre-wrap pour respecter les sauts de ligne de l'IA
+            className={`max-w-[88%] sm:max-w-[80%] px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl sm:rounded-xl text-xs sm:text-sm leading-relaxed shadow-sm whitespace-pre-wrap ${
               msg.role === 'user'
                 ? 'bg-[#333333] text-white rounded-br-none'
                 : 'bg-white text-[#333333] border border-[#333333]/10 rounded-bl-none'
@@ -42,7 +43,7 @@ export default function ChatMessageList({ messages, loading }: ChatMessageListPr
       
       {loading && (
         <div className="flex justify-start">
-          <div className="bg-white text-[#333333] border border-[#333333]/10 shadow-sm px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-[16px] sm:rounded-xl rounded-bl-none text-xs flex items-center gap-2">
+          <div className="bg-white text-[#333333] border border-[#333333]/10 shadow-sm px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl sm:rounded-xl rounded-bl-none text-xs flex items-center gap-2">
             <span className="flex gap-1">
               <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#6E857B] rounded-full animate-bounce"></span>
               <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#6E857B] rounded-full animate-bounce delay-100"></span>

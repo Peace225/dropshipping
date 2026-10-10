@@ -1,18 +1,89 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Sparkles, Bot, User, Send, ShieldCheck, AlertCircle } from "lucide-react";
+import { ArrowLeft, Sparkles, Bot, User, Send, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
+
+interface Message {
+  id: string;
+  sender: "ai" | "user";
+  text: string;
+}
 
 export default function ConseilIAPage() {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "1",
+      sender: "ai",
+      text: "Bonjour et bienvenue sur l'espace de conseil intelligent d'ECLOSIA ! Je suis là pour vous accompagner pas à pas dans votre parcours de future ou jeune maman. Que souhaitez-vous aborder aujourd'hui ?"
+    }
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  
+  // Référence pour l'auto-scroll
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll à chaque nouveau message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  const handleSend = async (textToSend?: string) => {
+    const content = textToSend || input;
+    if (!content.trim() || loading) return;
+
+    const newUserMessage: Message = {
+      id: Date.now().toString(),
+      sender: "user",
+      text: content,
+    };
+
+    setMessages((prev) => [...prev, newUserMessage]);
+    if (!textToSend) setInput("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          conversationId: "page-conseil-session",
+          message: content 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || "Erreur réseau.");
+
+      let rawReplyText = data.message?.content || data.reply || "Réponse reçue.";
+      let formattedReply = rawReplyText.replace(/\n/g, "<br />");
+
+      const aiResponse: Message = {
+        id: data.message?.id || (Date.now() + 1).toString(),
+        sender: "ai",
+        text: formattedReply,
+      };
+
+      setMessages((prev) => [...prev, aiResponse]);
+    } catch (error: any) {
+      setMessages((prev) => [...prev, {
+        id: (Date.now() + 1).toString(),
+        sender: "ai",
+        text: "Désolée, une petite perturbation technique est survenue. Veuillez réessayer dans quelques instants.",
+      }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F5EBE6]/30 via-white to-[#6E857B]/10 py-8 pt-28">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Fil d'Ariane / Retour */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#333333]/70 hover:text-[#333333] mb-6 transition-colors"
-        >
+        <Link href="/" className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#333333]/70 hover:text-[#333333] mb-6 transition-colors">
           <ArrowLeft className="w-4 h-4" />
           <span>Retour à l'accueil ECLOSIA</span>
         </Link>
@@ -23,9 +94,7 @@ export default function ConseilIAPage() {
             <Sparkles className="w-8 h-8 text-[#6E857B] animate-pulse" />
           </div>
           <div className="text-center sm:text-left">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#333333] tracking-tight">
-              Conseillère IA ECLOSIA
-            </h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#333333] tracking-tight">Conseillère IA ECLOSIA</h1>
             <p className="text-xs sm:text-sm text-[#333333]/70 font-medium mt-1">
               Votre expert virtuel dédié à la maternité et à la puériculture. Posez vos questions à tout moment pour des recommandations personnalisées et bienveillantes.
             </p>
@@ -63,42 +132,68 @@ export default function ConseilIAPage() {
           </div>
 
           {/* Corps de la conversation */}
-          <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-[#F5EBE6]/10">
-            {/* Message d'accueil du bot */}
-            <div className="flex gap-3 max-w-[85%]">
-              <div className="w-8 h-8 rounded-full bg-[#6E857B] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                <Bot className="w-4 h-4" />
+          <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-[#F5EBE6]/10 scroll-smooth">
+            {messages.map((msg) => (
+              <div key={msg.id} className={`flex gap-3 max-w-[85%] ${msg.sender === "user" ? "ml-auto flex-row-reverse" : ""}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${msg.sender === "user" ? "bg-[#333333] text-white" : "bg-[#6E857B] text-white"}`}>
+                  {msg.sender === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                </div>
+                <div className={`p-4 rounded-2xl shadow-sm text-xs sm:text-sm font-medium leading-relaxed ${
+                  msg.sender === "user" 
+                  ? "bg-[#333333] text-white rounded-tr-none" 
+                  : "bg-white text-[#333333] border border-[#333333]/10 rounded-tl-none"
+                }`}>
+                  <div dangerouslySetInnerHTML={{ __html: msg.text }} />
+                </div>
               </div>
-              <div className="p-4 rounded-2xl rounded-tl-none bg-white text-[#333333] border border-[#333333]/10 shadow-sm text-xs sm:text-sm font-medium leading-relaxed">
-                Bonjour et bienvenue sur l'espace de conseil intelligent d'ECLOSIA ! Je suis là pour vous accompagner pas à pas dans votre parcours de future ou jeune maman. Que souhaitez-vous aborder aujourd'hui ?
-              </div>
-            </div>
+            ))}
 
-            {/* Suggestions rapides */}
-            <div className="py-2 pl-11 flex flex-wrap gap-2">
-              <button type="button" className="text-xs font-bold bg-white border border-[#333333]/15 text-[#333333] px-3.5 py-2 rounded-full hover:bg-[#333333] hover:text-white transition-colors shadow-sm">
+            {loading && (
+              <div className="flex gap-3 max-w-[85%]">
+                <div className="w-8 h-8 rounded-full bg-[#6E857B] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <Bot className="w-4 h-4" />
+                </div>
+                <div className="p-4 rounded-2xl rounded-tl-none bg-white text-[#333333] border border-[#333333]/10 shadow-sm flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#6E857B]" />
+                  <span className="text-xs text-gray-500 font-medium">Rédaction en cours...</span>
+                </div>
+              </div>
+            )}
+
+            {/* Point d'ancrage pour l'auto-scroll */}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Suggestions rapides (masquées si des messages existent déjà pour éviter la surcharge) */}
+          {messages.length <= 1 && !loading && (
+            <div className="py-2 px-6 flex flex-wrap gap-2 bg-[#F5EBE6]/10 border-t border-white">
+              <button onClick={() => handleSend("Soin vergetures bio")} type="button" className="text-xs font-bold bg-white border border-[#333333]/15 text-[#333333] px-3.5 py-2 rounded-full hover:bg-[#333333] hover:text-white transition-colors shadow-sm">
                 🌿 Soin vergetures bio
               </button>
-              <button type="button" className="text-xs font-bold bg-white border border-[#333333]/15 text-[#333333] px-3.5 py-2 rounded-full hover:bg-[#333333] hover:text-white transition-colors shadow-sm">
+              <button onClick={() => handleSend("Sommeil de bébé (TOG 2.0)")} type="button" className="text-xs font-bold bg-white border border-[#333333]/15 text-[#333333] px-3.5 py-2 rounded-full hover:bg-[#333333] hover:text-white transition-colors shadow-sm">
                 🌙 Sommeil de bébé (TOG 2.0)
               </button>
-              <button type="button" className="text-xs font-bold bg-white border border-[#333333]/15 text-[#333333] px-3.5 py-2 rounded-full hover:bg-[#333333] hover:text-white transition-colors shadow-sm">
+              <button onClick={() => handleSend("Infos livraison & retours")} type="button" className="text-xs font-bold bg-white border border-[#333333]/15 text-[#333333] px-3.5 py-2 rounded-full hover:bg-[#333333] hover:text-white transition-colors shadow-sm">
                 📦 Infos livraison & retours
               </button>
             </div>
-          </div>
+          )}
 
           {/* Zone de saisie du message */}
           <div className="p-4 bg-white border-t border-[#333333]/10">
-            <form onSubmit={(e) => e.preventDefault()} className="flex items-center gap-3">
+            <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-center gap-3">
               <input
                 type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
                 placeholder="Posez votre question sur la grossesse, les soins ou l'équipement..."
                 className="flex-1 px-4 py-3 rounded-2xl border border-[#333333]/15 text-xs sm:text-sm focus:outline-none focus:border-[#333333] bg-[#F5EBE6]/10"
+                disabled={loading}
               />
               <button
                 type="submit"
-                className="inline-flex items-center justify-center px-5 py-3 rounded-2xl bg-[#6E857B] hover:bg-[#5b6e65] text-white font-bold transition-all shadow-md active:scale-95"
+                disabled={!input.trim() || loading}
+                className="inline-flex items-center justify-center px-5 py-3 rounded-2xl bg-[#6E857B] hover:bg-[#5b6e65] text-white font-bold transition-all shadow-md active:scale-95 disabled:opacity-50"
               >
                 <Send className="w-4 h-4" />
               </button>

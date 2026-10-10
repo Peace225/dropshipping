@@ -13,7 +13,7 @@ interface Message {
 
 export default function AiChatDrawer() {
   const [isOpen, setIsOpen] = useState(false)
-  const [isDismissed, setIsDismissed] = useState(false) // NOUVEL ÉTAT pour masquer la bulle
+  const [isDismissed, setIsDismissed] = useState(false)
   const [conversationId] = useState(() => `session-drawer-${Date.now()}`)
   
   const [shouldBounce, setShouldBounce] = useState(true)
@@ -27,7 +27,6 @@ export default function AiChatDrawer() {
   ])
   const [loading, setLoading] = useState(false)
 
-  // Arrête le petit saut de la bulle une fois cliquée
   useEffect(() => {
     if (isOpen) {
       setShouldBounce(false)
@@ -78,7 +77,6 @@ export default function AiChatDrawer() {
 
   const counselorImage = "/images/conseillere.png"
 
-  // Si l'utilisateur a fermé la bulle, on ne rend plus rien
   if (isDismissed) return null;
   
   return (
@@ -86,14 +84,12 @@ export default function AiChatDrawer() {
       isOpen ? "inset-3 sm:inset-auto sm:bottom-6 sm:right-6" : "bottom-4 right-4 sm:bottom-6 sm:right-6"
     }`}>
       
-      {/* BOUTON D'OUVERTURE DE LA BULLE */}
       {!isOpen && (
         <div className={`relative pointer-events-auto ${shouldBounce ? 'animate-bounce' : ''}`}>
           
-          {/* NOUVEAU : Bouton pour fermer (masquer) la bulle elle-même */}
           <button
             onClick={(e) => {
-              e.stopPropagation(); // Évite d'ouvrir le chat en cliquant sur la croix
+              e.stopPropagation();
               setIsDismissed(true);
             }}
             className="absolute -top-2 -left-2 z-40 bg-white text-gray-400 hover:text-[#333333] rounded-full p-1 shadow-md border border-gray-200 active:scale-95 transition-all"
@@ -102,10 +98,9 @@ export default function AiChatDrawer() {
             <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </button>
 
-          {/* Bulle de notification clignotante */}
           <div className="absolute -top-2 -right-1 sm:-top-3 sm:-right-2 z-30 animate-pulse pointer-events-none">
             <span className="flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-500 border-2 border-white shadow-sm">
-              <span className="text-white text-[9px] sm:text-[10px] font-bold">1</span>
+              <span className="text-white text-[10px] sm:text-xs font-bold">1</span>
             </span>
           </div>
 
@@ -129,10 +124,10 @@ export default function AiChatDrawer() {
             </div>
             
             <div className="flex flex-col items-start justify-center ml-1 z-10">
-              <span className="font-extrabold text-[12px] sm:text-sm tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
+              <span className="font-extrabold text-xs sm:text-sm tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
                 Conseillère ECLOSIA
               </span>
-              <span className="text-[9px] sm:text-[10px] text-gray-400 font-medium flex items-center gap-1 group-hover:text-emerald-300 transition-colors">
+              <span className="text-[10px] sm:text-xs text-gray-400 font-medium flex items-center gap-1 group-hover:text-emerald-300 transition-colors">
                 <MessageCircleHeart className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 Posez une question
               </span>
@@ -143,17 +138,15 @@ export default function AiChatDrawer() {
         </div>
       )}
 
-      {/* FENÊTRE DE CHAT OUVERTE */}
       {isOpen && (
-        <div className="pointer-events-auto flex flex-col w-full h-full sm:h-[560px] sm:w-[380px] bg-white border border-[#333333]/20 rounded-[20px] sm:rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 transform origin-bottom sm:origin-bottom-right">
+        <div className="pointer-events-auto flex flex-col w-full h-full sm:h-[600px] sm:w-[400px] bg-white border border-[#333333]/20 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 transform origin-bottom sm:origin-bottom-right">
           
-          {/* En-tête avec bouton de FERMETURE DU CHAT */}
           <div className="px-4 sm:px-5 py-3 sm:py-4 bg-gradient-to-r from-[#333333] to-[#1a1a1a] text-white flex items-center justify-between border-b border-white/10 relative overflow-hidden shrink-0">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
             <div className="flex items-center gap-3 sm:gap-4 relative z-10">
               <div className="relative">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/10 flex items-center justify-center shadow-lg overflow-hidden border-[2px] sm:border-[2.5px] border-white/20">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/10 flex items-center justify-center shadow-lg overflow-hidden border-2 sm:border-[2.5px] border-white/20">
                   <img 
                     src={counselorImage} 
                     alt="Clara - ECLOSIA" 
@@ -164,8 +157,8 @@ export default function AiChatDrawer() {
               </div>
               
               <div className="flex flex-col">
-                <h3 className="font-extrabold text-[14px] sm:text-[15px] tracking-wide text-white">Clara d'ECLOSIA</h3>
-                <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-emerald-300 font-medium mt-0.5">
+                <h3 className="font-extrabold text-base sm:text-lg tracking-wide text-white">Clara d'ECLOSIA</h3>
+                <div className="flex items-center gap-1.5 text-xs sm:text-sm text-emerald-300 font-medium mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                   En ligne • À votre écoute
                 </div>
@@ -181,7 +174,7 @@ export default function AiChatDrawer() {
             </button>
           </div>
 
-          <div className="bg-[#F5EBE6] border-b border-[#333333]/10 px-3 py-2 flex items-start gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] text-[#333333] shrink-0">
+          <div className="bg-[#F5EBE6] border-b border-[#333333]/10 px-3 py-2 flex items-start gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-[#333333] shrink-0">
             <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B] shrink-0 mt-0.5" />
             <p className="leading-tight">
               <strong className="font-bold">Info :</strong> Cet assistant ne remplace pas un professionnel de santé.
