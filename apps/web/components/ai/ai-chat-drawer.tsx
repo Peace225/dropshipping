@@ -9,20 +9,24 @@ interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
+  products?: any[]
+  metadata?: {
+    products?: any[]
+  }
 }
 
 export default function AiChatDrawer() {
   const [isOpen, setIsOpen] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
   const [conversationId] = useState(() => `session-drawer-${Date.now()}`)
-  
   const [shouldBounce, setShouldBounce] = useState(true)
-  
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: 'Bonjour ! Je suis Clara, votre conseillère ECLOSIA. Comment puis-je vous aider aujourd\'hui ?',
+      content:
+        "Bonjour ! Je suis Clara, votre conseillère ECLOSIA 💚 Comment puis-je vous aider aujourd'hui ?",
     },
   ])
   const [loading, setLoading] = useState(false)
@@ -55,11 +59,15 @@ export default function AiChatDrawer() {
       if (!response.ok) throw new Error('Erreur réseau')
 
       const data = await response.json()
+      const returnedProducts =
+        data.products || data.message?.products || data.message?.metadata?.products || []
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: data.message?.content || 'Désolé, une erreur est survenue.',
+        products: returnedProducts,
+        metadata: { products: returnedProducts },
       }
 
       setMessages((prev) => [...prev, assistantMessage])
@@ -75,22 +83,22 @@ export default function AiChatDrawer() {
     }
   }
 
-  const counselorImage = "/images/conseillere.png"
+  const counselorImage = '/images/conseillere.png'
 
-  if (isDismissed) return null;
-  
+  if (isDismissed) return null
+
   return (
-    <div className={`fixed z-50 pointer-events-none flex flex-col items-end justify-end transition-all ${
-      isOpen ? "inset-3 sm:inset-auto sm:bottom-6 sm:right-6" : "bottom-4 right-4 sm:bottom-6 sm:right-6"
-    }`}>
-      
+    <div
+      className={`fixed z-50 pointer-events-none flex flex-col items-end justify-end transition-all ${
+        isOpen ? 'inset-3 sm:inset-auto sm:bottom-6 sm:right-6' : 'bottom-4 right-4 sm:bottom-6 sm:right-6'
+      }`}
+    >
       {!isOpen && (
         <div className={`relative pointer-events-auto ${shouldBounce ? 'animate-bounce' : ''}`}>
-          
           <button
             onClick={(e) => {
-              e.stopPropagation();
-              setIsDismissed(true);
+              e.stopPropagation()
+              setIsDismissed(true)
             }}
             className="absolute -top-2 -left-2 z-40 bg-white text-gray-400 hover:text-[#333333] rounded-full p-1 shadow-md border border-gray-200 active:scale-95 transition-all"
             aria-label="Masquer la bulle"
@@ -112,9 +120,9 @@ export default function AiChatDrawer() {
 
             <div className="relative flex items-center justify-center">
               <div className="absolute inset-0 rounded-full border border-dashed border-white/30 animate-[spin_10s_linear_infinite] group-hover:border-white/60" />
-              <img 
-                src={counselorImage} 
-                alt="Conseillère" 
+              <img
+                src={counselorImage}
+                alt="Conseillère"
                 className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-[#333333] shadow-md z-10"
               />
               <span className="absolute bottom-0 right-0 flex h-3.5 w-3.5 sm:h-4 sm:w-4 z-20">
@@ -122,7 +130,7 @@ export default function AiChatDrawer() {
                 <span className="relative inline-flex rounded-full h-full w-full bg-emerald-500 border-2 border-[#1a1a1a] group-hover:border-[#222222] transition-colors shadow-sm"></span>
               </span>
             </div>
-            
+
             <div className="flex flex-col items-start justify-center ml-1 z-10">
               <span className="font-extrabold text-xs sm:text-sm tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
                 Conseillère ECLOSIA
@@ -140,31 +148,32 @@ export default function AiChatDrawer() {
 
       {isOpen && (
         <div className="pointer-events-auto flex flex-col w-full h-full sm:h-[600px] sm:w-[400px] bg-white border border-[#333333]/20 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.4)] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-300 transform origin-bottom sm:origin-bottom-right">
-          
           <div className="px-4 sm:px-5 py-3 sm:py-4 bg-gradient-to-r from-[#333333] to-[#1a1a1a] text-white flex items-center justify-between border-b border-white/10 relative overflow-hidden shrink-0">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
             <div className="flex items-center gap-3 sm:gap-4 relative z-10">
               <div className="relative">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/10 flex items-center justify-center shadow-lg overflow-hidden border-2 sm:border-[2.5px] border-white/20">
-                  <img 
-                    src={counselorImage} 
-                    alt="Clara - ECLOSIA" 
+                  <img
+                    src={counselorImage}
+                    alt="Clara - ECLOSIA"
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <span className="absolute bottom-0.5 right-0.5 h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full bg-emerald-500 border-2 border-[#1a1a1a] shadow-sm"></span>
               </div>
-              
+
               <div className="flex flex-col">
-                <h3 className="font-extrabold text-base sm:text-lg tracking-wide text-white">Clara d'ECLOSIA</h3>
+                <h3 className="font-extrabold text-base sm:text-lg tracking-wide text-white">
+                  Clara d&apos;ECLOSIA
+                </h3>
                 <div className="flex items-center gap-1.5 text-xs sm:text-sm text-emerald-300 font-medium mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                   En ligne • À votre écoute
                 </div>
               </div>
             </div>
-            
+
             <button
               onClick={() => setIsOpen(false)}
               className="relative z-10 text-white/50 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all duration-200 active:scale-95"
@@ -188,7 +197,6 @@ export default function AiChatDrawer() {
           <div className="shrink-0">
             <ChatInput onSend={handleSendMessage} disabled={loading} />
           </div>
-          
         </div>
       )}
     </div>
