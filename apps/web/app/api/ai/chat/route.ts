@@ -60,6 +60,7 @@ TON RÔLE :
 - Être chaleureuse, rassurante, comme une amie maman expérimentée. Utilise 💚
 - Toujours guider naturellement vers un produit ECLOSIA quand c'est pertinent.
 - N'utilise JAMAIS d'astérisques (**) dans tes réponses.
+- INTERDIT ABSOLU d'inclure des liens hypertextes ou des URL (ex: [texte](url) ou https://...) dans ton texte. Présente simplement les produits textuellement, le site affichera les fiches et images automatiquement en dessous.
 
 CATALOGUE RÉEL FRANCE (58 variantes actives - prix TTC définitifs - injection dynamique) :
 ${catalogueContext}
@@ -101,8 +102,10 @@ Tu ne bloques JAMAIS. Tu réponds à tout.
       aiReply = `Je suis là pour vous aider 💚 Dites-moi votre question sur bébé ou maman, je vous conseille avec nos produits lavables ECLOSIA.\n\nNos essentiels France : Culottes 25,90€, Maillots 17,90€, Matelas 74,90€, Serviettes Nuit 25,90€, Coussinets 13,90€, Carrés 12,90€.\nLivraison France 10,00€ fixe, gratuite dès 60€ - 24/48h.`;
     }
 
-    // Nettoyage des "**" pour un affichage propre dans la bulle de chat
-    aiReply = aiReply.replace(/\*\*/g, '');
+    // Nettoyage rigoureux des "**" et de tout lien Markdown accidentel
+    aiReply = aiReply
+      .replace(/\*\*/g, '')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
 
     // 3. SÉLECTION DES 3 PRODUITS (basée sur la réponse de Clara + la question du client)
     const combinedSearch = `${message} ${aiReply}`
@@ -126,10 +129,12 @@ Tu ne bloques JAMAIS. Tu réponds à tout.
         combinedSearch.includes('matelas') ||
         combinedSearch.includes('couche') ||
         combinedSearch.includes('culotte') ||
-        combinedSearch.includes('langer')
+        combinedSearch.includes('langer') ||
+        combinedSearch.includes('coussin') ||
+        combinedSearch.includes('chaise')
       ) {
         filtered = allActive.filter(
-          (p) => (p.sku || '').startsWith('SKU-BUM') || (p.sku || '').includes('KITBIO')
+          (p) => (p.sku || '').startsWith('SKU-BUM') || (p.sku || '').includes('KITBIO') || (p.name || '').toLowerCase().includes('coussin')
         );
       } else if (combinedSearch.includes('maman') || combinedSearch.includes('post-partum') || combinedSearch.includes('demaquillant')) {
         filtered = allActive.filter((p) => ['SKU-BBKJNG', 'SKU-CARREFUSCHIA'].includes(p.sku || ''));
