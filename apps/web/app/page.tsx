@@ -1,16 +1,16 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
 import Link from "next/link";
 import { Sparkles, Heart, ShieldCheck, ShoppingBag, ArrowRight } from "lucide-react";
 import { HeroBanner } from "@/components/home/HeroBanner";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 import { MaternityCareSection } from "@/components/home/MaternityCareSection";
 import { BabyCareSection } from "@/components/home/BabyCareSection";
-import HomeComponent from "@/components/home/HomeComponent";
 
 export const metadata = {
   title: "ECLOSIA | Maternité, Puériculture & Bien-être Maman & Bébé",
-  description: "Plateforme d'excellence dédiée à la maternité et à la puériculture basée à Paris. Retrouvez nos essentiels, notre conseillère IA et des produits sélectionnés avec soin pour maman et bébé.",
+  description: "Plateforme d'excellence dédiée à la maternité et à la puériculture. Retrouvez nos essentiels, notre conseillère IA et des produits sélectionnés avec soin pour maman et bébé.",
 };
 
 export default function HomePage() {
@@ -52,7 +52,7 @@ export default function HomePage() {
       "https://instagram.com/eclosia"
     ],
     "priceRange": "$$",
-    "description": "Plateforme e-commerce spécialisée dans la maternité et le bien-être de bébé, offrant des articles de puériculture d'excellence et un accompagnement sur mesure depuis Paris, France."
+    "description": "Plateforme e-commerce spécialisée dans la maternité et le bien-être de bébé, offrant des articles de puériculture d'excellence et un accompagnement sur mesure."
   };
 
   return (
@@ -74,8 +74,6 @@ export default function HomePage() {
 
         {/* Section Soins & Cocon de Bébé */}
         <BabyCareSection />
-
-        <HomeComponent />
 
       </main>
     </>

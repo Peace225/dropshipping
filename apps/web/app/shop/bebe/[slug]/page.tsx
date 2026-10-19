@@ -16,8 +16,14 @@ function cleanImageUrl(raw?: string){
   return first.startsWith("http") ? first : PLACEHOLDER;
 }
 
+// Tailles spécifiques uniquement pour le Plan Incliné
+const PLAN_INCLINE_SIZES = [
+  { key: "30x35", label: "30x35 cm pour Berceau / Landau bébé", price: 19.90 },
+  { key: "60x35", label: "60x35 cm pour Lit bébé 60x120 cm", price: 23.90 },
+  { key: "70x35", label: "70x35 cm pour Lit bébé 70x140 cm", price: 24.90 }
+];
+
 export default function BebeProductDetailPage() {
-  // ✅ Instance Supabase sécurisée à l'intérieur du composant (évite le SSR prématuré)
   const [supabase] = useState(() => getSupabase());
 
   const params = useParams();
@@ -34,6 +40,9 @@ export default function BebeProductDetailPage() {
   const [selectedCity, setSelectedCity] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState<"relais"|"domicile">("relais");
   const [debugMsg, setDebugMsg] = useState("");
+
+  // État pour la taille (uniquement pour le plan incliné)
+  const [selectedSizeKey, setSelectedSizeKey] = useState<string>("30x35");
   
   const sliderRef = useRef<HTMLDivElement>(null);
   const scrollSlider = (dir: "left" | "right") => {
@@ -42,16 +51,30 @@ export default function BebeProductDetailPage() {
   
   const activeDeliveryPriceStr = "10,00 €";
   
+  // Vérifie si le produit affiché est bien le plan incliné
+  const isPlanIncline = product?.slug?.includes("plan-incline");
+
+  // Calcul du prix selon qu'il s'agit du plan incliné ou d'un autre produit standard
+  const currentNumericPrice = isPlanIncline 
+    ? (PLAN_INCLINE_SIZES.find(s => s.key === selectedSizeKey)?.price ?? 19.90)
+    : Number(product?.price || 0);
+
+  const currentPriceFormatted = `${currentNumericPrice.toFixed(2).replace(".",",")} €`;
+  const currentOldPriceFormatted = `${(currentNumericPrice * 1.25).toFixed(2).replace(".",",")} €`;
+
   const handleBuy = () => {
     if(!product) return;
+    const sizeObj = isPlanIncline ? PLAN_INCLINE_SIZES.find(s => s.key === selectedSizeKey) : null;
+    
     const item = {
-      id: product.id,
-      name: product.name,
+      id: sizeObj ? `${product.id}-${sizeObj.key}` : product.id,
+      name: sizeObj ? `${product.name} (${sizeObj.label})` : product.name,
       slug: product.slug,
-      price: Number(product.price),
-      priceFormatted: product.priceFormatted,
+      price: currentNumericPrice,
+      priceFormatted: currentPriceFormatted,
       image: mainImage,
       quantity: 1,
+      size: sizeObj ? sizeObj.label : undefined,
       brand: product.brand,
       fabrication: product.fabrication,
       fabricationFlag: product.fabricationFlag,
@@ -109,17 +132,13 @@ export default function BebeProductDetailPage() {
         if (fb3) prodSimple = fb3;
       }
       
-      if (error && !prodSimple) {
-        console.error("Introuvable", error, slug);
-      }
-      
       if (!prodSimple) {
-        setDebugMsg("Le produit n'existe pas en base. Exécute UPDATE products SET is_active=true WHERE slug ILIKE '%32x72%'");
+        setDebugMsg("Le produit n'existe pas en base.");
         setLoading(false);
         return;
       }
 
-            let fabFull = "Fabriqué en France et en Union Européenne";
+      let fabFull = "Fabriqué en France et en Union Européenne";
       let fabFlag = "FR / EU";
       let fabShort = "UE";
       if (prodSimple.manufacturer_id) {
@@ -134,7 +153,6 @@ export default function BebeProductDetailPage() {
           fabShort = manuf.code || fabShort;
         }
       }
-      // OVERRIDE FORCÉ ECLOSIA - Plan incliné = France uniquement, on ignore manufacturers si c'est le plan incliné
       if (prodSimple.slug?.includes("plan-incline") || prodSimple.sku === "SKU-FELY") {
         fabFull = "Fabriqué en France";
         fabFlag = "🇫🇷";
@@ -167,8 +185,6 @@ export default function BebeProductDetailPage() {
         fabrication: fabFull,
         fabricationFlag: fabFlag,
         fabricationShort: fabShort,
-        priceFormatted: `${Number(prodSimple.price||0).toFixed(2).replace(".",",")} €`,
-        oldPriceFormatted: `${(Number(prodSimple.price||0)*1.25).toFixed(2).replace(".",",")} €`,
         reviewsCount: Math.floor(Math.random()*80)+20
       });
       setMainImage(formattedImages[0]);
@@ -212,62 +228,26 @@ export default function BebeProductDetailPage() {
     fetchData();
   }, [slug, supabase]);
 
-  // ✅ Injection SEO avec Cleanup Anti-Clignotement
   useEffect(() => {
     if (!product) return;
-
     const originalTitle = "ECLOSIA - Maternité & Puériculture";
-
-    if (product.meta_title) {
-      document.title = product.meta_title;
-    }
-
-    if (product.meta_description) {
-      let metaDesc = document.querySelector('meta[name="description"]');
-      if (!metaDesc) {
-        metaDesc = document.createElement('meta');
-        metaDesc.setAttribute('name', 'description');
-        document.head.appendChild(metaDesc);
-      }
-      metaDesc.setAttribute('content', product.meta_description);
-    }
-
-    if (product.seo_keywords) {
-      let metaKeywords = document.querySelector('meta[name="keywords"]');
-      if (!metaKeywords) {
-        metaKeywords = document.createElement('meta');
-        metaKeywords.setAttribute('name', 'keywords');
-        document.head.appendChild(metaKeywords);
-      }
-      metaKeywords.setAttribute('content', product.seo_keywords);
-    }
-
-    return () => {
-      document.title = originalTitle;
-    };
+    if (product.meta_title) document.title = product.meta_title;
+    return () => { document.title = originalTitle; };
   }, [product]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center pt-20"><p className="font-bold animate-pulse text-[#333333]">Chargement...</p></div>;
-  if (!product) return <div className="min-h-screen flex flex-col items-center justify-center gap-4 pt-20"><h1 className="text-2xl font-extrabold text-[#333333]">Produit introuvable</h1><p className="text-xs text-gray-500">Slug: {slug}</p>{debugMsg && <p className="text-xs text-red-500">{debugMsg}</p>}<Link href="/shop/bebe" className="px-6 py-2.5 bg-[#333333] text-white rounded-full font-bold text-sm">Retour boutique bébé</Link></div>;
+  if (!product) return <div className="min-h-screen flex flex-col items-center justify-center gap-4 pt-20"><h1 className="text-2xl font-extrabold text-[#333333]">Produit introuvable</h1><Link href="/shop/bebe" className="px-6 py-2.5 bg-[#333333] text-white rounded-full font-bold text-sm">Retour boutique bébé</Link></div>;
 
   function getMarketingDescription(p:any){
     if(p?.description && p.description.trim().length > 30) return p.description;
-    const s = (p?.slug || "" + p?.name || "").toLowerCase();
-    if(s.includes("50x100") && s.includes("3-draps")) return "Le kit malin qui vous évite 3 lessives en retard. Matelas 50x100 respirant, déhoussable, anti-acariens + 3 draps housse coton ultra-doux qui tiennent au matelas même quand bébé gigote + 2 alèses imperméables qui sauvent les nuits. Coton OEKO-TEX, lavable à 60°, fabrication France et UE. L'essentiel qui dure, pensé pour les parents débordés.";
-    if(s.includes("32x72")) return "Douceur de couffin x3. Lot de 3 draps housse 32x72 en coton naturel, extensibles et ultra-doux. Lavables à 60°, tiennent parfaitement au matelas. Le lot qui vous sauve quand tout est au sale. Coton OEKO-TEX, fabrication UE. Respirant, doux pour la peau fragile de bébé, entretien facile. L'essentiel malin qui dure.";
-    if(s.includes("40x80") || s.includes("40x90")) return "Le trio qui vous sauve les nuits. 3 draps housse 40x80/40x90 en coton doux, extensibles, qui restent en place. Lavables 60°, sèchent vite. Parfaits pour berceau et cododo. OEKO-TEX, fabrication UE. Le stock malin pour éviter les lessives d'urgence.";
-    if(s.includes("60x120")) return "Voyage léger, bébé au sec. Lot de 3 draps housse 60x120 + 2 alèses imperméables. Coton doux, extensible, qui reste en place. Lavable 60°, sèche vite. Le kit malin qui vous évite les lessives d'urgence. OEKO-TEX, fabrication UE.";
-    return "Offrez à votre bébé douceur et sécurité. Matériaux certifiés OEKO-TEX, fabrication France et Union Européenne. Entretien facile, lavable à 60°, respirant et anti-allergique. L'essentiel malin qui dure, pensé pour simplifier la vie des jeunes parents.";
+    return "Offrez à votre bébé douceur et sécurité. Matériaux certifiés OEKO-TEX, fabrication France et Union Européenne. Entretien facile, lavable à 60°, respirant et anti-allergique.";
   }
 
   const rawDesc = getMarketingDescription(product);
   const descLines = (rawDesc||"").split("\n");
   const bulletLines = descLines.filter((l:string) => l.trim().startsWith("-") || l.trim().startsWith("•"));
   const resumeLine = descLines.find((l:string) => l.toLowerCase().includes("très pratique") || l.toLowerCase().includes("résumé")) || "";
-  
-  const descText = descLines
-    .filter((l:string) => !l.toLowerCase().includes("très pratique") && !l.toLowerCase().includes("résumé") && !l.trim().startsWith("-") && !l.trim().startsWith("•") && l.trim().length > 0)
-    .join("\n\n");
+  const descText = descLines.filter((l:string) => !l.toLowerCase().includes("très pratique") && !l.toLowerCase().includes("résumé") && !l.trim().startsWith("-") && !l.trim().startsWith("•") && l.trim().length > 0).join("\n\n");
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F5EBE6]/30 via-white to-[#F5EBE6]/20 pb-16 pt-24">
@@ -292,7 +272,6 @@ export default function BebeProductDetailPage() {
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-[#333333]/50 text-center mt-1">Clique pour zoomer</p>
             </div>
             <div className="w-full md:w-[55%] flex flex-col p-4 sm:p-6">
               <div className="flex flex-wrap gap-2 mb-2">
@@ -300,12 +279,35 @@ export default function BebeProductDetailPage() {
               </div>
               <h1 className="text-xl sm:text-2xl font-extrabold text-[#333333] leading-snug mb-3 mt-2">{product.name}</h1>
               <hr className="border-[#333333]/10 mb-4"/>
-              <div className="flex items-center gap-3 mb-1">
-                <p className="text-3xl font-extrabold text-[#333333]">{product.priceFormatted}</p>
-                <p className="text-base text-gray-400 line-through">{product.oldPriceFormatted}</p>
+              
+              {/* PRIX DYNAMIQUE */}
+              <div className="flex items-center gap-3 mb-3">
+                <p className="text-3xl font-extrabold text-[#333333]">{currentPriceFormatted}</p>
+                <p className="text-base text-gray-400 line-through">{currentOldPriceFormatted}</p>
                 <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-md">-20%</span>
               </div>
-              <div className="flex items-center gap-2 mb-4 mt-2">
+
+              {/* CHAMP DROPDOWN "CHOISISSEZ LA TAILLE :" (UNIQUEMENT POUR LE PLAN INCLINÉ) */}
+              {isPlanIncline && (
+                <div className="mb-4">
+                  <label className="block text-xs font-extrabold text-[#333333] uppercase tracking-wider mb-2">
+                    Choisissez la taille :
+                  </label>
+                  <select
+                    value={selectedSizeKey}
+                    onChange={(e) => setSelectedSizeKey(e.target.value)}
+                    className="w-full text-sm border border-[#333333]/20 rounded-xl p-3 bg-white text-[#333333] font-semibold outline-none focus:border-[#333333] cursor-pointer shadow-sm"
+                  >
+                    {PLAN_INCLINE_SIZES.map((opt) => (
+                      <option key={opt.key} value={opt.key}>
+                        {opt.label} — {opt.price.toFixed(2).replace(".", ",")} €
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 mb-4">
                 <span className="text-lg leading-none">{product.fabricationFlag}</span>
                 <span className="text-xs italic font-bold text-[#6E857B]">{product.fabrication}</span>
               </div>
@@ -326,7 +328,7 @@ export default function BebeProductDetailPage() {
               <div className="flex items-center gap-1.5 mb-5 text-amber-500">{[...Array(4)].map((_,i)=><Star key={i} className="w-4 h-4 fill-current"/>)}<Star className="w-4 h-4 text-gray-300"/><span className="text-xs text-[#333333]/60 ml-1">({product.reviewsCount} avis)</span></div>
               <hr className="border-[#333333]/10 mb-5"/>
               <div className="mt-auto">
-                <button onClick={handleBuy} className="w-full bg-[#333333] hover:bg-black text-white py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer"><ShoppingCart className="w-5 h-5"/> J'achète</button>
+                <button onClick={handleBuy} className="w-full bg-[#333333] hover:bg-black text-white py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer"><ShoppingCart className="w-5 h-5"/> J'achète ({currentPriceFormatted})</button>
               </div>
             </div>
           </div>
