@@ -25,10 +25,10 @@ function getMarketingShort(p:any){
   if(s.includes("32x72")) return "Lot de 3 draps housse couffin ultra-doux.";
   if(s.includes("60x120")) return "3 draps housse + 2 alèses imperméables.";
   if(s.includes("90x190")) return "Matelas enfant déhoussable, mémoire de forme.";
-  if(s.includes("culotte") || s.includes("couche") || s.includes("bumbuns")) return "Lavable, Oeko-Tex, fabrication UE.";
+  if(s.includes("culotte") || s.includes("couche") || s.includes("bumbuns")) return "Lavable, certifié Oeko-Tex, éco-responsable.";
   if(s.includes("tapis") || s.includes("langer")) return "Nomade, pliable, imperméable. 🇫🇷";
   if(s.includes("coussin")) return "Confortable, s'essuie d'un coup d'éponge. 🇫🇷";
-  return "OEKO-TEX • Fabriqué France/UE • Lavable 60°";
+  return "OEKO-TEX • Bambou & Coton Bio • Lavable 60°";
 }
 
 function useCountdown(targetDate: Date | null) {
@@ -66,7 +66,6 @@ export function FeaturedProducts() {
         .eq("is_flash_sale", true).eq("is_active", true).order("price",{ascending:false}).limit(6);
 
       if (error || !data || data.length === 0) {
-        // Fallback ciblé uniquement sur les rubriques officielles de Bébé
         const { data: fallback } = await supabase
           .from("products")
           .select(`id,name,slug,price,promo_price,original_price_backup,manufacturer_id,rubrique,brand,image_url,product_images ( image_url, is_primary, position )`)
@@ -97,23 +96,24 @@ export function FeaturedProducts() {
         const rawImg = images[0]?.image_url ?? item.image_url ?? "";
         const imageUrl = cleanImageUrl(rawImg);
         
+        const currentPrice = Number(item.price);
         const originalPrice = Number(item.original_price_backup || item.price);
-        const promoPrice = item.promo_price ? Number(item.promo_price) : Number((originalPrice*0.9).toFixed(2));
-        const discountPercent = Math.round(((originalPrice-promoPrice)/originalPrice)*100);
         
         const isBebe = item.rubrique && !item.rubrique.toLowerCase().includes("maman");
         const manuf = item.manufacturer_id ? manufById[item.manufacturer_id] : null;
-        const fabLabel = manuf?.label_fr || item.brand || "Fabriqué en France/UE";
-        const flag = manuf?.flag_emoji || "🇫🇷 🇪🇺";
+        const rawFab = manuf?.label_fr || item.brand || "Expédié en France";
+        const fabLabel = rawFab.replace(/\/UE|UE|Europe/gi, "").trim() || "Expédié en France";
+        const flag = (manuf?.flag_emoji || "🇫🇷").replace("🇪🇺", "").trim() || "🇫🇷";
         const short = getMarketingShort(item);
 
         return {
           id: item.id, name: item.name, slug: item.slug, shortDesc: short,
           categoryName: item.rubrique?.split("—")[0].trim() || "Bébé",
           universe: isBebe ? "Bébé" : "Maman",
-          price: `${promoPrice.toFixed(2).replace(".",",")} €`, numericPrice: promoPrice,
-          oldPrice: `${originalPrice.toFixed(2).replace(".",",")} €`, originalNumeric: originalPrice,
-          discount: `-${discountPercent || 10}%`,
+          price: `${currentPrice.toFixed(2).replace(".",",")} €`, numericPrice: currentPrice,
+          oldPrice: originalPrice > currentPrice ? `${originalPrice.toFixed(2).replace(".",",")} €` : null, 
+          originalNumeric: originalPrice,
+          badgeText: "FLASH",
           image: imageUrl,
           detailUrl: `/shop/bebe/${item.slug}`,
           flashListUrl: "/ventes-flash",
@@ -136,7 +136,6 @@ export function FeaturedProducts() {
 
   const scroll = (dir: "left"|"right") => {
     if (scrollContainerRef.current) {
-      // Ajustement dynamique du défilement selon l'appareil
       const scrollAmount = window.innerWidth < 640 ? 280 : 320;
       scrollContainerRef.current.scrollBy({ left: dir==="left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
     }
@@ -146,7 +145,7 @@ export function FeaturedProducts() {
   if (!flashProducts.length) return null;
 
   return (
-    <ProductSection title=" Vente Flash Exclusive -10%" subtitle="Des pépites indispensables Maman & Bébé à prix d'amie. Stocks ultra-limités !" viewAllLink="/ventes-flash">
+    <ProductSection title=" Vente Flash Exclusive" subtitle="Des pépites indispensables Maman & Bébé à prix d'amie. Stocks ultra-limités !" viewAllLink="/ventes-flash">
       <div className="col-span-full w-full">
         
         {/* HEADER MARKETING ECLOSIA */}
@@ -160,16 +159,16 @@ export function FeaturedProducts() {
               </span>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="font-extrabold text-[15px] sm:text-lg tracking-tight">Vente Flash -10%</h2>
+                  <h2 className="font-extrabold text-[15px] sm:text-lg tracking-tight">Vente Flash</h2>
                   <span className="bg-white/15 border border-white/20 px-2 py-0.5 sm:px-2.5 rounded-full text-[9px] sm:text-xs font-bold uppercase tracking-wide">Des produits • Stock limité</span>
                   <span className="hidden sm:inline-flex items-center gap-1 bg-[#6E857B] px-2.5 py-0.5 rounded-full text-xs font-bold">
                     <ShieldCheck className="w-3 h-3"/> OEKO-TEX
                   </span>
                 </div>
                 <p className="text-[11px] sm:text-xs text-white/70 mt-1 flex items-center gap-1.5 sm:gap-2">
-                  <span>🔥 Livraison 10€ !</span>
+                  <span>🔥 Livraison 10€ (Gratuite dès 60€) !</span>
                   <span className="w-1 h-1 bg-white/30 rounded-full"></span>
-                  <span>🇫🇷 🇪🇺 France/UE</span>
+                  <span>🇫🇷 Livraison France 24/48h</span>
                 </p>
               </div>
             </div>
@@ -192,9 +191,9 @@ export function FeaturedProducts() {
           </div>
           
           <div className="bg-[#F5EBE6]/40 px-4 py-2.5 sm:px-5 sm:py-3 flex flex-wrap items-center justify-between sm:justify-start gap-2 sm:gap-3 text-[10px] sm:text-xs font-bold text-[#333333]/70">
-            <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B]"/>Livraison rapide dès 10,00 €</span>
+            <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B]"/>Livraison rapide 10,00 € (Gratuite dès 60 €)</span>
             <span className="w-px h-3 bg-[#333333]/15 hidden sm:block"></span>
-            <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B]"/>OEKO-TEX & Fabriqué France/UE</span>
+            <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B]"/>Certifié OEKO-TEX • Bambou & Coton Bio</span>
           </div>
         </div>
 
@@ -216,7 +215,7 @@ export function FeaturedProducts() {
                 {/* TOP BADGES - SÉCURISÉS EN HAUT */}
                 <div className="absolute left-0 right-0 top-0 z-20 flex justify-between items-start p-2.5 sm:p-3 pointer-events-none">
                   <div className="flex flex-col gap-1.5 items-start">
-                    <span className="pointer-events-auto rounded-full bg-[#333333] px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-extrabold text-white shadow-sm">{product.discount} FLASH</span>
+                    <span className="pointer-events-auto rounded-full bg-[#333333] px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-extrabold text-white shadow-sm">{product.badgeText}</span>
                     <span className="pointer-events-auto rounded-full bg-white/95 backdrop-blur border border-[#333333]/10 px-2 py-0.5 text-[8px] sm:text-[9px] font-bold flex items-center gap-1 shadow-sm text-[#333333]"><span>{product.flag}</span><span className="truncate max-w-[60px] sm:max-w-[70px]">{product.fabrication.split(" ").slice(0,2).join(" ")}</span></span>
                   </div>
                   <span className="pointer-events-auto rounded-full bg-white/95 backdrop-blur border border-[#333333]/10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wide text-[#333333] shadow-sm">{product.universe}</span>
@@ -241,7 +240,7 @@ export function FeaturedProducts() {
                   
                   <div className="mt-2.5 sm:mt-3 flex items-baseline gap-2">
                     <span className="font-extrabold text-sm sm:text-base text-[#333333]">{product.price}</span>
-                    <span className="text-[10px] sm:text-xs line-through text-[#333333]/40">{product.oldPrice}</span>
+                    {product.oldPrice && <span className="text-[10px] sm:text-xs line-through text-[#333333]/40">{product.oldPrice}</span>}
                   </div>
                   
                   <div className="mt-2.5 sm:mt-3">
@@ -256,7 +255,7 @@ export function FeaturedProducts() {
                   
                   {/* BOUTON AJOUTER */}
                   <button type="button" onClick={(e)=>{e.preventDefault(); e.stopPropagation(); handleAddToCart(product);}} className="mt-3.5 sm:mt-4 flex w-full items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-[#333333] active:scale-95 sm:hover:bg-black py-2 sm:py-2.5 text-[11px] sm:text-xs font-extrabold text-white shadow-sm transition-all relative z-10 cursor-pointer">
-                    <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>Ajouter • -10%
+                    <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4"/>Ajouter au panier
                   </button>
                 </div>
               </article>

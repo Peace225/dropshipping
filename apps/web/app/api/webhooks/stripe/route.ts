@@ -10,16 +10,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
 
-// ✅ FIX CRITIQUE: Utilise SERVICE_ROLE_KEY sinon RLS bloque l'update
-// Ton commentaire "ou SUPABASE_SERVICE_ROLE_KEY selon vos règles RLS" était le piège
-// En webhook, il n'y a PAS de session user, donc ANON_KEY = bloqué par RLS
+// ✅ Utilisation du SERVICE_ROLE_KEY pour contourner les RLS en webhook
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const signature = headers().get("stripe-signature") || "";
+  
+  // ✅ FIX CRITIQUE : headers() est asynchrone dans Next.js App Router
+  const headerList = await headers();
+  const signature = headerList.get("stripe-signature") || "";
 
   let event: Stripe.Event;
 
@@ -27,7 +28,6 @@ export async function POST(req: Request) {
     if (webhookSecret) {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } else {
-      // Dev local sans CLI Stripe - ne pas utiliser en prod
       console.warn("STRIPE_WEBHOOK_SECRET manquant - parsing JSON brut (dev only)");
       event = JSON.parse(body);
     }
@@ -37,7 +37,6 @@ export async function POST(req: Request) {
   }
 
   try {
-    // ✅ Gère plusieurs events importants
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
@@ -51,16 +50,11 @@ export async function POST(req: Request) {
           break;
         }
 
-        // ✅ FIX: Ta structure réelle orders (31 colonnes)
-        // status: pending -> processing -> shipped
-        // payment_status: pending -> paid
         const { data, error } = await supabaseAdmin
           .from("orders")
           .update({
             payment_status: "paid",
-            status: "processing", // payée, en préparation France
-            // Optionnel: stocke le payment_intent pour debug
-            // Tu peux ajouter une colonne stripe_payment_intent_id si besoin
+            status: "processing", // Payée, en préparation en France
             updated_at: new Date().toISOString(),
           })
           .eq("id", orderId)
@@ -72,11 +66,7 @@ export async function POST(req: Request) {
           return NextResponse.json({ error: "DB update failed" }, { status: 500 });
         }
 
-        console.log(`✅ Commande ECLOSIA ${data.order_number} (${orderId}) marquée payée - France`);
-        
-        // TODO: Ici tu peux déclencher email confirmation
-        // await sendConfirmationEmail(data.customer_email, data.order_number)
-        
+        console.log(`✅ Commande ECLOSIA ${data?.order_number || orderNumber} (${orderId}) marquée payée - France`);
         break;
       }
 
@@ -108,6 +98,3 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ received: true });
 }
-
-// Important pour Stripe: désactive le body parsing Next.js
-// Dans app/api/webhooks/stripe/route.ts, Next.js 13+ gère déjà avec req.text()

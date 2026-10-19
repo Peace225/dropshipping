@@ -119,7 +119,7 @@ export default function BebeProductDetailPage() {
         return;
       }
 
-      let fabFull = "Fabriqué en France et en Union Européenne";
+            let fabFull = "Fabriqué en France et en Union Européenne";
       let fabFlag = "FR / EU";
       let fabShort = "UE";
       if (prodSimple.manufacturer_id) {
@@ -133,6 +133,12 @@ export default function BebeProductDetailPage() {
           fabFlag = manuf.code || "FR / EU";
           fabShort = manuf.code || fabShort;
         }
+      }
+      // OVERRIDE FORCÉ ECLOSIA - Plan incliné = France uniquement, on ignore manufacturers si c'est le plan incliné
+      if (prodSimple.slug?.includes("plan-incline") || prodSimple.sku === "SKU-FELY") {
+        fabFull = "Fabriqué en France";
+        fabFlag = "🇫🇷";
+        fabShort = "FR";
       }
       
       let catName = prodSimple.rubrique || "Bébé";
