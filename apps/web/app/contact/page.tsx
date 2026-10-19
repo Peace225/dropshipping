@@ -48,8 +48,8 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <span className="block text-xs font-bold text-gray-400 uppercase tracking-wide">E-mail</span>
-                  <a href="mailto:support@eclosia.app" className="text-sm font-semibold text-[#333333] hover:text-[#6E857B] transition-colors">
-                    support@eclosia.app
+                  <a href="mailto:contact@eclosia.shop" className="text-sm font-semibold text-[#333333] hover:text-[#6E857B] transition-colors">
+                    contact@eclosia.shop
                   </a>
                 </div>
               </div>
@@ -61,7 +61,7 @@ export default function ContactPage() {
                 <div>
                   <span className="block text-xs font-bold text-gray-400 uppercase tracking-wide">Horaires du Support</span>
                   <p className="text-sm font-semibold text-[#333333]">
-                    Lun - Ven : 8h - 19h<br />Samedi : 10h - 18h
+                    Lun - Ven : 09h - 18h
                   </p>
                 </div>
               </div>
@@ -71,9 +71,9 @@ export default function ContactPage() {
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="block text-xs font-bold text-gray-400 uppercase tracking-wide">Localisation</span>
+                  <span className="block text-xs font-bold text-gray-400 uppercase tracking-wide">Siège Social</span>
                   <p className="text-sm font-semibold text-[#333333]">
-                    Paris, France
+                    22 rue de la gerbe d’or, 95490 Vauréal, France
                   </p>
                 </div>
               </div>

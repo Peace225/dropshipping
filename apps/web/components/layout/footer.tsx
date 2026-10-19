@@ -9,7 +9,6 @@ export function Footer() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Schéma global @graph optimisé pour GEO, SEO et LLMO
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -28,8 +27,8 @@ export function Footer() {
         "knowsAbout": [
           "accessoires et literie bébé",
           "matelas berceau et draps bio",
-          "bien-être maternel et infantile",
-          "produits post-partum bio"
+          "bien-être et confort infantile",
+          "puériculture écoresponsable"
         ]
       },
       {
@@ -78,6 +77,14 @@ export function Footer() {
         "mainEntity": [
           {
             "@type": "Question",
+            "name": "Quels sont les frais et délais de livraison ECLOSIA ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "La livraison standard est de 10,00 € en France métropolitaine (délai de 2 à 4 jours ouvrables), et elle est offerte dès 89,00 € d'achats."
+            }
+          },
+          {
+            "@type": "Question",
             "name": "Où est situé le siège d'ECLOSIA ?",
             "acceptedAnswer": {
               "@type": "Answer",
@@ -86,10 +93,10 @@ export function Footer() {
           },
           {
             "@type": "Question",
-            "name": "Comment fonctionne votre conseillère IA pour mamans ?",
+            "name": "Comment fonctionne votre conseillère IA Puériculture ?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Notre assistante IA intégrée est disponible 24/7 sur notre plateforme pour répondre à vos questions sur l'allaitement, le post-partum et le bien-être de votre bébé."
+              "text": "Notre assistante IA intégrée est disponible 24/7 sur notre plateforme pour répondre à vos questions sur le sommeil, l'équipement et le confort de votre bébé."
             }
           }
         ]
@@ -137,10 +144,10 @@ export function Footer() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 mb-8 sm:mb-10">
             
             <div className="space-y-3">
-              <Link href="/" className="inline-flex items-center gap-2.5 group" title="ECLOSIA - Accueil Maternité">
+              <Link href="/" className="inline-flex items-center gap-2.5 group" title="ECLOSIA - Accueil Puériculture">
                 <img 
                   src="/images/logo.png" 
-                  alt="Logo ECLOSIA - Boutique Maternité & Bébé" 
+                  alt="Logo ECLOSIA - Boutique Puériculture & Bébé" 
                   className="h-6 sm:h-7 w-auto object-contain"
                   onError={(e) => {
                     (e.target as HTMLElement).style.display = 'none';
@@ -149,7 +156,7 @@ export function Footer() {
                 <span className="text-lg sm:text-xl font-bold font-serif tracking-wider text-white">ECLOSIA</span>
               </Link>
               <p className="text-[11px] sm:text-[12px] text-[#F5EBE6]/70 leading-relaxed">
-                Boutique bébé & maman éco-responsable. Spécialiste des articles de puériculture, matelas, linge de lit en coton bio et bambou certifiés OEKO-TEX.
+                Boutique puériculture & bébé écoresponsable. Spécialiste des articles de soin, matelas, linge de lit en coton bio et bambou certifiés OEKO-TEX.
               </p>
               
               <div className="space-y-1 pt-0.5">
@@ -176,8 +183,8 @@ export function Footer() {
               <h4 className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-wider text-white mb-2.5 sm:mb-3">Navigation</h4>
               <ul className="space-y-1 text-[11px] sm:text-[12px] text-[#F5EBE6]/70">
                 <li><Link href="/shop/bebe" className="block py-0.5 hover:text-[#6E857B] transition-colors">Boutique & Essentiels Bébé</Link></li>
-                <li><Link href="/ai-chat" className="block py-0.5 hover:text-[#6E857B] transition-colors">Conseillère IA Maternité 24/7</Link></li>
-                <li><Link href="/community" className="block py-0.5 hover:text-[#6E857B] transition-colors">Communauté des Mamans</Link></li>
+                <li><Link href="/ai-chat" className="block py-0.5 hover:text-[#6E857B] transition-colors">Conseillère IA Puériculture 24/7</Link></li>
+                <li><Link href="/community" className="block py-0.5 hover:text-[#6E857B] transition-colors">Espace Conseils Parents</Link></li>
                 <li><Link href="/about" className="block py-0.5 hover:text-[#6E857B] transition-colors">Notre Mission & Valeurs</Link></li>
               </ul>
             </nav>
@@ -188,14 +195,14 @@ export function Footer() {
                 <li><Link href="/cgv" className="block py-0.5 hover:text-[#6E857B] transition-colors">Conditions Générales de Vente (CGV)</Link></li>
                 <li><Link href="/mentions-legales" className="block py-0.5 hover:text-[#6E857B] transition-colors">Mentions Légales</Link></li>
                 <li><Link href="/privacy" className="block py-0.5 hover:text-[#6E857B] transition-colors">Politique de Confidentialité & RGPD</Link></li>
-                <li><Link href="/retours" className="block py-0.5 hover:text-[#6E857B] transition-colors">Politique de Retours</Link></li>
+                <li><Link href="/retours" className="block py-0.5 hover:text-[#6E857B] transition-colors">Politique de Retours (30 jours)</Link></li>
                 <li><Link href="/contact" className="block py-0.5 hover:text-[#6E857B] transition-colors">Contactez notre support</Link></li>
               </ul>
             </nav>
 
             <div className="sm:col-span-2 lg:col-span-1">
-              <h4 className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-wider text-white mb-2.5 sm:mb-3">Restez connectée</h4>
-              <p className="text-[11px] sm:text-[12px] text-[#F5EBE6]/70 mb-2.5 sm:mb-3">Recevez nos guides d'experts, conseils post-partum et offres exclusives réservées à notre communauté.</p>
+              <h4 className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-wider text-white mb-2.5 sm:mb-3">Restez connecté</h4>
+              <p className="text-[11px] sm:text-[12px] text-[#F5EBE6]/70 mb-2.5 sm:mb-3">Recevez nos guides d&apos;experts, conseils sommeil bébé et offres exclusives réservées à notre communauté.</p>
               
               <form onSubmit={handleNewsletterSubmit} className="flex flex-col gap-2">
                 <input 
@@ -232,9 +239,9 @@ export function Footer() {
           </div>
 
           <div className="border-t border-white/10 pt-5 sm:pt-6 flex flex-col md:flex-row items-center justify-between text-[10px] sm:text-[11px] text-[#F5EBE6]/50 gap-2 text-center md:text-left">
-            <p>© {new Date().getFullYear()} ECLOSIA (eclosia.shop) — Édité par Guy-Mars Karamba Mamadou (SIREN : 104 232 756). Tous droits réservés.</p>
+            <p>© {new Date().getFullYear()} ECLOSIA (eclosia.shop) — Tous droits réservés.</p>
             <p className="flex items-center justify-center md:justify-end gap-1.5">
-              Conçu avec <Heart className="w-3 h-3 text-[#6E857B] fill-[#6E857B]" /> pour le bien-être des mamans et bébés.
+              Conçu avec <Heart className="w-3 h-3 text-[#6E857B] fill-[#6E857B]" /> pour le confort et l&apos;éveil des tout-petits.
             </p>
           </div>
         </div>

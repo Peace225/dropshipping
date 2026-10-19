@@ -15,7 +15,7 @@ export default function CgvPage() {
           <section>
             <h2 className="text-lg font-bold text-[#333333] mb-2">Article 2 : Prix</h2>
             <p>
-              Les prix de nos produits sont indiqués en Euros (€) toutes taxes françaises comprises (TTC), hors frais de livraison éventuels. ECLOSIA se réserve le droit de modifier ses prix à tout moment, mais les produits facturés le seront sur la base des tarifs en vigueur au moment de la validation de la commande.
+              Les prix de nos produits sont indiqués en Euros (€) toutes taxes françaises comprises (TTC), hors frais de livraison éventuels. Les frais de port standard s&apos;élèvent à <strong>10,00 €</strong> et sont <strong>offerts dès 89,00 € d&apos;achats</strong>. ECLOSIA se réserve le droit de modifier ses prix à tout moment, mais les produits facturés le seront sur la base des tarifs en vigueur au moment de la validation de la commande.
             </p>
           </section>
 
@@ -29,21 +29,34 @@ export default function CgvPage() {
           <section>
             <h2 className="text-lg font-bold text-[#333333] mb-2">Article 4 : Livraison</h2>
             <p>
-              Les produits sont livrés à l&apos;adresse de livraison indiquée lors de la commande. Le délai moyen de livraison standard est généralement constaté entre <strong>7 et 10 jours ouvrables</strong> en France métropolitaine.
+              Les produits sont livrés à l&apos;adresse de livraison indiquée lors de la commande. Le délai moyen de livraison constaté est de <strong>2 à 4 jours ouvrables</strong> en France métropolitaine.
             </p>
           </section>
 
           <section>
             <h2 className="text-lg font-bold text-[#333333] mb-2">Article 5 : Droit de rétractation et Retours</h2>
             <p>
-              Conformément à l&apos;article L.221-18 du Code de la consommation, le client dispose d&apos;un délai de <strong>30 jours</strong> à compter de la réception de sa commande pour exercer son droit de rétractation sans avoir à justifier de motifs. Les articles doivent être retournés dans leur emballage d&apos;origine, non ouverts et en parfait état.
+              Conformément à l&apos;article L.221-18 du Code de la consommation, le client dispose d&apos;un délai de <strong>30 jours</strong> à compter de la réception de sa commande pour exercer son droit de rétractation sans avoir à justifier de motifs. Les articles doivent être retournés en parfait état et dans leur emballage d&apos;origine permettant une commercialisation. 
+            </p>
+            <p className="mt-2">
+              <strong>Frais de retour :</strong> Les frais de retour sont à la charge exclusive du client.
+            </p>
+            <p className="mt-2">
+              <strong>Remboursement :</strong> En cas de rétractation, ECLOSIA procédera au remboursement de la totalité des sommes versées au plus tard dans les <strong>14 jours</strong> suivant la date à laquelle le droit a été exercé, sous réserve de la réception du produit retourné ou d&apos;une preuve de son expédition.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-[#333333] mb-2">Article 6 : Service client</h2>
+            <h2 className="text-lg font-bold text-[#333333] mb-2">Article 6 : Médiation des litiges de la consommation</h2>
             <p>
-              Pour toute question, information ou réclamation, notre équipe est joignable par e-mail à l&apos;adresse : support@eclosia.app.
+              En cas de litige entre le client et l&apos;entreprise, ceux-ci s&apos;efforceront de le résoudre à l&apos;amiable. À défaut d&apos;accord amiable, le consommateur a le droit de recourir gratuitement à un médiateur de la consommation conformément à l&apos;article L.616-1 du Code de la consommation.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-bold text-[#333333] mb-2">Article 7 : Service client</h2>
+            <p>
+              Pour toute question, information ou réclamation, notre équipe est joignable par e-mail à l&apos;adresse : contact@eclosia.shop.
             </p>
           </section>
         </div>

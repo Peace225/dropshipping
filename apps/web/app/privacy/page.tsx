@@ -25,28 +25,59 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-[#333333] mb-2">3. Utilisation des données</h2>
+            <h2 className="text-lg font-bold text-[#333333] mb-2">3. Utilisation des données et délais</h2>
             <p>
               Vos données sont utilisées exclusivement pour :
             </p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
-              <li>L&apos;exécution et le suivi de vos commandes (livraison en 7 à 10 jours).</li>
+              <li>L&apos;exécution et le suivi de vos commandes (livraison estimée en 2 à 4 jours ouvrables).</li>
               <li>La gestion de la relation client et l&apos;assistance personnalisée.</li>
               <li>L&apos;envoi d&apos;informations ou d&apos;offres promotionnelles (uniquement si vous y avez consenti).</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-[#333333] mb-2">4. Protection et sécurité</h2>
+            <h2 className="text-lg font-bold text-[#333333] mb-2">4. Destinataires des données</h2>
             <p>
-              Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles rigoureuses (chiffrement SSL, accès restreints aux bases de données Supabase) pour empêcher tout accès non autorisé, modification, divulgation ou destruction de vos données.
+              Pour assurer nos services, vos données personnelles sont transmises à des tiers de confiance sélectionnés :
+            </p>
+            <ul className="list-disc pl-5 mt-2 space-y-1">
+              <li><strong>Stripe :</strong> pour le traitement sécurisé des paiements en ligne.</li>
+              <li><strong>BigBuy :</strong> pour la préparation logistique et l&apos;expédition de votre commande (transmission de votre nom et adresse de livraison).</li>
+              <li><strong>Hostinger et Supabase :</strong> pour l&apos;hébergement sécurisé du site web et de la base de données.</li>
+              <li><strong>Outils marketing (ex: Meta Pixel) :</strong> pour la mesure de l&apos;audience et l&apos;optimisation publicitaire (sous réserve de votre consentement aux cookies).</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-bold text-[#333333] mb-2">5. Durée de conservation des données</h2>
+            <p>
+              Conformément aux obligations légales et réglementaires :
+            </p>
+            <ul className="list-disc pl-5 mt-2 space-y-1">
+              <li>Les données relatives aux commandes et transactions sont conservées pendant <strong>5 ans</strong> à des fins comptables et fiscales.</li>
+              <li>Les données prospects (newsletter) sont conservées pendant <strong>3 ans</strong> à compter du dernier contact.</li>
+              <li>Les données de compte client sont conservées jusqu&apos;à la suppression du compte par l&apos;utilisateur.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-bold text-[#333333] mb-2">6. Protection et sécurité</h2>
+            <p>
+              Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles rigoureuses (chiffrement SSL, accès restreints aux bases de données) pour empêcher tout accès non autorisé, modification, divulgation ou destruction de vos données.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-[#333333] mb-2">5. Vos droits (RGPD)</h2>
+            <h2 className="text-lg font-bold text-[#333333] mb-2">7. Vos droits (RGPD)</h2>
             <p>
-              Conformément à la réglementation européenne en vigueur, vous disposez d&apos;un droit d&apos;accès, de rectification, de portabilité et de suppression de vos données personnelles. Pour exercer ces droits, vous pouvez nous contacter à tout moment par e-mail à : <strong>support@eclosia.app</strong>.
+              Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez d&apos;un droit d&apos;accès, de rectification, de portabilité et de suppression de vos données personnelles. 
+            </p>
+            <p className="mt-2">
+              Pour exercer ces droits ou pour toute question, vous pouvez nous contacter par e-mail à : <strong>contact@eclosia.shop</strong>.
+            </p>
+            <p className="mt-2">
+              Vous disposez également du droit d&apos;introduire une réclamation auprès de l&apos;autorité de contrôle compétente, la <strong>CNIL</strong> (Commission Nationale de l&apos;Informatique et des Libertés), en vous rendant sur leur site officiel : <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer" className="text-[#6E857B] underline font-bold">www.cnil.fr</a>.
             </p>
           </section>
         </div>

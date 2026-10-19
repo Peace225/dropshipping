@@ -39,8 +39,7 @@ export default function BebeProductDetailPage() {
   const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   
-  // Remplacement de relais/domicile par livraison rapide/standard
-  const [deliveryMethod, setDeliveryMethod] = useState<"rapide"|"standard">("rapide");
+  const [deliveryMethod, setDeliveryMethod] = useState<"rapide"|"standard">("standard");
   const [debugMsg, setDebugMsg] = useState("");
 
   // État pour la taille (uniquement pour le plan incliné)
@@ -51,7 +50,7 @@ export default function BebeProductDetailPage() {
     if(sliderRef.current) sliderRef.current.scrollBy({ left: dir==="left"?-250:250, behavior:"smooth" });
   };
   
-  const activeDeliveryPriceStr = "89,00 €";
+  const activeDeliveryPriceStr = "10,00 €";
   
   // Vérifie si le produit affiché est bien le plan incliné
   const isPlanIncline = product?.slug?.includes("plan-incline");
@@ -97,7 +96,7 @@ export default function BebeProductDetailPage() {
       
       const selectQuery = "id, name, slug, price, description, image_url, sku, rubrique, brand, category_bebe_id, manufacturer_id, meta_title, meta_description, seo_keywords";
 
-      let { data: prodSimple, error } = await supabase
+      let { data: prodSimple } = await supabase
         .from("products")
         .select(selectQuery)
         .eq("slug", slug)
@@ -140,26 +139,9 @@ export default function BebeProductDetailPage() {
         return;
       }
 
-      let fabFull = "Fabriqué en France et en Union Européenne";
-      let fabFlag = "FR / EU";
-      let fabShort = "UE";
-      if (prodSimple.manufacturer_id) {
-        const { data: manuf } = await supabase
-          .from("manufacturers")
-          .select("label_fr, flag_emoji, code")
-          .eq("id", prodSimple.manufacturer_id)
-          .maybeSingle();
-        if (manuf) {
-          fabFull = manuf.label_fr || fabFull;
-          fabFlag = manuf.code || "FR / EU";
-          fabShort = manuf.code || fabShort;
-        }
-      }
-      if (prodSimple.slug?.includes("plan-incline") || prodSimple.sku === "SKU-FELY") {
-        fabFull = "Fabriqué en France";
-        fabFlag = "🇫🇷";
-        fabShort = "FR";
-      }
+      let fabFull = "Fabriqué en France • Certifié OEKO-TEX";
+      let fabFlag = "🇫🇷";
+      let fabShort = "FR";
       
       let catName = prodSimple.rubrique || "Bébé";
       if (prodSimple.category_bebe_id) {
@@ -193,7 +175,7 @@ export default function BebeProductDetailPage() {
       
       const { data: sugData } = await supabase
         .from("products")
-        .select("id, name, slug, price, image_url, brand, product_images(image_url, is_primary, position)")
+        .select("id, name, slug, price, image_url, brand, rubrique, product_images(image_url, is_primary, position)")
         .eq("is_active", true)
         .neq("id", prodSimple.id)
         .limit(20);
@@ -201,6 +183,10 @@ export default function BebeProductDetailPage() {
       if (sugData) {
         const map = new Map();
         sugData.forEach((s:any)=>{
+          const nameLow = (s.name || "").toLowerCase();
+          const rubLow = (s.rubrique || "").toLowerCase();
+          if (rubLow.includes("maman") || nameLow.includes("maman") || nameLow.includes("léopard") || nameLow.includes("felyna") || nameLow.includes("allaitement") || nameLow.includes("serviette")) return;
+
           const key = s.name ? s.name.trim() : s.id;
           if(!map.has(key)){
             const raw = s.product_images?.find((i:any)=>i.is_primary)?.image_url || s.product_images?.[0]?.image_url || s.image_url;
@@ -210,7 +196,7 @@ export default function BebeProductDetailPage() {
                price: `${Number(s.price||0).toFixed(2).replace(".",",")} €`, 
                slug: `/shop/bebe/${s.slug}`, 
                image: cleanImageUrl(raw),
-              fabrication: s.brand || "Union Européenne" 
+              fabrication: s.brand || "Certifié OEKO-TEX" 
              });
           }
         });
@@ -232,7 +218,7 @@ export default function BebeProductDetailPage() {
 
   useEffect(() => {
     if (!product) return;
-    const originalTitle = "ECLOSIA - Maternité & Puériculture";
+    const originalTitle = "ECLOSIA - Puériculture & Essentiels Bébé";
     if (product.meta_title) document.title = product.meta_title;
     return () => { document.title = originalTitle; };
   }, [product]);
@@ -242,7 +228,7 @@ export default function BebeProductDetailPage() {
 
   function getMarketingDescription(p:any){
     if(p?.description && p.description.trim().length > 30) return p.description;
-    return "Offrez à votre bébé douceur et sécurité. Matériaux certifiés OEKO-TEX, fabrication France et Union Européenne. Entretien facile, lavable à 60°, respirant et anti-allergique.";
+    return "Offrez à votre bébé douceur et sécurité. Matériaux certifiés OEKO-TEX, fabrication soignée. Entretien facile, lavable à 60°, respirant et anti-allergique.";
   }
 
   const rawDesc = getMarketingDescription(product);
@@ -255,7 +241,7 @@ export default function BebeProductDetailPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#F5EBE6]/30 via-white to-[#F5EBE6]/20 pb-16 pt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-6">
-          <Link href="/shop/bebe" className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#333333]/70 hover:text-[#333333]"><ArrowLeft className="w-4 h-4"/><span>Retour à l'univers Bébé</span></Link>
+          <Link href="/shop/bebe" className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#333333]/70 hover:text-[#333333]"><ArrowLeft className="w-4 h-4"/><span>Retour à l&apos;univers Bébé</span></Link>
           <div className="text-xs font-bold text-[#6E857B] bg-[#6E857B]/10 px-3 py-1 rounded-full flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#6E857B]"></span>ECLOSIA Secure • {product.images.length} photos</div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
@@ -325,12 +311,12 @@ export default function BebeProductDetailPage() {
                   )}
                 </div>
               </div>
-              <p className="text-xs text-[#31A039] font-medium mb-1">En stock - Expédition rapide</p>
-              <p className="text-xs text-[#333333]/80 mb-3">+ livraison à partir de <span className="font-bold">{activeDeliveryPriceStr}</span> vers <strong>{selectedCity||"votre adresse"}</strong></p>
+              <p className="text-xs text-[#31A039] font-medium mb-1">En stock - Expédition en 2 à 4 jours</p>
+              <p className="text-xs text-[#333333]/80 mb-3">+ livraison standard à <span className="font-bold">{activeDeliveryPriceStr}</span> (offerte dès 89 € d&apos;achats)</p>
               <div className="flex items-center gap-1.5 mb-5 text-amber-500">{[...Array(4)].map((_,i)=><Star key={i} className="w-4 h-4 fill-current"/>)}<Star className="w-4 h-4 text-gray-300"/><span className="text-xs text-[#333333]/60 ml-1">({product.reviewsCount} avis)</span></div>
               <hr className="border-[#333333]/10 mb-5"/>
               <div className="mt-auto">
-                <button onClick={handleBuy} className="w-full bg-[#333333] hover:bg-black text-white py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer"><ShoppingCart className="w-5 h-5"/> J'achète ({currentPriceFormatted})</button>
+                <button onClick={handleBuy} className="w-full bg-[#333333] hover:bg-black text-white py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer"><ShoppingCart className="w-5 h-5"/> J&apos;achète ({currentPriceFormatted})</button>
               </div>
             </div>
           </div>
@@ -344,8 +330,8 @@ export default function BebeProductDetailPage() {
               <select className="w-full text-sm border border-[#333333]/20 rounded-xl p-2.5 mb-3 bg-white text-[#333333] font-medium outline-none focus:border-[#333333] cursor-pointer" value={selectedRegion} onChange={(e)=>{const nr=e.target.value; setSelectedRegion(nr); setSelectedCity(locations[nr]?.[0]?.name||"");}}>{Object.keys(locations).map(r=><option key={r} value={r}>{r}</option>)}</select>
               <select className="w-full text-sm border border-[#333333]/20 rounded-xl p-2.5 mb-5 bg-white text-[#333333] font-medium outline-none focus:border-[#333333] cursor-pointer" value={selectedCity} onChange={e=>setSelectedCity(e.target.value)}>{(locations[selectedRegion]||[]).map((c:any)=><option key={c.name} value={c.name}>{c.name}</option>)}</select>
               <div className="border border-[#333333]/10 rounded-xl divide-y divide-[#333333]/10 bg-[#F9F6F4] text-[#333333]">
-                <div className="p-3.5 flex gap-3"><Package className="w-4 h-4 shrink-0 text-[#333333]"/><div><p className="text-xs font-extrabold mb-1">Livraison ({deliveryMethod === "rapide" ? "Rapide" : "Standard"})</p><p className="text-xs">Frais: <span className="font-bold text-[#6E857B]">{activeDeliveryPriceStr}</span></p><p className="text-[10px] text-[#333333]/70">vers {selectedCity}</p></div></div>
-                <div className="p-3.5 flex gap-3"><RotateCcw className="w-4 h-4 shrink-0 text-[#333333]"/><div><p className="text-xs font-extrabold mb-1">Retour</p><p className="text-xs text-[#333333]/70">10 jours gratuits</p></div></div>
+                <div className="p-3.5 flex gap-3"><Package className="w-4 h-4 shrink-0 text-[#333333]"/><div><p className="text-xs font-extrabold mb-1">Livraison ({deliveryMethod === "rapide" ? "Rapide" : "Standard"})</p><p className="text-xs">Frais: <span className="font-bold text-[#6E857B]">{activeDeliveryPriceStr}</span> (Offerte dès 89 €)</p><p className="text-[10px] text-[#333333]/70">Délai : 2 à 4 jours ouvrés</p></div></div>
+                <div className="p-3.5 flex gap-3"><RotateCcw className="w-4 h-4 shrink-0 text-[#333333]"/><div><p className="text-xs font-extrabold mb-1">Retour</p><p className="text-xs text-[#333333]/70">30 jours pour changer d&apos;avis</p></div></div>
                 <div className="p-3.5 flex gap-3"><ShieldCheck className="w-4 h-4 shrink-0 text-[#333333]"/><div><p className="text-xs font-extrabold mb-1">Garantie</p><p className="text-xs text-[#333333]/70">12 mois</p></div></div>
               </div>
             </div>

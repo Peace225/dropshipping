@@ -3,11 +3,10 @@
 import { useState, useRef, useEffect, FormEvent } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, Search, User, HelpCircle, Users, Sparkles, ShieldCheck, Truck, Percent, ArrowRight, Loader2 } from "lucide-react";
+import { ShoppingBag, Search, User, HelpCircle, Users, Sparkles, ShieldCheck, Truck, ArrowRight, Loader2 } from "lucide-react";
 import { useCart } from "@/context/cart-context";
 import { Poppins } from "next/font/google";
 
-// ✅ 1. Correction majeure : Utilisation du singleton global Supabase au lieu de createClient()
 import { getSupabase } from "@/lib/supabase/client";
 
 const logoFont = Poppins({ subsets: ["latin"], weight: ["700", "800"] });
@@ -15,7 +14,6 @@ const logoFont = Poppins({ subsets: ["latin"], weight: ["700", "800"] });
 export function Header() {
   const { totalItems } = useCart();
   
-  // ✅ Instance sécurisée unique pour le client
   const [supabase] = useState(() => getSupabase());
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,7 +30,6 @@ export function Header() {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user || null);
       if (session?.user) {
-        // ✅ Utilisation de maybeSingle() pour éviter l'erreur 406 (Not Acceptable)
         const { data } = await supabase.from("users").select("avatar_url, full_name").eq("id", session.user.id).maybeSingle();
         if (data) setProfile(data);
       }
@@ -91,8 +88,8 @@ export function Header() {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "ECLOSIA",
-    "url": "https://eclosia.app",
-    "logo": "https://eclosia.app/og-image.jpg",
+    "url": "https://eclosia.shop",
+    "logo": "https://eclosia.shop/images/logo.png",
   };
 
   return (
@@ -110,8 +107,8 @@ export function Header() {
               </span>
               <Sparkles className="hidden sm:block w-3.5 h-3.5 text-[#E8C5C8] shrink-0" />
               <span className="line-clamp-1 sm:line-clamp-none">
-                <span className="hidden sm:inline">Bien-être Maternel & Puériculture d'Excellence - </span>
-                Livraison offerte dès 60€ d'achats en France
+                <span className="hidden sm:inline">Puériculture d&apos;Excellence - </span>
+                Livraison offerte dès 89 € d&apos;achats (2-4 jours)
               </span>
             </div>
             <div className="hidden md:flex items-center gap-5 text-xs font-medium text-white/90">
@@ -139,7 +136,7 @@ export function Header() {
               </div>
               <div className="flex flex-col transition-transform duration-300 group-hover:translate-x-0.5">
                 <span className={`text-[1.65rem] sm:text-[1.90rem] font-extrabold tracking-tight text-[#333333] leading-none ${logoFont.className}`}>ECLOSIA</span>
-                <span className="hidden sm:block text-[10px] sm:text-xs font-bold tracking-wider uppercase text-[#6E857B] mt-1 transition-colors group-hover:text-[#D4A396]">Maternité & Puériculture</span>
+                <span className="hidden sm:block text-[10px] sm:text-xs font-bold tracking-wider uppercase text-[#6E857B] mt-1 transition-colors group-hover:text-[#D4A396]">Puériculture & Bébé</span>
               </div>
             </Link>
 
@@ -191,7 +188,7 @@ export function Header() {
                   value={searchQuery} 
                   onChange={(e) => setSearchQuery(e.target.value)} 
                   onFocus={() => { if(searchQuery) setShowDropdown(true) }} 
-                  placeholder="Posez une question, cherchez un besoin..." 
+                  placeholder="Posez une question, cherchez un produit bébé..." 
                   className="w-full pl-10 pr-14 sm:pr-32 py-2.5 bg-white/80 border border-[#333333]/10 rounded-full text-sm text-[#333333] placeholder-[#333333]/40 focus:outline-none focus:ring-2 focus:ring-[#6E857B] focus:bg-white transition-all duration-300 shadow-inner hover:border-[#6E857B]/40" 
                 />
                 <button 
@@ -217,7 +214,7 @@ export function Header() {
                       {results.map((product) => (
                         <li key={product.id}>
                           <Link 
-                            href={`/shop/product/${product.slug}`} 
+                            href={`/shop/bebe/${product.slug}`} 
                             onClick={() => setShowDropdown(false)} 
                             className="flex items-center justify-between p-3 rounded-xl hover:bg-[#F5EBE6]/50 transition-colors group"
                           >

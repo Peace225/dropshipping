@@ -47,7 +47,7 @@ const SLIDES = [
   },
   {
     id: 5,
-    badge: "Livraison 24/48h France Métropolitaine",
+    badge: "Livraison 2/4 jours France Métropolitaine",
     title: "Nouveautés Puériculture & Éveil",
     subtitle: "Livraison gratuite dès 89€ d'achats à Paris, Lyon, Marseille et toute la France.",
     buttonText: "Commander maintenant",
@@ -75,7 +75,6 @@ const SLIDES = [
     badgeBg: "bg-[#6E857B] text-white",
     image: "/images/banner-5.jpg",
   },
-  
 ];
 
 export function HeroBanner() {

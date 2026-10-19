@@ -8,15 +8,17 @@ export default function MentionsLegalesPage() {
           <section>
             <h2 className="text-lg font-bold text-[#333333] mb-2">1. Édition du site</h2>
             <p>
-              Le site <strong>ECLOSIA</strong> (ci-après &quot;le site&quot;) est édité dans le cadre de l&apos;activité de commerce en ligne spécialisé dans le bien-être maternel et la puériculture.
+              Le site <strong>ECLOSIA</strong> (ci-après &quot;le site&quot;) est édité dans le cadre de l&apos;activité de commerce en ligne spécialisé dans la puériculture et les accessoires pour bébé.
             </p>
             <div className="mt-2 space-y-1">
               <p><strong>Responsable légal :</strong> Guy-Mars Karamba Mamadou</p>
+              <p><strong>Statut juridique :</strong> Entrepreneur individuel - Micro-entreprise</p>
               <p><strong>SIREN :</strong> 104 232 756</p>
               <p><strong>SIRET (Siège) :</strong> 104 232 756 00015</p>
-              <p><strong>Numéro TVA intracommunautaire :</strong> FR59104232756</p>
+              <p><strong>TVA :</strong> TVA non applicable, art. 293 B du CGI</p>
               <p><strong>Siège social :</strong> 22 rue de la gerbe d’or, 95490 Vauréal, France</p>
-              <p><strong>Contact :</strong> support@eclosia.app</p>
+              <p><strong>Téléphone :</strong> +33 7 69 23 85 11</p>
+              <p><strong>Contact :</strong> contact@eclosia.shop</p>
               <p><strong>Pays d&apos;exploitation :</strong> France</p>
             </div>
           </section>
@@ -38,7 +40,7 @@ export default function MentionsLegalesPage() {
           <section>
             <h2 className="text-lg font-bold text-[#333333] mb-2">4. Protection des données personnelles (RGPD)</h2>
             <p>
-              Conformément à la loi « Informatique et Libertés » et au Règlement Général sur la Protection des Données (RGPD), vous disposez d&apos;un droit d&apos;accès, de rectification et de suppression des données vous concernant. Pour l&apos;exercer, vous pouvez nous contacter directement par e-mail.
+              Conformément à la loi « Informatique et Libertés » et au Règlement Général sur la Protection des Données (RGPD), vous disposez d&apos;un droit d&apos;accès, de rectification et de suppression des données vous concernant. Pour l&apos;exercer, vous pouvez nous contacter directement par e-mail à <strong>contact@eclosia.shop</strong>.
             </p>
           </section>
 

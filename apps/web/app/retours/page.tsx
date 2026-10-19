@@ -18,8 +18,8 @@ export default function RetoursPage() {
               Pour être éligible à un retour, l&apos;article doit répondre aux critères suivants :
             </p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
-              <li>Être dans son emballage d&apos;origine non endommagé.</li>
-              <li>Être parfaitement neuf, non utilisé et non ouvert (par mesure d&apos;hygiène stricte, les produits cosmétiques ou d&apos;hygiène des ouverts ne pourront être repris).</li>
+              <li>Être dans son emballage d&apos;origine permettant sa recommercialisation.</li>
+              <li>Être en parfait état (le client est autorisé à ouvrir et inspecter le produit, tout en veillant à ne pas l&apos;endommager).</li>
               <li>Être accompagné de tous ses accessoires ou notices éventuels.</li>
             </ul>
           </section>
@@ -27,14 +27,17 @@ export default function RetoursPage() {
           <section>
             <h2 className="text-lg font-bold text-[#333333] mb-2">3. Comment effectuer un retour ?</h2>
             <p>
-              Pour initier un retour, il vous suffit de contacter notre support client par e-mail à l&apos;adresse <strong>support@eclosia.app</strong> en indiquant votre numéro de commande et le motif de votre retour. Notre équipe vous transmettra la marche à suivre ainsi que l&apos;adresse de réexpédition.
+              Pour initier un retour, il vous suffit de contacter notre support client par e-mail à l&apos;adresse <strong>contact@eclosia.shop</strong> en indiquant votre numéro de commande et le motif de votre retour. Notre équipe vous transmettra la marche à suivre. 
+            </p>
+            <p className="mt-2">
+              <em>Note :</em> Dans certains cas spécifiques et selon la nature de l&apos;article, notre service client pourra vous indiquer qu&apos;un renvoi physique n'est pas nécessaire pour procéder à votre solution personnalisée.
             </p>
           </section>
 
           <section>
             <h2 className="text-lg font-bold text-[#333333] mb-2">4. Remboursement</h2>
             <p>
-              Dès réception et inspection de l&apos;article retourné dans nos entrepôts, nous procéderons au remboursement intégral du montant de l&apos;article concerné (hors frais de port initiaux) via le moyen de paiement initialement utilisé lors de votre commande, sous un délai de 7 à 14 jours ouvrés.
+              Dès réception et inspection de l&apos;article retourné dans nos entrepôts (ou validation de votre dossier), nous procéderons au remboursement intégral du montant de la commande, <strong>frais de livraison standard initiaux inclus</strong>, via le moyen de paiement initialement utilisé, sous un délai maximum de 14 jours.
             </p>
           </section>
         </div>
