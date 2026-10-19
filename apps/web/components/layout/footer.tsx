@@ -19,15 +19,16 @@ export function Footer() {
         "name": "ECLOSIA",
         "url": "https://eclosia.shop",
         "logo": "https://eclosia.shop/images/logo.png",
+        "legalName": "Guy-Mars Karamba Mamadou",
+        "identifier": "104232756",
         "sameAs": [
           "https://www.instagram.com/eclosia.shop",
           "https://www.facebook.com/eclosia.shop"
         ],
         "knowsAbout": [
-          "couche lavable bébé Bumbuns So Protect",
-          "matelas berceau 40x80 coton bio",
+          "accessoires et literie bébé",
+          "matelas berceau et draps bio",
           "bien-être maternel et infantile",
-          "couches lavables écoresponsables",
           "produits post-partum bio"
         ]
       },
@@ -44,58 +45,17 @@ export function Footer() {
         "paymentAccepted": "Carte bancaire, Visa, Mastercard",
         "address": {
           "@type": "PostalAddress",
-          "streetAddress": "75 rue de Rivoli",
-          "addressLocality": "Paris",
-          "postalCode": "75001",
+          "streetAddress": "22 rue de la gerbe d’or",
+          "addressLocality": "Vauréal",
+          "postalCode": "95490",
           "addressRegion": "Île-de-France",
           "addressCountry": "FR"
-        },
-        "geo": {
-          "@type": "GeoCoordinates",
-          "latitude": 48.8606,
-          "longitude": 2.3376
         },
         "openingHoursSpecification": {
           "@type": "OpeningHoursSpecification",
           "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
           "opens": "09:00",
           "closes": "18:00"
-        },
-        "hasOfferCatalog": {
-          "@type": "OfferCatalog",
-          "name": "Catalogue Essentiels Bébé & Maman",
-          "itemListElement": [
-            {
-              "@type": "Offer",
-              "itemOffered": {
-                "@type": "Product",
-                "sku": "SKU-BUM1",
-                "name": "Culotte Couche Lavable So Protect Rainbow",
-                "description": "Culotte lavable écoresponsable pour bébé",
-                "offers": {
-                  "@type": "Offer",
-                  "price": "25.90",
-                  "priceCurrency": "EUR",
-                  "availability": "https://schema.org/InStock"
-                }
-              }
-            },
-            {
-              "@type": "Offer",
-              "itemOffered": {
-                "@type": "Product",
-                "sku": "SKU-KITBIO40X80M2",
-                "name": "Matelas Berceau 40x80 Coton Bio + 3 draps + 2 alèses",
-                "description": "Kit complet de literie berceau bio pour bébé",
-                "offers": {
-                  "@type": "Offer",
-                  "price": "74.90",
-                  "priceCurrency": "EUR",
-                  "availability": "https://schema.org/InStock"
-                }
-              }
-            }
-          ]
         }
       },
       {
@@ -118,18 +78,10 @@ export function Footer() {
         "mainEntity": [
           {
             "@type": "Question",
-            "name": "Quels sont les produits phares ECLOSIA ?",
+            "name": "Où est situé le siège d'ECLOSIA ?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Nos produits phares incluent la Culotte Couche Lavable So Protect Rainbow (SKU-BUM1) à 25,90 € et le Kit Matelas Berceau 40x80 Coton Bio avec draps et alèses (SKU-KITBIO40X80M2) à 74,90 €. La livraison est de 10 € en France métropolitaine, ou offerte dès 60 € d'achats."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Où sont situés vos bureaux ?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Notre siège est basé au 75 rue de Rivoli, 75001 Paris, en Île-de-France."
+              "text": "Notre siège est basé au 22 rue de la gerbe d’or, 95490 Vauréal, en France."
             }
           },
           {
@@ -188,7 +140,7 @@ export function Footer() {
               <Link href="/" className="inline-flex items-center gap-2.5 group" title="ECLOSIA - Accueil Maternité">
                 <img 
                   src="/images/logo.png" 
-                  alt="Logo ECLOSIA - Boutique Maternité & Bébé à Paris" 
+                  alt="Logo ECLOSIA - Boutique Maternité & Bébé" 
                   className="h-6 sm:h-7 w-auto object-contain"
                   onError={(e) => {
                     (e.target as HTMLElement).style.display = 'none';
@@ -197,13 +149,13 @@ export function Footer() {
                 <span className="text-lg sm:text-xl font-bold font-serif tracking-wider text-white">ECLOSIA</span>
               </Link>
               <p className="text-[11px] sm:text-[12px] text-[#F5EBE6]/70 leading-relaxed">
-                Boutique bébé & maman éco-responsable - <strong>75 rue de Rivoli, Paris 75001</strong>. Spécialiste couches lavables <em>Bumbuns So Protect Rainbow</em> (25,90€ - SKU: SKU-BUM1) et matelas berceau 40x80 coton bio + 3 draps + 2 alèses (74,90€ - SKU: SKU-KITBIO40X80M2).
+                Boutique bébé & maman éco-responsable. Spécialiste des articles de puériculture, matelas, linge de lit en coton bio et bambou certifiés OEKO-TEX.
               </p>
               
               <div className="space-y-1 pt-0.5">
                 <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-[#F5EBE6]/60">
                   <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#6E857B] shrink-0" />
-                  <span>75001 Paris, Île-de-France, France</span>
+                  <span>22 rue de la gerbe d’or, 95490 Vauréal</span>
                 </div>
                 <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-[#F5EBE6]/60">
                   <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#6E857B] shrink-0" />
@@ -223,7 +175,7 @@ export function Footer() {
             <nav aria-label="Navigation secondaire du site">
               <h4 className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-wider text-white mb-2.5 sm:mb-3">Navigation</h4>
               <ul className="space-y-1 text-[11px] sm:text-[12px] text-[#F5EBE6]/70">
-                <li><Link href="/shop" className="block py-0.5 hover:text-[#6E857B] transition-colors">Boutique & Essentiels (Matelas 40x80, Couches)</Link></li>
+                <li><Link href="/shop/bebe" className="block py-0.5 hover:text-[#6E857B] transition-colors">Boutique & Essentiels Bébé</Link></li>
                 <li><Link href="/ai-chat" className="block py-0.5 hover:text-[#6E857B] transition-colors">Conseillère IA Maternité 24/7</Link></li>
                 <li><Link href="/community" className="block py-0.5 hover:text-[#6E857B] transition-colors">Communauté des Mamans</Link></li>
                 <li><Link href="/about" className="block py-0.5 hover:text-[#6E857B] transition-colors">Notre Mission & Valeurs</Link></li>
@@ -236,14 +188,14 @@ export function Footer() {
                 <li><Link href="/cgv" className="block py-0.5 hover:text-[#6E857B] transition-colors">Conditions Générales de Vente (CGV)</Link></li>
                 <li><Link href="/mentions-legales" className="block py-0.5 hover:text-[#6E857B] transition-colors">Mentions Légales</Link></li>
                 <li><Link href="/privacy" className="block py-0.5 hover:text-[#6E857B] transition-colors">Politique de Confidentialité & RGPD</Link></li>
-                <li><Link href="/retours" className="block py-0.5 hover:text-[#6E857B] transition-colors">Politique de Retours (30 jours)</Link></li>
+                <li><Link href="/retours" className="block py-0.5 hover:text-[#6E857B] transition-colors">Politique de Retours</Link></li>
                 <li><Link href="/contact" className="block py-0.5 hover:text-[#6E857B] transition-colors">Contactez notre support</Link></li>
               </ul>
             </nav>
 
             <div className="sm:col-span-2 lg:col-span-1">
               <h4 className="text-[12px] sm:text-[13px] font-semibold uppercase tracking-wider text-white mb-2.5 sm:mb-3">Restez connectée</h4>
-              <p className="text-[11px] sm:text-[12px] text-[#F5EBE6]/70 mb-2.5 sm:mb-3">Recevez nos guides d'experts, conseils post-partum et offres exclusives réservées à notre communauté en France.</p>
+              <p className="text-[11px] sm:text-[12px] text-[#F5EBE6]/70 mb-2.5 sm:mb-3">Recevez nos guides d'experts, conseils post-partum et offres exclusives réservées à notre communauté.</p>
               
               <form onSubmit={handleNewsletterSubmit} className="flex flex-col gap-2">
                 <input 
@@ -280,9 +232,9 @@ export function Footer() {
           </div>
 
           <div className="border-t border-white/10 pt-5 sm:pt-6 flex flex-col md:flex-row items-center justify-between text-[10px] sm:text-[11px] text-[#F5EBE6]/50 gap-2 text-center md:text-left">
-            <p>© {new Date().getFullYear()} ECLOSIA (eclosia.shop). Tous droits réservés. E-commerce enregistré en France.</p>
+            <p>© {new Date().getFullYear()} ECLOSIA (eclosia.shop) — Édité par Guy-Mars Karamba Mamadou (SIREN : 104 232 756). Tous droits réservés.</p>
             <p className="flex items-center justify-center md:justify-end gap-1.5">
-              Conçu avec <Heart className="w-3 h-3 text-[#6E857B] fill-[#6E857B]" /> pour le bien-être des mamans en France.
+              Conçu avec <Heart className="w-3 h-3 text-[#6E857B] fill-[#6E857B]" /> pour le bien-être des mamans et bébés.
             </p>
           </div>
         </div>

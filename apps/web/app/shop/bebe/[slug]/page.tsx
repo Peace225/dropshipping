@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Star, ShieldCheck, RotateCcw, Heart, MapPin, Home, ChevronRight, ChevronLeft, Package, ShoppingCart, Truck, ZoomIn } from "lucide-react";
+import { ArrowLeft, Star, ShieldCheck, RotateCcw, Heart, Zap, Clock, ChevronRight, ChevronLeft, Package, ShoppingCart, Truck, ZoomIn } from "lucide-react";
 
 import { getSupabase } from "@/lib/supabase/client";
 import { useCart } from "@/context/cart-context";
@@ -38,7 +38,9 @@ export default function BebeProductDetailPage() {
   const [locations, setLocations] = useState<Record<string, any[]>>({});
   const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
-  const [deliveryMethod, setDeliveryMethod] = useState<"relais"|"domicile">("relais");
+  
+  // Remplacement de relais/domicile par livraison rapide/standard
+  const [deliveryMethod, setDeliveryMethod] = useState<"rapide"|"standard">("rapide");
   const [debugMsg, setDebugMsg] = useState("");
 
   // État pour la taille (uniquement pour le plan incliné)
@@ -49,7 +51,7 @@ export default function BebeProductDetailPage() {
     if(sliderRef.current) sliderRef.current.scrollBy({ left: dir==="left"?-250:250, behavior:"smooth" });
   };
   
-  const activeDeliveryPriceStr = "10,00 €";
+  const activeDeliveryPriceStr = "89,00 €";
   
   // Vérifie si le produit affiché est bien le plan incliné
   const isPlanIncline = product?.slug?.includes("plan-incline");
@@ -336,13 +338,13 @@ export default function BebeProductDetailPage() {
             <div className="p-4 border-b border-[#333333]/10 bg-[#6E857B]/5 rounded-t-2xl flex justify-between items-center"><h3 className="font-extrabold text-xs uppercase text-[#333333]">LIVRAISON & RETOURS</h3><span className="text-xs font-bold text-white bg-[#6E857B] px-2 py-0.5 rounded-md flex items-center gap-1">ECLOSIA <Truck className="w-3 h-3"/></span></div>
             <div className="p-4">
               <div className="grid grid-cols-2 gap-2 mb-4">
-                <button onClick={()=>setDeliveryMethod("relais")} className={`flex flex-col items-center p-2.5 border rounded-xl text-xs font-bold cursor-pointer transition-colors ${deliveryMethod==="relais"?"border-[#333333] bg-[#333333] text-white":"border-[#333333]/15 text-[#333333] bg-white hover:border-[#333333]/30"}`}><MapPin className="w-4 h-4 mb-1"/><span>Point Relais</span></button>
-                <button onClick={()=>setDeliveryMethod("domicile")} className={`flex flex-col items-center p-2.5 border rounded-xl text-xs font-bold cursor-pointer transition-colors ${deliveryMethod==="domicile"?"border-[#333333] bg-[#333333] text-white":"border-[#333333]/15 text-[#333333] bg-white hover:border-[#333333]/30"}`}><Home className="w-4 h-4 mb-1"/><span>À domicile</span></button>
+                <button onClick={()=>setDeliveryMethod("rapide")} className={`flex flex-col items-center p-2.5 border rounded-xl text-xs font-bold cursor-pointer transition-colors ${deliveryMethod==="rapide"?"border-[#333333] bg-[#333333] text-white":"border-[#333333]/15 text-[#333333] bg-white hover:border-[#333333]/30"}`}><Zap className="w-4 h-4 mb-1"/><span>Livraison rapide</span></button>
+                <button onClick={()=>setDeliveryMethod("standard")} className={`flex flex-col items-center p-2.5 border rounded-xl text-xs font-bold cursor-pointer transition-colors ${deliveryMethod==="standard"?"border-[#333333] bg-[#333333] text-white":"border-[#333333]/15 text-[#333333] bg-white hover:border-[#333333]/30"}`}><Clock className="w-4 h-4 mb-1"/><span>Livraison standard</span></button>
               </div>
               <select className="w-full text-sm border border-[#333333]/20 rounded-xl p-2.5 mb-3 bg-white text-[#333333] font-medium outline-none focus:border-[#333333] cursor-pointer" value={selectedRegion} onChange={(e)=>{const nr=e.target.value; setSelectedRegion(nr); setSelectedCity(locations[nr]?.[0]?.name||"");}}>{Object.keys(locations).map(r=><option key={r} value={r}>{r}</option>)}</select>
               <select className="w-full text-sm border border-[#333333]/20 rounded-xl p-2.5 mb-5 bg-white text-[#333333] font-medium outline-none focus:border-[#333333] cursor-pointer" value={selectedCity} onChange={e=>setSelectedCity(e.target.value)}>{(locations[selectedRegion]||[]).map((c:any)=><option key={c.name} value={c.name}>{c.name}</option>)}</select>
               <div className="border border-[#333333]/10 rounded-xl divide-y divide-[#333333]/10 bg-[#F9F6F4] text-[#333333]">
-                <div className="p-3.5 flex gap-3"><Package className="w-4 h-4 shrink-0 text-[#333333]"/><div><p className="text-xs font-extrabold mb-1">Livraison</p><p className="text-xs">Frais: <span className="font-bold text-[#6E857B]">{activeDeliveryPriceStr}</span></p><p className="text-[10px] text-[#333333]/70">vers {selectedCity}</p></div></div>
+                <div className="p-3.5 flex gap-3"><Package className="w-4 h-4 shrink-0 text-[#333333]"/><div><p className="text-xs font-extrabold mb-1">Livraison ({deliveryMethod === "rapide" ? "Rapide" : "Standard"})</p><p className="text-xs">Frais: <span className="font-bold text-[#6E857B]">{activeDeliveryPriceStr}</span></p><p className="text-[10px] text-[#333333]/70">vers {selectedCity}</p></div></div>
                 <div className="p-3.5 flex gap-3"><RotateCcw className="w-4 h-4 shrink-0 text-[#333333]"/><div><p className="text-xs font-extrabold mb-1">Retour</p><p className="text-xs text-[#333333]/70">10 jours gratuits</p></div></div>
                 <div className="p-3.5 flex gap-3"><ShieldCheck className="w-4 h-4 shrink-0 text-[#333333]"/><div><p className="text-xs font-extrabold mb-1">Garantie</p><p className="text-xs text-[#333333]/70">12 mois</p></div></div>
               </div>

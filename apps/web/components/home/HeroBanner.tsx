@@ -13,7 +13,7 @@ const SLIDES = [
     buttonText: "Créer son cocon",
     buttonLink: "/shop/bebe",
     badgeBg: "bg-[#E8C5C8] text-[#333333]",
-    image: "/images/banner.jpg",
+    image: "/images/ber.jpg",
   },
   {
     id: 2,
@@ -33,7 +33,7 @@ const SLIDES = [
     buttonText: "Découvrir les accessoires",
     buttonLink: "/shop/bebe",
     badgeBg: "bg-[#D4A396] text-white",
-    image: "/images/banner-3.jpg",
+    image: "/images/bars.jpg",
   },
   {
     id: 4,
@@ -43,13 +43,13 @@ const SLIDES = [
     buttonText: "Tester l'IA gratuitement",
     buttonLink: "/ai-chat",
     badgeBg: "bg-[#333333] text-white",
-    image: "/images/banner-2.jpg",
+    image: "/images/barr.jpg",
   },
   {
     id: 5,
     badge: "Livraison 24/48h France Métropolitaine",
     title: "Nouveautés Puériculture & Éveil",
-    subtitle: "Livraison gratuite dès 60€ d'achats à Paris, Lyon, Marseille et toute la France.",
+    subtitle: "Livraison gratuite dès 89€ d'achats à Paris, Lyon, Marseille et toute la France.",
     buttonText: "Commander maintenant",
     buttonLink: "/shop/bebe",
     badgeBg: "bg-[#6E857B] text-white",
@@ -75,16 +75,7 @@ const SLIDES = [
     badgeBg: "bg-[#6E857B] text-white",
     image: "/images/banner-5.jpg",
   },
-  {
-    id: 8,
-    badge: "Chambre Bébé",
-    title: "Cocon de Douceur & Sommeil Sécurisé",
-    subtitle: "Créez un véritable cocon de douceur et de sécurité pour les premières nuits de votre bébé.",
-    buttonText: "Équiper la chambre",
-    buttonLink: "/shop/bebe",
-    badgeBg: "bg-[#333333] text-white",
-    image: "/images/banner-8.jpg",
-  },
+  
 ];
 
 export function HeroBanner() {

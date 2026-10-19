@@ -10,16 +10,21 @@ export default function MentionsLegalesPage() {
             <p>
               Le site <strong>ECLOSIA</strong> (ci-après &quot;le site&quot;) est édité dans le cadre de l&apos;activité de commerce en ligne spécialisé dans le bien-être maternel et la puériculture.
             </p>
-            <p className="mt-2">
-              <strong>Contact :</strong> support@eclosia.app<br />
-              <strong>Pays d&apos;exploitation :</strong> France
-            </p>
+            <div className="mt-2 space-y-1">
+              <p><strong>Responsable légal :</strong> Guy-Mars Karamba Mamadou</p>
+              <p><strong>SIREN :</strong> 104 232 756</p>
+              <p><strong>SIRET (Siège) :</strong> 104 232 756 00015</p>
+              <p><strong>Numéro TVA intracommunautaire :</strong> FR59104232756</p>
+              <p><strong>Siège social :</strong> 22 rue de la gerbe d’or, 95490 Vauréal, France</p>
+              <p><strong>Contact :</strong> support@eclosia.app</p>
+              <p><strong>Pays d&apos;exploitation :</strong> France</p>
+            </div>
           </section>
 
           <section>
             <h2 className="text-lg font-bold text-[#333333] mb-2">2. Hébergement</h2>
             <p>
-              Le site est hébergé par <strong>Vercel Inc.</strong>, situé 340 S Lemon Ave #4133 Walnut, CA 91789, USA, et par la plateforme de base de données <strong>Neon Technologies Inc.</strong>
+              Le site est hébergé par <strong>Hostinger International Ltd.</strong>, situé 61 Lordou Vironos Street, 6023 Larnaca, Chypre.
             </p>
           </section>
 
