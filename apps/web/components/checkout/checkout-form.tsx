@@ -11,7 +11,7 @@ export function CheckoutForm() {
     address: "",
     city: "",
     postalCode: "",
-    country: "Côte d'Ivoire", // ou "France" selon votre marché principal
+    country: "France",
   });
 
   // Charger les données si elles existaient déjà
@@ -40,7 +40,7 @@ export function CheckoutForm() {
           Informations de livraison
         </h2>
         <p className="text-xs sm:text-sm text-[#333333]/60">
-          Veuillez entrer vos coordonnées pour l'expédition de votre commande.
+          Veuillez entrer vos coordonnées pour l'expédition de votre commande en France métropolitaine.
         </p>
       </div>
 
@@ -121,7 +121,7 @@ export function CheckoutForm() {
             value={formData.postalCode}
             onChange={handleChange}
             className="w-full px-4 py-3.5 rounded-xl border border-[#333333]/15 focus:outline-none focus:border-[#6E857B] focus:ring-1 focus:ring-[#6E857B] transition-colors text-sm text-[#333333] bg-white placeholder:text-gray-400"
-            placeholder="75001"
+            placeholder="95490"
           />
         </div>
         <div className="col-span-1 sm:col-span-2">
@@ -133,7 +133,7 @@ export function CheckoutForm() {
             value={formData.city}
             onChange={handleChange}
             className="w-full px-4 py-3.5 rounded-xl border border-[#333333]/15 focus:outline-none focus:border-[#6E857B] focus:ring-1 focus:ring-[#6E857B] transition-colors text-sm text-[#333333] bg-white placeholder:text-gray-400"
-            placeholder="Ex: Abidjan ou Paris"
+            placeholder="Ex: Vauréal ou Paris"
           />
         </div>
       </div>

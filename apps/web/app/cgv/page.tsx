@@ -8,7 +8,7 @@ export default function CgvPage() {
           <section>
             <h2 className="text-lg font-bold text-[#333333] mb-2">Article 1 : Champ d&apos;application</h2>
             <p>
-              Les présentes Conditions Générales de Vente régissent les ventes de produits effectuées sur le site <strong>ECLOSIA</strong> auprès des clients consommateurs. Toute commande validée implique l&apos;adhésion sans réserve aux présentes CGV.
+              Les présentes Conditions Générales de Vente régissent les ventes de produits effectuées sur le site <strong>ECLOSIA</strong> (eclosia.shop), édité par Guy-Mars Karamba Mamadou, entrepreneur individuel (micro-entreprise), SIREN 104 232 756, auprès des clients consommateurs. Toute commande validée implique l&apos;adhésion sans réserve aux présentes CGV.
             </p>
           </section>
 
@@ -29,34 +29,47 @@ export default function CgvPage() {
           <section>
             <h2 className="text-lg font-bold text-[#333333] mb-2">Article 4 : Livraison</h2>
             <p>
-              Les produits sont livrés à l&apos;adresse de livraison indiquée lors de la commande. Le délai moyen de livraison constaté est de <strong>2 à 4 jours ouvrables</strong> en France métropolitaine.
+              Les produits sont livrés à l&apos;adresse de livraison indiquée lors de la commande, en France métropolitaine uniquement. Le délai moyen de livraison constaté est de <strong>2 à 4 jours ouvrables</strong>.
             </p>
           </section>
 
           <section>
             <h2 className="text-lg font-bold text-[#333333] mb-2">Article 5 : Droit de rétractation et Retours</h2>
             <p>
-              Conformément à l&apos;article L.221-18 du Code de la consommation, le client dispose d&apos;un délai de <strong>30 jours</strong> à compter de la réception de sa commande pour exercer son droit de rétractation sans avoir à justifier de motifs. Les articles doivent être retournés en parfait état et dans leur emballage d&apos;origine permettant une commercialisation. 
+              Conformément à l&apos;article L.221-18 du Code de la consommation, le client dispose d&apos;un délai de <strong>20 jours</strong> à compter de la réception de sa commande pour exercer son droit de rétractation sans avoir à justifier de motifs.
             </p>
             <p className="mt-2">
-              <strong>Frais de retour :</strong> Les frais de retour sont à la charge exclusive du client.
+              Les articles doivent être retournés en parfait état, dans leur emballage d&apos;origine permettant une recommercialisation. Le client est autorisé à ouvrir et inspecter le produit, à condition de ne pas l&apos;endommager.
             </p>
             <p className="mt-2">
-              <strong>Remboursement :</strong> En cas de rétractation, ECLOSIA procédera au remboursement de la totalité des sommes versées au plus tard dans les <strong>14 jours</strong> suivant la date à laquelle le droit a été exercé, sous réserve de la réception du produit retourné ou d&apos;une preuve de son expédition.
+              <strong>Frais de retour :</strong> Les frais de retour sont à la charge exclusive du client, sauf lorsque notre service client indique qu&apos;un renvoi physique n&apos;est pas nécessaire pour traiter la demande.
+            </p>
+            <p className="mt-2">
+              <strong>Remboursement :</strong> En cas de rétractation, ECLOSIA procédera au remboursement intégral des sommes versées, <strong>frais de livraison standard initiaux inclus</strong>, au plus tard dans les <strong>14 jours</strong> suivant la date à laquelle le droit a été exercé, sous réserve de la réception du produit retourné ou d&apos;une preuve de son expédition (sauf cas dispensés de renvoi physique).
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-[#333333] mb-2">Article 6 : Médiation des litiges de la consommation</h2>
+            <h2 className="text-lg font-bold text-[#333333] mb-2">Article 6 : Garantie légale de conformité et des vices cachés</h2>
+            <p>
+              Indépendamment de toute garantie commerciale éventuelle, ECLOSIA reste tenue des défauts de conformité du bien au contrat et des vices cachés, dans les conditions prévues aux articles L.217-3 à L.217-20 et 1641 à 1648 du Code civil.
+            </p>
+            <p className="mt-2">
+              Le client bénéficie d&apos;un délai de 2 ans à compter de la délivrance du bien pour agir au titre de la garantie légale de conformité, sans avoir à prouver l&apos;existence du défaut de conformité durant les 24 premiers mois suivant la délivrance. En cas de mise en œuvre, le client bénéficie de la réparation ou du remplacement du bien, sans frais, dans un délai de 30 jours suivant sa demande.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-bold text-[#333333] mb-2">Article 7 : Médiation des litiges de la consommation</h2>
             <p>
               En cas de litige entre le client et l&apos;entreprise, ceux-ci s&apos;efforceront de le résoudre à l&apos;amiable. À défaut d&apos;accord amiable, le consommateur a le droit de recourir gratuitement à un médiateur de la consommation conformément à l&apos;article L.616-1 du Code de la consommation.
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-[#333333] mb-2">Article 7 : Service client</h2>
+            <h2 className="text-lg font-bold text-[#333333] mb-2">Article 8 : Service client</h2>
             <p>
-              Pour toute question, information ou réclamation, notre équipe est joignable par e-mail à l&apos;adresse : contact@eclosia.shop.
+              Pour toute question, information ou réclamation, notre équipe est joignable par e-mail à l&apos;adresse : <strong>contact@eclosia.shop</strong>.
             </p>
           </section>
         </div>
