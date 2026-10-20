@@ -72,7 +72,7 @@ export default function AdminSupportPage() {
               </h1>
             </div>
             <p className="text-xs text-[#333333]/60">
-              Consultez l'historique des requêtes et conversations de vos clientes avec l'assistante IA.
+              Consultez l'historique des requêtes et conversations de vos clients avec l'assistante IA.
             </p>
           </div>
           <span className="px-4 py-2 bg-[#F5EBE6] text-[#333333] text-xs font-bold rounded-xl border border-[#333333]/5 w-fit">

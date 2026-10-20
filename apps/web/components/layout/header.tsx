@@ -111,9 +111,15 @@ export function Header() {
                 Livraison offerte dès 89 € d&apos;achats (2-4 jours)
               </span>
             </div>
+            
+            {/* CORRECTION : Liens fonctionnels pour Suivi de commande et Sécurité */}
             <div className="hidden md:flex items-center gap-5 text-xs font-medium text-white/90">
-              <div className="flex items-center gap-1.5 hover:text-[#E8C5C8] transition-colors cursor-pointer"><Truck className="w-3.5 h-3.5 text-[#E8C5C8]" />Suivi de commande</div>
-              <div className="flex items-center gap-1.5 hover:text-[#E8C5C8] transition-colors cursor-pointer"><ShieldCheck className="w-3.5 h-3.5 text-[#E8C5C8]" />Sécurité & Authenticité</div>
+              <Link href="/suivi-de-commande" className="flex items-center gap-1.5 hover:text-[#E8C5C8] transition-colors cursor-pointer">
+                <Truck className="w-3.5 h-3.5 text-[#E8C5C8]" /> Suivi de commande
+              </Link>
+              <Link href="/securite" className="flex items-center gap-1.5 hover:text-[#E8C5C8] transition-colors cursor-pointer">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#E8C5C8]" /> Sécurité & Authenticité
+              </Link>
             </div>
           </div>
         </div>
@@ -165,10 +171,11 @@ export function Header() {
                 <span className="hidden lg:inline">Communauté</span>
               </Link>
               
-              <button className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-[#333333] hover:text-[#6E857B] transition-all duration-200 px-3 py-2 rounded-full hover:bg-white/80 hover:shadow-sm">
+              {/* CORRECTION : Le bouton Aide devient un lien fonctionnel vers la page Aide */}
+              <Link href="/aide" className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-[#333333] hover:text-[#6E857B] transition-all duration-200 px-3 py-2 rounded-full hover:bg-white/80 hover:shadow-sm">
                 <HelpCircle className="w-4 h-4 text-[#6E857B]" />
                 <span className="hidden lg:inline">Aide</span>
-              </button>
+              </Link>
 
               <Link href="/cart" className="flex items-center gap-1.5 sm:gap-2 pl-2.5 pr-2 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#6E857B] text-white hover:bg-[#5b7067] transition-all duration-300 relative shadow-sm hover:shadow-md active:scale-95">
                 <ShoppingBag className="w-4 h-4 text-white" />

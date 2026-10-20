@@ -21,9 +21,9 @@ export default function AdminSettingsPage() {
   // Paramètres globaux de la boutique
   const [settings, setSettings] = useState({
     storeName: "ECLOSIA",
-    supportEmail: "contact@eclosia.com",
-    phoneNumber: "+225 00 00 00 00",
-    address: "Abidjan, Côte d'Ivoire",
+    supportEmail: "contact@eclosia.shop",
+    phoneNumber: "+33 7 69 23 85 11",
+    address: "22 rue de la gerbe d'or, 95490 Vauréal, France",
     currency: "EUR",
     taxRate: 20,
     enableNotifications: true,
@@ -66,7 +66,7 @@ export default function AdminSettingsPage() {
 
   const fetchAdmins = async () => {
     setAdmins([
-      { id: "1", name: "Super Admin Eclosia", email: "admin@eclosia.com", role: "super_admin", status: "Actif" },
+      { id: "1", name: "Super Admin Eclosia", email: "contact@eclosia.shop", role: "super_admin", status: "Actif" },
     ]);
   };
 

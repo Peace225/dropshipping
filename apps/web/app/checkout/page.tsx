@@ -18,10 +18,7 @@ export default function CheckoutPage() {
   const [localItems, setLocalItems] = useState<any[]>([]);
   
   const [selectedPaymentName, setSelectedPaymentName] = useState("Carte bancaire");
-  const [selectedShippingName, setSelectedShippingName] = useState("Livraison Standard à domicile");
-  
-  // RÈGLE STRICTE ECLOSIA : La livraison est toujours à 10 €
-  const [shippingPrice, setShippingPrice] = useState<number>(10.00);
+  const [selectedShippingName, setSelectedShippingName] = useState("Livraison Standard");
 
   useEffect(() => {
     try {
@@ -37,11 +34,6 @@ export default function CheckoutPage() {
       
       const savedShippingName = localStorage.getItem("selected_shipping_name");
       if (savedShippingName) setSelectedShippingName(savedShippingName);
-      
-      // On ignore le prix de livraison sauvegardé pour forcer à 10€
-      // Mais si vous avez d'autres options (Express à 15€ par ex), on peut le récupérer
-      const savedShippingPrice = localStorage.getItem("selected_shipping_price");
-      if (savedShippingPrice) setShippingPrice(parseFloat(savedShippingPrice));
     } catch (e) {
       console.error("Erreur localStorage", e);
     }
@@ -56,17 +48,17 @@ export default function CheckoutPage() {
 
   const handleShippingSelect = (option: any) => {
     setSelectedShippingName(option.name);
-    setShippingPrice(option.price);
     localStorage.setItem("selected_shipping_id", option.id);
     localStorage.setItem("selected_shipping_name", option.name);
-    localStorage.setItem("selected_shipping_price", option.price.toString());
   };
 
   const contextItems = Array.isArray(cart) ? cart : [];
   const items = contextItems.length > 0 ? contextItems : localItems;
   
   const totalPrice = items.reduce((sum: number, item: any) => sum + (Number(item.price) * Number(item.quantity || 1)), 0);
-  // Frais de port sécurisé : si 0 article, 0€ de port. Sinon, on applique le shippingPrice.
+  
+  // RÈGLE ECLOSIA : Gratuit dès 89€ d'achats, sinon 10,00 €
+  const shippingPrice = totalPrice >= 89 ? 0 : 10.00;
   const finalTotal = totalPrice + (items.length > 0 ? shippingPrice : 0);
 
   const handleProceedToPayment = async (e: React.FormEvent) => {
@@ -97,7 +89,6 @@ export default function CheckoutPage() {
       
       localStorage.setItem("final_order", JSON.stringify(orderPayload));
       
-      // Simulation appel API Stripe
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -108,13 +99,12 @@ export default function CheckoutPage() {
       
       if (!response.ok) throw new Error(data.error || "Erreur Stripe");
       
-      // Nettoyage avant redirection
       localStorage.removeItem("cart");
       localStorage.removeItem("panier");
       clearCart();
       
       if (data.url) window.location.href = data.url;
-      else router.push("/shop/merci"); // Redirection vers votre page merci ECLOSIA
+      else router.push("/shop/merci");
       
     } catch (error: any) {
       alert(error.message || "Une erreur est survenue");
@@ -126,7 +116,6 @@ export default function CheckoutPage() {
     <form onSubmit={handleProceedToPayment} className="min-h-screen bg-gradient-to-b from-[#F5EBE6]/20 via-white to-[#6E857B]/10 py-10 px-4 sm:px-6 lg:px-8 pt-24">
       <div className="max-w-7xl mx-auto space-y-8">
         
-        {/* Header Navigation */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <Link href="/shop/panier" className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-[#333333]/70 hover:text-[#333333] transition-colors">
             <ArrowLeft className="w-4 h-4" /> Retour au panier
@@ -136,7 +125,6 @@ export default function CheckoutPage() {
           </div>
         </div>
         
-        {/* Titre */}
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#333333]">Finaliser votre commande</h1>
           <p className="text-xs sm:text-sm text-[#333333]/60 mt-1">Complétez vos informations de livraison et choisissez votre mode de paiement.</p>
@@ -153,10 +141,8 @@ export default function CheckoutPage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* Colonne de gauche (Formulaires) */}
             <div className="lg:col-span-7 space-y-6">
               
-              {/* Étape 1 : Adresse */}
               <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#333333]/10 shadow-sm space-y-5">
                 <div className="flex items-center gap-3 border-b border-[#333333]/10 pb-4">
                   <div className="w-8 h-8 rounded-lg bg-[#333333] text-white flex items-center justify-center font-bold text-sm shadow-sm">1</div>
@@ -165,7 +151,6 @@ export default function CheckoutPage() {
                 <CheckoutForm />
               </div>
               
-              {/* Étape 2 : Livraison */}
               <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#333333]/10 shadow-sm space-y-5">
                 <div className="flex items-center gap-3 border-b border-[#333333]/10 pb-4">
                   <div className="w-8 h-8 rounded-lg bg-[#333333] text-white flex items-center justify-center font-bold text-sm shadow-sm">2</div>
@@ -174,7 +159,6 @@ export default function CheckoutPage() {
                 <ShippingSelector onSelectShipping={handleShippingSelect} />
               </div>
               
-              {/* Étape 3 : Paiement */}
               <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#333333]/10 shadow-sm space-y-5">
                 <div className="flex items-center gap-3 border-b border-[#333333]/10 pb-4">
                   <div className="w-8 h-8 rounded-lg bg-[#333333] text-white flex items-center justify-center font-bold text-sm shadow-sm">3</div>
@@ -185,10 +169,8 @@ export default function CheckoutPage() {
 
             </div>
 
-            {/* Colonne de droite (Récapitulatif & Bouton) */}
             <div className="lg:col-span-5 space-y-6 sticky top-24">
               
-              {/* Liste Panier */}
               <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#333333]/10 shadow-sm space-y-4">
                 <h3 className="text-sm font-extrabold uppercase tracking-wider text-[#333333] border-b border-[#333333]/10 pb-4 flex justify-between items-center">
                   <span>Panier</span>
@@ -212,7 +194,6 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Validation Total */}
               <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#333333]/10 shadow-sm space-y-6">
                 <h3 className="text-base font-extrabold text-[#333333] border-b border-[#333333]/10 pb-4">Validation</h3>
                 
@@ -222,8 +203,10 @@ export default function CheckoutPage() {
                     <span className="font-bold text-[#333333]">{totalPrice.toFixed(2).replace(".", ",")} €</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Livraison ({selectedShippingName})</span>
-                    <span className="font-bold text-[#333333]">{shippingPrice.toFixed(2).replace(".", ",")} €</span>
+                    <span>Livraison</span>
+                    <span className={`font-bold ${shippingPrice === 0 ? "text-emerald-600 font-extrabold" : "text-[#333333]"}`}>
+                      {shippingPrice === 0 ? "Gratuite dès 89 € 🎉" : `${shippingPrice.toFixed(2).replace(".", ",")} €`}
+                    </span>
                   </div>
                 </div>
                 

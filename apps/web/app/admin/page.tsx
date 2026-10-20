@@ -75,7 +75,6 @@ export default function AdminPage() {
     }
     fetchData();
 
-    // Canal statique : Supabase gère le multiplexing automatiquement si plusieurs onglets sont ouverts
     const channel = supabase
       .channel('admin-notifs-room')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, () => {
@@ -87,7 +86,7 @@ export default function AdminPage() {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, []); // <-- Tableau de dépendances vide respecté
+  }, []);
 
   const totalNotifs = stats.newOrders + stats.newClients;
 
@@ -103,7 +102,7 @@ export default function AdminPage() {
               Tableau de bord
             </h1>
             <p className="text-xs text-[#333333]/60 mt-1">
-              Bienvenue eclosia66@eclosia.shop — espace super admin ECLOSIA.
+              Espace Super Admin — ECLOSIA (Vauréal, France).
             </p>
           </div>
 
@@ -185,7 +184,7 @@ export default function AdminPage() {
                   <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"><UserPlus className="w-5 h-5" /></div>
                   <div>
                     <p className="text-sm font-bold">{stats.newClients} nouveaux clients</p>
-                    <p className="text-xs text-white/70">Maman & Bébé</p>
+                    <p className="text-xs text-white/70">Bébé</p>
                   </div>
                 </div>
                 <Link href="/admin/clients" className="bg-white text-[#6E857B] px-4 py-2 rounded-xl text-xs font-bold">Voir</Link>
@@ -198,7 +197,7 @@ export default function AdminPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricsCard title="Chiffre d'Affaires" value={loading? "..." : `${stats.ca.toFixed(2)} €`} iconName="dollar" trend={stats.newOrders>0?`+${stats.newOrders}`:"0"} trendDirection="up" description="Total payé" />
           <MetricsCard title="Commandes" value={loading? "..." : `${stats.orders}`} iconName="shopping" trend={stats.newOrders>0?`+${stats.newOrders} (24h)`:"+0"} trendDirection={stats.newOrders>0?"up":"down"} description="dont en attente" />
-          <MetricsCard title="Clients Inscrits" value={loading? "..." : `${stats.clients}`} iconName="users" trend={stats.newClients>0?`+${stats.newClients}`:"+0"} trendDirection="up" description="Maman & Bébé" />
+          <MetricsCard title="Clients Inscrits" value={loading? "..." : `${stats.clients}`} iconName="users" trend={stats.newClients>0?`+${stats.newClients}`:"+0"} trendDirection="up" description="Bébé" />
           <MetricsCard title="Ventes Flash" value={`${stats.flash} Actives`} iconName="zap" description="Gestion en cours" />
         </div>
 
@@ -210,7 +209,7 @@ export default function AdminPage() {
               <Link href="/admin/commandes" className="text-xs font-bold text-[#6E857B] flex items-center gap-1"><Eye className="w-3 h-3" /> Voir tout</Link>
             </div>
             <div className="space-y-3">
-              {recentOrders.length===0? <p className="text-xs text-[#333333]/50">Aucune commande pour l'instant — tes 18 produits ECLOSIA (SKU-BUM1, KITBIO40X80M2...) arrivent bientôt.</p> :
+              {recentOrders.length===0? <p className="text-xs text-[#333333]/50">Aucune commande pour l'instant.</p> :
                 recentOrders.map((o:any) => (
                   <div key={o.id} className="flex justify-between items-center p-3 bg-[#FAFAFA] rounded-xl">
                     <div>
@@ -246,9 +245,9 @@ export default function AdminPage() {
         </div>
 
         <div className="rounded-2xl border border-[#333333]/10 bg-white p-6 shadow-sm">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-[#333333]/70 mb-2">ECLOSIA — Boutique Maman & Bébé Française</h2>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-[#333333]/70 mb-2">ECLOSIA — Boutique Puériculture & Bébé</h2>
           <p className="text-xs text-[#333333]/50 leading-relaxed">
-            18 produits actifs (58 variantes) : Culottes Bumbuns So Protect 25,90€ (SKU-BUM1...), Matelas 40x80 Bio 74,90€ (SKU-KITBIO40X80M2), Maillots Bébé 17,90€. Livraison 10€ Point Relais. Oeko-Tex, Coton Bio.
+            Plateforme e-commerce dédiée au confort de bébé (certifiée OEKO-TEX, coton bio et bambou). Livraison standard à 10,00 € (offerte dès 89,00 € d'achats).
           </p>
         </div>
       </main>

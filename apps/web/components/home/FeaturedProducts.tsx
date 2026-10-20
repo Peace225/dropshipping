@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ShoppingBag, Star, Clock3, ArrowRight, ChevronLeft, ChevronRight, Zap, ShieldCheck, Truck, Heart } from "lucide-react";
+import { ShoppingBag, Star, Clock3, ArrowRight, ChevronLeft, ChevronRight, Zap, ShieldCheck, Truck } from "lucide-react";
 import { ProductSection } from "./ProductSection";
 import { useCart } from "@/context/cart-context";
 import { createClient } from "@supabase/supabase-js";
@@ -84,14 +84,21 @@ export function FeaturedProducts() {
 
       if (!data?.length) { setLoading(false); return; }
 
-      const manufIds = [...new Set(data.map((p:any)=>p.manufacturer_id).filter(Boolean))];
+      // Filtrage strict pour écarter tout terme "maman" de la base
+      const filteredData = data.filter((item: any) => {
+        const nameLow = (item.name || "").toLowerCase();
+        const rubLow = (item.rubrique || "").toLowerCase();
+        return !nameLow.includes("maman") && !rubLow.includes("maman") && !nameLow.includes("felyna") && !nameLow.includes("léopard");
+      });
+
+      const manufIds = [...new Set(filteredData.map((p:any)=>p.manufacturer_id).filter(Boolean))];
       let manufById: Record<string, any> = {};
       if (manufIds.length>0){
         const { data: manufs } = await supabase.from("manufacturers").select("id,label_fr,flag_emoji").in("id", manufIds);
         if (manufs) manufs.forEach(m=>{ manufById[m.id]=m; });
       }
 
-      const formatted = data.map((item: any) => {
+      const formatted = filteredData.map((item: any) => {
         const images = [...(item.product_images ?? [])].sort((a:any,b:any)=>(b.is_primary?1:0)-(a.is_primary?1:0) || (a.position??0)-(b.position??0));
         const rawImg = images[0]?.image_url ?? item.image_url ?? "";
         const imageUrl = cleanImageUrl(rawImg);
@@ -99,17 +106,16 @@ export function FeaturedProducts() {
         const currentPrice = Number(item.price);
         const originalPrice = Number(item.original_price_backup || item.price);
         
-        const isBebe = item.rubrique && !item.rubrique.toLowerCase().includes("maman");
         const manuf = item.manufacturer_id ? manufById[item.manufacturer_id] : null;
-        const rawFab = manuf?.label_fr || item.brand || "Expédié en France";
-        const fabLabel = rawFab.replace(/\/UE|UE|Europe/gi, "").trim() || "Expédié en France";
+        const rawFab = manuf?.label_fr || item.brand || "Fabriqué en France";
+        const fabLabel = rawFab.replace(/\/UE|UE|Europe/gi, "").trim() || "Fabriqué en France";
         const flag = (manuf?.flag_emoji || "🇫🇷").replace("🇪🇺", "").trim() || "🇫🇷";
         const short = getMarketingShort(item);
 
         return {
           id: item.id, name: item.name, slug: item.slug, shortDesc: short,
           categoryName: item.rubrique?.split("—")[0].trim() || "Bébé",
-          universe: isBebe ? "Bébé" : "Maman",
+          universe: "Bébé",
           price: `${currentPrice.toFixed(2).replace(".",",")} €`, numericPrice: currentPrice,
           oldPrice: originalPrice > currentPrice ? `${originalPrice.toFixed(2).replace(".",",")} €` : null, 
           originalNumeric: originalPrice,
@@ -145,7 +151,7 @@ export function FeaturedProducts() {
   if (!flashProducts.length) return null;
 
   return (
-    <ProductSection title=" Vente Flash Exclusive" subtitle="Des pépites indispensables Maman & Bébé à prix d'amie. Stocks ultra-limités !" viewAllLink="/ventes-flash">
+    <ProductSection title="Vente Flash Exclusive" subtitle="Des pépites indispensables pour bébé à prix d'amie. Stocks ultra-limités !" viewAllLink="/ventes-flash">
       <div className="col-span-full w-full">
         
         {/* HEADER MARKETING ECLOSIA */}
@@ -160,15 +166,15 @@ export function FeaturedProducts() {
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="font-extrabold text-[15px] sm:text-lg tracking-tight">Vente Flash</h2>
-                  <span className="bg-white/15 border border-white/20 px-2 py-0.5 sm:px-2.5 rounded-full text-[9px] sm:text-xs font-bold uppercase tracking-wide">Des produits • Stock limité</span>
+                  <span className="bg-white/15 border border-white/20 px-2 py-0.5 sm:px-2.5 rounded-full text-[9px] sm:text-xs font-bold uppercase tracking-wide">Sélection • Stock limité</span>
                   <span className="hidden sm:inline-flex items-center gap-1 bg-[#6E857B] px-2.5 py-0.5 rounded-full text-xs font-bold">
                     <ShieldCheck className="w-3 h-3"/> OEKO-TEX
                   </span>
                 </div>
                 <p className="text-[11px] sm:text-xs text-white/70 mt-1 flex items-center gap-1.5 sm:gap-2">
-                  <span>🔥 Livraison 10€ (Gratuite dès 60€) !</span>
+                  <span>🔥 Livraison 10,00 € (Offerte dès 89,00 €) !</span>
                   <span className="w-1 h-1 bg-white/30 rounded-full"></span>
-                  <span>🇫🇷 Livraison France 24/48h</span>
+                  <span>🇫🇷 Livraison France 2-4 jours</span>
                 </p>
               </div>
             </div>
@@ -191,7 +197,7 @@ export function FeaturedProducts() {
           </div>
           
           <div className="bg-[#F5EBE6]/40 px-4 py-2.5 sm:px-5 sm:py-3 flex flex-wrap items-center justify-between sm:justify-start gap-2 sm:gap-3 text-[10px] sm:text-xs font-bold text-[#333333]/70">
-            <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B]"/>Livraison rapide 10,00 € (Gratuite dès 60 €)</span>
+            <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B]"/>Livraison 10,00 € (Offerte dès 89,00 € d'achats)</span>
             <span className="w-px h-3 bg-[#333333]/15 hidden sm:block"></span>
             <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B]"/>Certifié OEKO-TEX • Bambou & Coton Bio</span>
           </div>
@@ -212,7 +218,7 @@ export function FeaturedProducts() {
             return (
               <article key={product.id} className="group relative flex w-[80%] sm:w-[45%] md:w-[calc(33%-14px)] xl:w-[calc(25%-15px)] shrink-0 flex-col overflow-hidden rounded-[16px] sm:rounded-2xl border border-[#333333]/10 bg-white snap-start shadow-[0_2px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.10)] sm:hover:-translate-y-1.5 transition-all duration-500">
                 
-                {/* TOP BADGES - SÉCURISÉS EN HAUT */}
+                {/* TOP BADGES */}
                 <div className="absolute left-0 right-0 top-0 z-20 flex justify-between items-start p-2.5 sm:p-3 pointer-events-none">
                   <div className="flex flex-col gap-1.5 items-start">
                     <span className="pointer-events-auto rounded-full bg-[#333333] px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-extrabold text-white shadow-sm">{product.badgeText}</span>

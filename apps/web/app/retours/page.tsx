@@ -6,9 +6,9 @@ export default function RetoursPage() {
         
         <div className="space-y-6 text-sm text-gray-600 leading-relaxed">
           <section>
-            <h2 className="text-lg font-bold text-[#333333] mb-2">1. Délai de rétractation (30 jours)</h2>
+            <h2 className="text-lg font-bold text-[#333333] mb-2">1. Délai de rétractation (20 jours)</h2>
             <p>
-              Parce que nous savons à quel point le choix des articles pour votre bien-être et celui de bébé est délicat, <strong>ECLOSIA</strong> vous offre un délai de rétractation étendu à <strong>30 jours</strong> à compter de la date de réception de votre commande pour changer d&apos;avis.
+              Parce que nous savons à quel point le choix des articles pour votre bien-être et celui de bébé est délicat, <strong>ECLOSIA</strong> vous offre un délai de rétractation étendu à <strong>20 jours</strong> à compter de la date de réception de votre commande pour changer d&apos;avis.
             </p>
           </section>
 

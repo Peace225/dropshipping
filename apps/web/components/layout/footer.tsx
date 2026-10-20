@@ -195,7 +195,7 @@ export function Footer() {
                 <li><Link href="/cgv" className="block py-0.5 hover:text-[#6E857B] transition-colors">Conditions Générales de Vente (CGV)</Link></li>
                 <li><Link href="/mentions-legales" className="block py-0.5 hover:text-[#6E857B] transition-colors">Mentions Légales</Link></li>
                 <li><Link href="/privacy" className="block py-0.5 hover:text-[#6E857B] transition-colors">Politique de Confidentialité & RGPD</Link></li>
-                <li><Link href="/retours" className="block py-0.5 hover:text-[#6E857B] transition-colors">Politique de Retours (30 jours)</Link></li>
+                <li><Link href="/retours" className="block py-0.5 hover:text-[#6E857B] transition-colors">Politique de Retours (20 jours)</Link></li>
                 <li><Link href="/contact" className="block py-0.5 hover:text-[#6E857B] transition-colors">Contactez notre support</Link></li>
               </ul>
             </nav>

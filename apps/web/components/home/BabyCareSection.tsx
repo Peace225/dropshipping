@@ -251,7 +251,7 @@ export async function BabyCareSection() {
             <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B]"/> OEKO-TEX® & Fabriqué France/UE
           </span>
           <span className="flex items-center gap-1.5 sm:gap-2">
-            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B] sm:hidden"/> Retour gratuit 10 jours <span className="hidden sm:inline">• Garantie 12 mois</span>
+            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B] sm:hidden"/> Retour gratuit 20 jours <span className="hidden sm:inline">• Garantie 12 mois</span>
           </span>
           <Link href="/shop/bebe" className="hidden lg:inline-flex px-5 py-2.5 rounded-full bg-[#F9F6F4] text-[#333333] hover:bg-[#333333] hover:text-white transition-colors border border-[#333333]/5">
             Découvrir toute la collection →

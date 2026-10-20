@@ -24,10 +24,10 @@ function getMarketingShort(p:any){
   if(s.includes("32x72")) return "Lot de 3 draps housse couffin ultra-doux. Lavable 60°, OEKO-TEX.";
   if(s.includes("60x120")) return "3 draps housse + 2 alèses imperméables. Coton doux qui tient.";
   if(s.includes("90x190")) return "Matelas enfant déhoussable, mémoire de forme, anti-acariens.";
-  if(s.includes("culotte") || s.includes("couche") || s.includes("bumbuns")) return "Lavable, Oeko-Tex, fabrication UE. Douce et respirante.";
+  if(s.includes("culotte") || s.includes("couche") || s.includes("bumbuns")) return "Lavable, Oeko-Tex, fabrication France. Douce et respirante.";
   if(s.includes("tapis") || s.includes("langer")) return "Nomade, pliable, imperméable. Fabriqué en France 🇫🇷.";
   if(s.includes("coussin")) return "Confortable, s'essuie d'un coup d'éponge. Fabriqué en France 🇫🇷.";
-  return "OEKO-TEX • Fabriqué France/UE • Lavable 60°";
+  return "OEKO-TEX • Fabriqué en France • Lavable 60°";
 }
 
 function LiveCountdown({ endsAt }: { endsAt: string | Date }) {
@@ -72,7 +72,6 @@ export default function VentesFlashPage8() {
         const { data: flash } = await supabase.from("flash_sales").select("ends_at").eq("is_active", true).order("created_at", {ascending:false}).limit(1).maybeSingle();
         setFlashEndsAt(flash?.ends_at || new Date(Date.now()+2*3600000).toISOString());
 
-        // 1. Cherche d'abord les produits explicitement marqués en vente flash
         const { data: prods, error } = await supabase
           .from("products")
           .select("id, name, slug, price, promo_price, stock, description, brand, manufacturer_id, rubrique, category_bebe_id, image_url")
@@ -86,7 +85,6 @@ export default function VentesFlashPage8() {
           return;
         }
 
-        // 2. Si aucun produit n'est tagué "Vente Flash", on pioche directement dans nos 13 produits officiels Bébé
         if (!prods || prods.length === 0) {
           const { data: fallback } = await supabase
             .from("products")
@@ -118,8 +116,15 @@ export default function VentesFlashPage8() {
     }
 
     async function formatProducts(prods:any[]){
-      const productIds = prods.map(p=>p.id);
-      const manufIds = [...new Set(prods.map(p=>p.manufacturer_id).filter(Boolean))];
+      // Filtrage strict anti-maman / anti-léopard en base
+      const cleanProds = prods.filter((item: any) => {
+        const nameLow = (item.name || "").toLowerCase();
+        const rubLow = (item.rubrique || "").toLowerCase();
+        return !nameLow.includes("maman") && !rubLow.includes("maman") && !nameLow.includes("felyna") && !nameLow.includes("léopard");
+      });
+
+      const productIds = cleanProds.map(p=>p.id);
+      const manufIds = [...new Set(cleanProds.map(p=>p.manufacturer_id).filter(Boolean))];
 
       let imagesByProduct: Record<string, any[]> = {};
       if (productIds.length>0){
@@ -138,7 +143,7 @@ export default function VentesFlashPage8() {
         if (manufs) manufs.forEach(m=>{ manufById[m.id]=m; });
       }
 
-      const formatted = prods.map((item: any) => {
+      const formatted = cleanProds.map((item: any) => {
         const imgs = imagesByProduct[item.id] || [];
         const sorted = [...imgs].sort((a:any,b:any)=> (b.is_primary?1:0) - (a.is_primary?1:0) || a.position-b.position);
         const raw = sorted[0]?.image_url ?? item.image_url ?? "";
@@ -147,8 +152,9 @@ export default function VentesFlashPage8() {
         const original = Number(item.price);
         const promo = Number(item.promo_price || (original*0.9).toFixed(2));
         const manuf = item.manufacturer_id ? manufById[item.manufacturer_id] : null;
-        const fab = manuf?.label_fr || item.brand || "Fabriqué en France/UE";
-        const flag = manuf?.flag_emoji || "🇫🇷 🇪🇺";
+        const fab = manuf?.label_fr || item.brand || "Fabriqué en France";
+        const cleanFab = fab.replace(/\/UE|UE|Europe/gi, "").trim() || "Fabriqué en France";
+        const flag = (manuf?.flag_emoji || "🇫🇷").replace("🇪🇺", "").trim() || "🇫🇷";
         const rub = (item.rubrique || "BÉBÉ").split("—")[0].trim().toUpperCase();
 
         return {
@@ -159,9 +165,9 @@ export default function VentesFlashPage8() {
           detailUrl: `/shop/bebe/${item.slug}`,
           stockLeft: Math.floor((item.stock||40)*0.35), stockTotal: item.stock||40,
           reviewsCount: Math.floor(Math.random()*40)+22,
-          category: /maman/i.test(item.rubrique||"") ? "Maman" : "Bébé",
+          category: "Bébé",
           shortDesc: getMarketingShort(item),
-          fabrication: fab, flag, rubrique: rub
+          fabrication: cleanFab, flag, rubrique: rub
         };
       });
       setFlashProducts(formatted);
@@ -181,7 +187,7 @@ export default function VentesFlashPage8() {
     <main className="min-h-screen bg-gradient-to-b from-[#FAFAFA] via-white to-[#F5EBE6]/30 pt-20 sm:pt-24 text-[#333333]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         
-        {/* HERO FLASH (Responsive Mobile) */}
+        {/* HERO FLASH */}
         <div className="mb-6 sm:mb-8 overflow-hidden rounded-[20px] sm:rounded-[24px] border border-[#333333]/10 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.06)] relative">
           <div className="absolute top-0 right-0 w-48 sm:w-72 h-48 sm:h-72 bg-[#D4A396]/20 rounded-full blur-[40px] sm:blur-[60px] -mr-20 -mt-20 sm:-mr-32 sm:-mt-32 pointer-events-none"></div>
           
@@ -201,7 +207,7 @@ export default function VentesFlashPage8() {
                 <p className="text-[11px] sm:text-[12px] text-white/70 mt-0.5 sm:mt-1 flex items-center gap-1.5 sm:gap-2">
                   <span>{filtered.length} pépites Bébé</span>
                   <span className="w-1 h-1 bg-white/30 rounded-full"></span>
-                  <span>🇫🇷 🇪🇺 France/UE</span>
+                  <span>🇫🇷 Fabriqué en France</span>
                 </p>
               </div>
             </div>
@@ -216,9 +222,9 @@ export default function VentesFlashPage8() {
           </div>
 
           <div className="bg-[#F5EBE6]/40 px-4 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between sm:justify-start sm:gap-3 text-[10px] sm:text-[11px] font-bold text-[#333333]/70">
-            <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-[#6E857B]"/>Livraison 10,00 €</span>
+            <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 text-[#6E857B]"/>Livraison 10,00 € (Offerte dès 89,00 € d'achats)</span>
             <span className="w-px h-3 bg-[#333333]/15 hidden sm:block"></span>
-            <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-[#6E857B]"/>OEKO-TEX / France</span>
+            <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-[#6E857B]"/>Certifié OEKO-TEX • 2-4 jours</span>
           </div>
         </div>
 
@@ -234,10 +240,10 @@ export default function VentesFlashPage8() {
           </button>
         </div>
 
-        {/* MENU FILTRES MOBILE (DÉROULANT) */}
+        {/* MENU FILTRES MOBILE */}
         {showMobileFilters && (
           <div className="lg:hidden mb-6 p-4 rounded-xl border border-[#333333]/10 bg-white shadow-sm flex flex-wrap gap-2">
-            {["Tous les produits","Bébé","Maman"].map(cat=>{
+            {["Tous les produits","Bébé"].map(cat=>{
               const active = selectedCategory===cat;
               return (
                 <button key={cat} onClick={()=>{ setSelectedCategory(cat); setShowMobileFilters(false); }} className={`px-4 py-2 rounded-lg text-[11px] font-bold transition-all ${active?"bg-[#333333] text-white shadow-md":"bg-[#F9F6F4] border border-[#333333]/5 text-[#333333]"}`}>
@@ -255,7 +261,7 @@ export default function VentesFlashPage8() {
             <div className="sticky top-24 rounded-[20px] border border-[#333333]/10 bg-white p-5 shadow-sm">
               <div className="mb-6 rounded-2xl bg-gradient-to-br from-[#F5EBE6] via-[#F5EBE6] to-[#E8C5C8]/30 p-4 border border-[#D4A396]/20">
                 <div className="flex items-center gap-2 mb-2"><Sparkles className="h-4 w-4 text-[#D4A396]"/><span className="text-xs font-extrabold uppercase tracking-wide">Univers ECLOSIA</span></div>
-                <p className="text-[11px] text-[#333333]/70 leading-relaxed">8 pépites Bébé à prix flash -10%. Coton BIO, bambou naturel, fabrication France/UE.</p>
+                <p className="text-[11px] text-[#333333]/70 leading-relaxed">Sélection d&apos;essentiels pour bébé à prix flash -10%. Coton BIO, bambou naturel, fabrication française.</p>
               </div>
               <div className="relative mb-6">
                 <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Rechercher..." className="w-full rounded-xl border border-[#333333]/15 py-2.5 pl-9 pr-8 text-xs font-medium focus:outline-none focus:border-[#333333]"/>
@@ -264,7 +270,7 @@ export default function VentesFlashPage8() {
               </div>
               <h3 className="text-[11px] font-extrabold uppercase tracking-widest text-[#333333]/50 mb-3">Filtrer par univers</h3>
               <div className="space-y-1.5">
-                {["Tous les produits","Bébé","Maman"].map(cat=>{
+                {["Tous les produits","Bébé"].map(cat=>{
                   const active = selectedCategory===cat;
                   return <button key={cat} onClick={()=>setSelectedCategory(cat)} className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-xs font-bold transition-all ${active?"bg-[#333333] text-white shadow-md":"bg-[#F9F6F4] border border-[#333333]/5 text-[#333333] hover:bg-[#F5EBE6]"}`}><span className="flex items-center gap-2.5"><span className={`h-2 w-2 rounded-full ${active?"bg-[#D4A396]":"bg-[#333333]/20"}`}/>{cat}</span>{active && <Check className="h-4 w-4 text-[#D4A396]"/>}</button>
                 })}
@@ -279,7 +285,6 @@ export default function VentesFlashPage8() {
                 <p className="font-bold">Aucun produit flash</p>
               </div>
             ) : (
-              // GRID ADAPTÉE : 1 colonne mobile, 2 tablettes, 4 sur grands écrans
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {filtered.map(product=>{
                   const pct = Math.round(((product.stockTotal-product.stockLeft)/product.stockTotal)*100);
@@ -289,7 +294,6 @@ export default function VentesFlashPage8() {
                       {/* CONTENEUR DES BADGES HAUT */}
                       <div className="absolute left-0 right-0 top-0 z-20 flex justify-between items-start p-2.5 pointer-events-none">
                         
-                        {/* GAUCHE : PASTILLE PROMO + DRAPEAU */}
                         <div className="flex flex-col gap-1.5 items-start">
                           <span className="pointer-events-auto rounded-full bg-[#333333] px-2.5 py-1 text-[9px] sm:text-[10px] font-extrabold text-white shadow-sm">
                             {product.discount}
@@ -300,7 +304,6 @@ export default function VentesFlashPage8() {
                           </span>
                         </div>
 
-                        {/* DROITE : RUBRIQUE + COEUR */}
                         <div className="flex flex-col gap-1.5 items-end">
                            <span className="pointer-events-auto rounded-full bg-white/95 backdrop-blur border border-[#333333]/10 px-2 py-1 text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wide text-[#333333] shadow-sm">
                              {product.rubrique.substring(0, 15)}{product.rubrique.length > 15 ? "..." : ""}

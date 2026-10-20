@@ -20,18 +20,12 @@ interface ShippingSelectorProps {
 const shippingOptions: ShippingOption[] = [
   {
     id: "standard",
-    name: "Livraison Standard à domicile",
-    delay: "7 à 10 jours ouvrés",
+    name: "Livraison Standard ",
+    delay: "2 à 4 jours ouvrés",
     price: 10.00, 
     icon: Truck,
   },
-  {
-    id: "relay",
-    name: "Point Relais Colis",
-    delay: "7 à 10 jours ouvrés",
-    price: 7.90,
-    icon: MapPin,
-  },
+  
   {
     id: "express",
     name: "Livraison Express",
