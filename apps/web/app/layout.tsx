@@ -20,9 +20,9 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "ECLOSIA — Bien-être Maternité & Bébé | France",
+  title: "ECLOSIA — Puériculture & Bébé | France",
   description:
-    "Plateforme intelligente de santé maternelle et de puériculture en France. Accompagnement par IA, soins experts, communauté et essentiels pour mamans et bébés.",
+    "Plateforme spécialisée en puériculture et articles de literie et soins pour bébé en France. Accompagnement par IA, qualité OEKO-TEX et essentiels pour bébés.",
   generator: "Next.js",
   applicationName: "ECLOSIA",
   referrer: "origin-when-cross-origin",
@@ -32,13 +32,13 @@ export const metadata: Metadata = {
     apple: "/logo.png",
   },
   keywords: [
-    "santé maternelle France",
+    "puériculture France",
     "bien-être bébé",
-    "produits maman et bébé",
-    "puériculture en ligne",
-    "conseillère IA maternité",
-    "maternité et post-partum",
-    "coffret maternité",
+    "produits bébé",
+    "literie bébé",
+    "conseillère IA puériculture",
+    "matelas berceau",
+    "draps housse bébé",
     "ECLOSIA",
   ],
   authors: [{ name: "ECLOSIA Team", url: siteUrl }],
@@ -57,9 +57,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "ECLOSIA — Bien-être Maternité & Bébé",
+    title: "ECLOSIA — Puériculture & Bébé",
     description:
-      "La référence du bien-être maternel et infantile en France. Soins experts, accompagnement intelligent et essentiels pour bébés et mamans.",
+      "La référence de la puériculture et du sommeil de bébé en France. Qualité certifiée OEKO-TEX, accompagnement intelligent et essentiels pour bébés.",
     url: siteUrl,
     siteName: "ECLOSIA",
     images: [
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "ECLOSIA Bien-être Maternité & Bébé France",
+        alt: "ECLOSIA Puériculture & Bébé France",
       },
     ],
     locale: "fr_FR",
@@ -75,9 +75,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ECLOSIA — Bien-être Maternité & Bébé",
+    title: "ECLOSIA — Puériculture & Bébé",
     description:
-      "Plateforme de santé maternelle et puériculture assistée par IA en France.",
+      "Plateforme de puériculture et articles pour bébé assistée par IA en France.",
     images: ["/twitter-image.jpg"],
   },
   robots: {

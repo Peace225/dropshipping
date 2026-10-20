@@ -5,12 +5,11 @@ import Link from "next/link";
 import { Sparkles, Heart, ShieldCheck, ShoppingBag, ArrowRight } from "lucide-react";
 import { HeroBanner } from "@/components/home/HeroBanner";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
-import { MaternityCareSection } from "@/components/home/MaternityCareSection";
 import { BabyCareSection } from "@/components/home/BabyCareSection";
 
 export const metadata = {
-  title: "ECLOSIA | Maternité, Puériculture & Bien-être Maman & Bébé",
-  description: "Plateforme d'excellence dédiée à la maternité et à la puériculture. Retrouvez nos essentiels, notre conseillère IA et des produits sélectionnés avec soin pour maman et bébé.",
+  title: "ECLOSIA — Puériculture & Bébé | France",
+  description: "Plateforme d'excellence dédiée à la puériculture et au sommeil de bébé. Retrouvez nos essentiels certifiés OEKO-TEX et sélectionnés avec soin.",
 };
 
 export default function HomePage() {
@@ -18,20 +17,22 @@ export default function HomePage() {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "name": "ECLOSIA",
-    "image": "https://eclosia.app/og-image.jpg",
-    "@id": "https://eclosia.app",
-    "url": "https://eclosia.app",
+    "image": "https://eclosia.shop/og-image.jpg",
+    "@id": "https://eclosia.shop",
+    "url": "https://eclosia.shop",
     "telephone": "",
     "address": {
       "@type": "PostalAddress",
-      "addressLocality": "Paris",
+      "streetAddress": "22 rue de la gerbe d'or",
+      "postalCode": "95490",
+      "addressLocality": "Vauréal",
       "addressRegion": "Île-de-France",
       "addressCountry": "FR"
     },
     "geo": {
       "@type": "GeoCoordinates",
-      "latitude": 48.8566,
-      "longitude": 2.3522
+      "latitude": 49.0333,
+      "longitude": 2.0333
     },
     "openingHoursSpecification": {
       "@type": "OpeningHoursSpecification",
@@ -52,7 +53,7 @@ export default function HomePage() {
       "https://instagram.com/eclosia"
     ],
     "priceRange": "$$",
-    "description": "Plateforme e-commerce spécialisée dans la maternité et le bien-être de bébé, offrant des articles de puériculture d'excellence et un accompagnement sur mesure."
+    "description": "Plateforme e-commerce spécialisée dans la puériculture, offrant des articles de literie et accessoires d'excellence pour bébé."
   };
 
   return (
@@ -68,9 +69,6 @@ export default function HomePage() {
 
         {/* Grille des produits phares / indispensables */}
         <FeaturedProducts />
-
-        {/* Section Soins Maman & Grossesse */}
-        <MaternityCareSection />
 
         {/* Section Soins & Cocon de Bébé */}
         <BabyCareSection />
