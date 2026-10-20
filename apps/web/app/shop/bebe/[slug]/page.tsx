@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Star, ShieldCheck, RotateCcw, Heart, Zap, Clock, ChevronRight, ChevronLeft, Package, ShoppingCart, Truck, ZoomIn } from "lucide-react";
+import { ArrowLeft, Star, ShieldCheck, RotateCcw, Heart, Zap, Clock, ChevronRight, ChevronLeft, Package, ShoppingCart, Truck, ZoomIn, Check } from "lucide-react";
 
 import { getSupabase } from "@/lib/supabase/client";
 import { useCart } from "@/context/cart-context";
@@ -21,6 +21,27 @@ const PLAN_INCLINE_SIZES = [
   { key: "30x35", label: "30x35 cm pour Berceau / Landau bébé", price: 19.90 },
   { key: "60x35", label: "60x35 cm pour Lit bébé 60x120 cm", price: 23.90 },
   { key: "70x35", label: "70x35 cm pour Lit bébé 70x140 cm", price: 24.90 }
+];
+
+// Les 6 coloris du Tapis à langer nomade (sans blanc)
+const TAPIS_LANGER_COLORS = [
+  { key: "vert-anis", label: "Vert anis", hex: "#9AB833", image: "https://www.lamaisonenchiffon.com/img/p/1/5/8/0/2/15802.jpg" },
+  { key: "gris", label: "Gris anthracite", hex: "#374151", image: "https://www.lamaisonenchiffon.com/img/p/1/7/6/0/1760.jpg" },
+  { key: "orange", label: "Orange", hex: "#C2593F", image: "https://www.lamaisonenchiffon.com/img/p/1/5/7/9/9/15799.jpg" },
+  { key: "bleu-ciel", label: "Bleu", hex: "#2B6CB0", image: "https://www.lamaisonenchiffon.com/img/p/1/5/8/0/0/15800.jpg" },
+  { key: "bleu-marine", label: "Bleu marine", hex: "#1A365D", image: "https://www.lamaisonenchiffon.com/img/p/1/5/8/0/1/15801.jpg" },
+  { key: "violet", label: "Violet", hex: "#6B46C1", image: "https://www.lamaisonenchiffon.com/img/p/1/5/8/0/3/15803.jpg" },
+];
+
+// Les 7 coloris exacts du Matelas à langer bébé 45x70 cm Coton enduit (dans l'ordre strict des pastilles de gauche à droite)
+const MATELAS_LANGER_COLORS = [
+  { key: "gris-clair", label: "Gris clair", hex: "#D1D5DB", border: true, image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/8/9/15589.jpg" },
+  { key: "anthracite", label: "Gris anthracite", hex: "#374151", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/7/15567.jpg" },
+  { key: "camel", label: "Camel", hex: "#8C6239", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/6/15566.jpg" },
+  { key: "moutarde", label: "Jaune moutarde", hex: "#B59410", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/8/15568.jpg" },
+  { key: "bleu-paon", label: "Bleu canard", hex: "#0F4C5C", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/7/1/15571.jpg" },
+  { key: "terracotta", label: "Terracotta", hex: "#8D4943", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/7/2/15572.jpg" },
+  { key: "ensemble", label: "Vue d'ensemble (Tous coloris)", hex: "#2D5A27", image: "https://www.lamaisonenchiffon.com/img/p/3/8/6/5/3865.jpg" },
 ];
 
 export default function BebeProductDetailPage() {
@@ -44,6 +65,9 @@ export default function BebeProductDetailPage() {
 
   // État pour la taille (uniquement pour le plan incliné)
   const [selectedSizeKey, setSelectedSizeKey] = useState<string>("30x35");
+
+  // État pour la couleur (pour le tapis à langer nomade ou le matelas à langer 45x70)
+  const [selectedColorKey, setSelectedColorKey] = useState<string>("");
   
   const sliderRef = useRef<HTMLDivElement>(null);
   const scrollSlider = (dir: "left" | "right") => {
@@ -52,8 +76,27 @@ export default function BebeProductDetailPage() {
   
   const activeDeliveryPriceStr = "10,00 €";
   
-  // Vérifie si le produit affiché est bien le plan incliné
-  const isPlanIncline = product?.slug?.includes("plan-incline");
+  // Vérifie le type de produit affiché
+  const isPlanIncline = slug?.includes("plan-incline") || product?.slug?.includes("plan-incline");
+  const isTapisLanger =
+    slug?.includes("tapis-a-langer") ||
+    product?.slug?.includes("tapis-a-langer") ||
+    product?.name?.toLowerCase().includes("tapis à langer");
+  const isMatelasLanger =
+    !isTapisLanger &&
+    !slug?.includes("housse") &&
+    !product?.slug?.includes("housse") && (
+      slug?.includes("matelas-a-langer") ||
+      product?.slug?.includes("matelas-a-langer") ||
+      product?.name?.toLowerCase().includes("matelas à langer")
+    );
+
+  // Palette de couleurs active selon le produit
+  const activeColorPalette = isTapisLanger
+    ? TAPIS_LANGER_COLORS
+    : isMatelasLanger
+    ? MATELAS_LANGER_COLORS
+    : [];
 
   // Calcul du prix selon qu'il s'agit du plan incliné ou d'un autre produit standard
   const currentNumericPrice = isPlanIncline 
@@ -63,19 +106,41 @@ export default function BebeProductDetailPage() {
   const currentPriceFormatted = `${currentNumericPrice.toFixed(2).replace(".",",")} €`;
   const currentOldPriceFormatted = `${(currentNumericPrice * 1.25).toFixed(2).replace(".",",")} €`;
 
+  const handleColorSelect = (colorObj: { key: string; label: string; hex: string; image?: string }, index: number) => {
+    setSelectedColorKey(colorObj.key);
+    if (colorObj.image) {
+      setMainImage(colorObj.image);
+    } else if (product?.images?.[index]) {
+      setMainImage(product.images[index]);
+    }
+  };
+
   const handleBuy = () => {
     if(!product) return;
     const sizeObj = isPlanIncline ? PLAN_INCLINE_SIZES.find(s => s.key === selectedSizeKey) : null;
+    const colorObj = activeColorPalette.length > 0 ? activeColorPalette.find(c => c.key === selectedColorKey) || activeColorPalette[0] : null;
     
+    let itemId = product.id;
+    let itemName = product.name;
+
+    if (sizeObj) {
+      itemId = `${product.id}-${sizeObj.key}`;
+      itemName = `${product.name} (${sizeObj.label})`;
+    } else if (colorObj) {
+      itemId = `${product.id}-${colorObj.key}`;
+      itemName = `${product.name} (${colorObj.label})`;
+    }
+
     const item = {
-      id: sizeObj ? `${product.id}-${sizeObj.key}` : product.id,
-      name: sizeObj ? `${product.name} (${sizeObj.label})` : product.name,
+      id: itemId,
+      name: itemName,
       slug: product.slug,
       price: currentNumericPrice,
       priceFormatted: currentPriceFormatted,
       image: mainImage,
       quantity: 1,
       size: sizeObj ? sizeObj.label : undefined,
+      color: colorObj ? colorObj.label : undefined,
       brand: product.brand,
       fabrication: product.fabrication,
       fabricationFlag: product.fabricationFlag,
@@ -172,6 +237,18 @@ export default function BebeProductDetailPage() {
         reviewsCount: Math.floor(Math.random()*80)+20
       });
       setMainImage(formattedImages[0]);
+
+      // Synchroniser la couleur initiale selon le produit
+      const prodIsTapis = slug?.includes("tapis-a-langer") || prodSimple.slug?.includes("tapis-a-langer") || prodSimple.name?.toLowerCase().includes("tapis à langer");
+      const prodIsMatelasLanger = !prodIsTapis && !slug?.includes("housse") && !prodSimple.slug?.includes("housse") && (slug?.includes("matelas-a-langer") || prodSimple.slug?.includes("matelas-a-langer") || prodSimple.name?.toLowerCase().includes("matelas à langer"));
+
+      if (prodIsTapis) {
+        const match = TAPIS_LANGER_COLORS.find(c => c.image === formattedImages[0]) || TAPIS_LANGER_COLORS[0];
+        setSelectedColorKey(match.key);
+      } else if (prodIsMatelasLanger) {
+        const match = MATELAS_LANGER_COLORS.find(c => c.image === formattedImages[0]) || MATELAS_LANGER_COLORS[6];
+        setSelectedColorKey(match.key);
+      }
       
       const { data: sugData } = await supabase
         .from("products")
@@ -231,11 +308,16 @@ export default function BebeProductDetailPage() {
     return "Offrez à votre bébé douceur et sécurité. Matériaux certifiés OEKO-TEX, fabrication soignée. Entretien facile, lavable à 60°, respirant et anti-allergique.";
   }
 
+  // Nettoyage de la description pour éviter tout doublon d'affichage
   const rawDesc = getMarketingDescription(product);
-  const descLines = (rawDesc||"").split("\n");
-  const bulletLines = descLines.filter((l:string) => l.trim().startsWith("-") || l.trim().startsWith("•"));
-  const resumeLine = descLines.find((l:string) => l.toLowerCase().includes("très pratique") || l.toLowerCase().includes("résumé")) || "";
-  const descText = descLines.filter((l:string) => !l.toLowerCase().includes("très pratique") && !l.toLowerCase().includes("résumé") && !l.trim().startsWith("-") && !l.trim().startsWith("•") && l.trim().length > 0).join("\n\n");
+  const descLines = (rawDesc || "").split("\n").map((l: string) => l.trim()).filter(Boolean);
+  const resumeLine = descLines.find((l: string) => l.toLowerCase().includes("très pratique") || l.toLowerCase().includes("résumé")) || "";
+  const bulletLines = descLines.filter((l: string) => l.startsWith("-") || l.startsWith("•"));
+  const descText = descLines
+    .filter((l: string) => l !== resumeLine && !l.startsWith("-") && !l.startsWith("•"))
+    .join("\n\n");
+
+  const activeColorObj = activeColorPalette.find(c => c.key === selectedColorKey) || activeColorPalette[0];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F5EBE6]/30 via-white to-[#F5EBE6]/20 pb-16 pt-24">
@@ -254,7 +336,17 @@ export default function BebeProductDetailPage() {
               </div>
               <div className="flex gap-2 overflow-x-auto pb-2 mb-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden">
                 {product.images.map((imgUrl: string, idx: number)=>(
-                  <button key={idx} onClick={()=>setMainImage(imgUrl)} className={`relative aspect-square w-16 shrink-0 snap-start rounded-lg overflow-hidden border bg-white p-1 cursor-pointer ${mainImage===imgUrl?"border-[#333333] ring-2 ring-[#333333]/20":"border-[#333333]/10 hover:border-[#333333]/30"}`}>
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setMainImage(imgUrl);
+                      if (activeColorPalette.length > 0) {
+                        const matched = activeColorPalette.find(c => c.image === imgUrl);
+                        if (matched) setSelectedColorKey(matched.key);
+                      }
+                    }}
+                    className={`relative aspect-square w-16 shrink-0 snap-start rounded-lg overflow-hidden border bg-white p-1 cursor-pointer ${mainImage===imgUrl?"border-[#333333] ring-2 ring-[#333333]/20":"border-[#333333]/10 hover:border-[#333333]/30"}`}
+                  >
                     <img src={imgUrl} alt={`Vue ${idx+1}`} className="w-full h-full object-contain mix-blend-multiply" />
                     <span className="absolute bottom-0 right-0 bg-black/70 text-white text-[10px] px-1 rounded-tl">{idx+1}</span>
                   </button>
@@ -303,13 +395,46 @@ export default function BebeProductDetailPage() {
                 <h3 className="text-xs font-extrabold uppercase tracking-wider mb-2 flex items-center gap-2 text-[#333333]"><ShieldCheck className="w-4 h-4 text-[#6E857B]"/> Description du produit</h3>
                 {resumeLine && <p className="text-xs font-bold text-[#333333] mb-3">{resumeLine}</p>}
                 <div className="text-xs text-[#333333]/80 leading-relaxed">
-                  <p className="whitespace-pre-wrap">{descText || rawDesc}</p>
+                  {descText && <p className="whitespace-pre-wrap mb-2">{descText}</p>}
                   {bulletLines.length > 0 && (
-                    <ul className="mt-3 list-disc list-inside space-y-1">
+                    <ul className="list-disc list-inside space-y-1.5">
                       {bulletLines.map((b:string, i:number)=><li key={i}>{b.replace(/^[-•]\s*/,"")}</li>)}
                     </ul>
                   )}
                 </div>
+
+                {/* BLOC DE SÉLECTION DE COULEUR INTÉGRÉ DANS LA DESCRIPTION (POUR TAPIS À LANGER & MATELAS À LANGER) */}
+                {activeColorPalette.length > 0 && activeColorObj && (
+                  <div className="mt-4 pt-3 border-t border-[#333333]/10">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="text-xs font-bold text-[#333333]">Couleur :</span>
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        {activeColorPalette.map((c: any, index: number) => {
+                          const isSelected = selectedColorKey === c.key;
+                          return (
+                            <button
+                              key={c.key}
+                              type="button"
+                              onClick={() => handleColorSelect(c, index)}
+                              title={c.label}
+                              style={{ backgroundColor: c.hex }}
+                              className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-sm ${
+                                c.border ? "border border-gray-300" : ""
+                              } ${
+                                isSelected ? "ring-2 ring-offset-2 ring-[#333333] scale-110" : "hover:scale-105 opacity-90 hover:opacity-100"
+                              }`}
+                            >
+                              {isSelected && (
+                                <Check className={`w-3.5 h-3.5 stroke-[3] ${c.key === "gris-clair" ? "text-[#333333]" : "text-white"}`} />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <p className="text-xs font-bold text-[#333333] mt-2">{activeColorObj.label}</p>
+                  </div>
+                )}
               </div>
               <p className="text-xs text-[#31A039] font-medium mb-1">En stock - Expédition en 2 à 4 jours</p>
               <p className="text-xs text-[#333333]/80 mb-3">+ livraison standard à <span className="font-bold">{activeDeliveryPriceStr}</span> (offerte dès 89 € d&apos;achats)</p>
