@@ -33,14 +33,13 @@ const TAPIS_LANGER_COLORS = [
   { key: "violet", label: "Violet", hex: "#6B46C1", image: "https://www.lamaisonenchiffon.com/img/p/1/5/8/0/3/15803.jpg" },
 ];
 
-// Les 7 coloris exacts du Matelas à langer bébé 45x70 cm Coton enduit (corrigés)
+// Les 6 coloris uniques du Matelas à langer bébé 45x70 cm Coton enduit
 const MATELAS_LANGER_COLORS = [
   { key: "gris-clair", label: "Gris clair", hex: "#D1D5DB", border: true, image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/7/1/15571.jpg" },
   { key: "anthracite", label: "Gris anthracite", hex: "#374151", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/8/15568.jpg" },
   { key: "camel", label: "Camel", hex: "#8C6239", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/7/2/15572.jpg" },
-  { key: "terracotta", label: "Terracotta", hex: "#C2593F", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/7/15567.jpg" }, // <-- Corrigé ici en Terracotta
+  { key: "terracotta", label: "Terracotta", hex: "#C2593F", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/7/15567.jpg" },
   { key: "bleu-canard", label: "Bleu canard", hex: "#0F4C5C", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/6/15566.jpg" },
-  { key: "bleu-detail", label: "Bleu canard (Détail)", hex: "#164E63", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/8/9/15589.jpg" },
   { key: "ensemble", label: "Vue d'ensemble", hex: "#6E857B", image: "https://www.lamaisonenchiffon.com/img/p/3/8/6/5/3865.jpg" },
 ];
 
