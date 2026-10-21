@@ -33,14 +33,14 @@ const TAPIS_LANGER_COLORS = [
   { key: "violet", label: "Violet", hex: "#6B46C1", image: "https://www.lamaisonenchiffon.com/img/p/1/5/8/0/3/15803.jpg" },
 ];
 
-// Les 6 coloris uniques du Matelas à langer bébé 45x70 cm Coton enduit
+// Les coloris du Matelas à langer bébé 45x70 cm Coton enduit rigoureusement synchronisés
 const MATELAS_LANGER_COLORS = [
-  { key: "gris-clair", label: "Gris clair", hex: "#D1D5DB", border: true, image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/7/1/15571.jpg" },
-  { key: "anthracite", label: "Gris anthracite", hex: "#374151", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/8/15568.jpg" },
-  { key: "camel", label: "Camel", hex: "#8C6239", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/7/2/15572.jpg" },
-  { key: "terracotta", label: "Terracotta", hex: "#C2593F", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/7/15567.jpg" },
-  { key: "bleu-canard", label: "Bleu canard", hex: "#0F4C5C", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/6/15566.jpg" },
-  { key: "ensemble", label: "Vue d'ensemble", hex: "#6E857B", image: "https://www.lamaisonenchiffon.com/img/p/3/8/6/5/3865.jpg" },
+  { key: "gris-clair", label: "Gris clair", hex: "#D1D5DB", border: true, image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/7/1/15571.jpg" }, // 1. Écru / Gris clair
+  { key: "anthracite", label: "Gris anthracite", hex: "#374151", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/8/15568.jpg" }, // 2. Gris anthracite
+  { key: "bleu-marine", label: "Bleu marine / Bleu foncé", hex: "#1A365D", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/7/2/15572.jpg" }, // 3. Bleu foncé (associé à la 3e pastille)
+  { key: "terracotta", label: "Terracotta", hex: "#C2593F", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/7/15567.jpg" }, // 4. Terracotta
+  { key: "bleu-canard", label: "Bleu canard", hex: "#0F4C5C", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/6/15566.jpg" }, // 5. Bleu canard
+  { key: "ensemble", label: "Vue d'ensemble", hex: "#6E857B", image: "https://www.lamaisonenchiffon.com/img/p/3/8/6/5/3865.jpg" }, // 6. Vue groupée
 ];
 
 export default function BebeProductDetailPage() {
