@@ -21,7 +21,7 @@ const shippingOptions: ShippingOption[] = [
   {
     id: "standard",
     name: "Livraison Standard ",
-    delay: "2 à 4 jours ouvrés",
+    delay: "3 à 5 jours ouvrés",
     price: 10.00, 
     icon: Truck,
   },
@@ -29,7 +29,7 @@ const shippingOptions: ShippingOption[] = [
   {
     id: "express",
     name: "Livraison Express",
-    delay: "24 à 48 heures",
+    delay: "2 à 3 jours ouvrés",
     price: 15.00,
     icon: Zap,
   },
