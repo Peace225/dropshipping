@@ -23,7 +23,13 @@ const PLAN_INCLINE_SIZES = [
   { key: "70x35", label: "70x35 cm pour Lit bébé 70x140 cm", price: 24.90 }
 ];
 
-// Les 6 coloris du Tapis à langer nomade (sans blanc)
+// Les coloris exacts pour la Housse matelas à langer
+const HOUSSE_LANGER_COLORS = [
+  { key: "ecru", label: "Écru", hex: "#F5EBE0", border: true, image: "https://www.lamaisonenchiffon.com/img/p/1/6/3/5/1635.jpg" },
+  { key: "gris", label: "Gris", hex: "#D1D5DB", border: true, image: "https://www.lamaisonenchiffon.com/img/p/1/9/4/8/1948.jpg" },
+];
+
+// Les 6 coloris du Tapis à langer nomade
 const TAPIS_LANGER_COLORS = [
   { key: "vert-anis", label: "Vert anis", hex: "#9AB833", image: "https://www.lamaisonenchiffon.com/img/p/1/5/8/0/2/15802.jpg" },
   { key: "gris", label: "Gris anthracite", hex: "#374151", image: "https://www.lamaisonenchiffon.com/img/p/1/7/6/0/1760.jpg" },
@@ -33,14 +39,14 @@ const TAPIS_LANGER_COLORS = [
   { key: "violet", label: "Violet", hex: "#6B46C1", image: "https://www.lamaisonenchiffon.com/img/p/1/5/8/0/3/15803.jpg" },
 ];
 
-// Les coloris du Matelas à langer bébé 45x70 cm Coton enduit rigoureusement synchronisés
+// Les coloris du Matelas à langer bébé 45x70 cm Coton enduit
 const MATELAS_LANGER_COLORS = [
-  { key: "gris-clair", label: "Gris clair", hex: "#D1D5DB", border: true, image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/7/1/15571.jpg" }, // 1. Écru / Gris clair
-  { key: "anthracite", label: "Gris anthracite", hex: "#374151", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/8/15568.jpg" }, // 2. Gris anthracite
-  { key: "bleu-marine", label: "Bleu marine / Bleu foncé", hex: "#1A365D", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/7/2/15572.jpg" }, // 3. Bleu foncé (associé à la 3e pastille)
-  { key: "terracotta", label: "Terracotta", hex: "#C2593F", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/7/15567.jpg" }, // 4. Terracotta
-  { key: "bleu-canard", label: "Bleu canard", hex: "#0F4C5C", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/6/15566.jpg" }, // 5. Bleu canard
-  { key: "ensemble", label: "Vue d'ensemble", hex: "#6E857B", image: "https://www.lamaisonenchiffon.com/img/p/3/8/6/5/3865.jpg" }, // 6. Vue groupée
+  { key: "gris-clair", label: "Gris clair", hex: "#D1D5DB", border: true, image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/7/1/15571.jpg" }, 
+  { key: "anthracite", label: "Gris anthracite", hex: "#374151", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/8/15568.jpg" }, 
+  { key: "bleu-marine", label: "Bleu marine / Bleu foncé", hex: "#1A365D", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/7/2/15572.jpg" }, 
+  { key: "terracotta", label: "Terracotta", hex: "#C2593F", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/7/15567.jpg" }, 
+  { key: "bleu-canard", label: "Bleu canard", hex: "#0F4C5C", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/6/15566.jpg" }, 
+  { key: "ensemble", label: "Vue d'ensemble", hex: "#6E857B", image: "https://www.lamaisonenchiffon.com/img/p/3/8/6/5/3865.jpg" }, 
 ];
 
 export default function BebeProductDetailPage() {
@@ -65,7 +71,7 @@ export default function BebeProductDetailPage() {
   // État pour la taille (uniquement pour le plan incliné)
   const [selectedSizeKey, setSelectedSizeKey] = useState<string>("30x35");
 
-  // État pour la couleur (pour le tapis à langer nomade ou le matelas à langer 45x70)
+  // État pour la couleur
   const [selectedColorKey, setSelectedColorKey] = useState<string>("");
   
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -91,12 +97,18 @@ export default function BebeProductDetailPage() {
       product?.slug?.includes("matelas-a-langer") ||
       product?.name?.toLowerCase().includes("matelas à langer")
     );
+  const isHousseLanger =
+    slug?.includes("housse") ||
+    product?.slug?.includes("housse") ||
+    product?.name?.toLowerCase().includes("housse");
 
   // Palette de couleurs active selon le produit
   const activeColorPalette = isTapisLanger
     ? TAPIS_LANGER_COLORS
     : isMatelasLanger
     ? MATELAS_LANGER_COLORS
+    : isHousseLanger
+    ? HOUSSE_LANGER_COLORS
     : [];
 
   // Calcul du prix selon qu'il s'agit du plan incliné ou d'un autre produit standard
@@ -242,12 +254,16 @@ export default function BebeProductDetailPage() {
       // Synchroniser la couleur initiale selon le produit
       const prodIsTapis = slug?.includes("tapis-a-langer") || prodSimple.slug?.includes("tapis-a-langer") || prodSimple.name?.toLowerCase().includes("tapis à langer");
       const prodIsMatelasLanger = !prodIsTapis && !slug?.includes("housse") && !prodSimple.slug?.includes("housse") && (slug?.includes("matelas-a-langer") || prodSimple.slug?.includes("matelas-a-langer") || prodSimple.name?.toLowerCase().includes("matelas à langer"));
+      const prodIsHousseLanger = slug?.includes("housse") || prodSimple.slug?.includes("housse") || prodSimple.name?.toLowerCase().includes("housse");
 
       if (prodIsTapis) {
         const match = TAPIS_LANGER_COLORS.find(c => c.image === formattedImages[0]) || TAPIS_LANGER_COLORS[0];
         setSelectedColorKey(match.key);
       } else if (prodIsMatelasLanger) {
-        const match = MATELAS_LANGER_COLORS.find(c => c.image === formattedImages[0]) || MATELAS_LANGER_COLORS[6];
+        const match = MATELAS_LANGER_COLORS.find(c => c.image === formattedImages[0]) || MATELAS_LANGER_COLORS[5];
+        setSelectedColorKey(match.key);
+      } else if (prodIsHousseLanger) {
+        const match = HOUSSE_LANGER_COLORS.find(c => c.image === formattedImages[0]) || HOUSSE_LANGER_COLORS[0];
         setSelectedColorKey(match.key);
       }
       
@@ -404,7 +420,7 @@ export default function BebeProductDetailPage() {
                   )}
                 </div>
 
-                {/* BLOC DE SÉLECTION DE COULEUR INTÉGRÉ DANS LA DESCRIPTION (POUR TAPIS À LANGER & MATELAS À LANGER) */}
+                {/* BLOC DE SÉLECTION DE COULEUR INTÉGRÉ DANS LA DESCRIPTION */}
                 {activeColorPalette.length > 0 && activeColorObj && (
                   <div className="mt-4 pt-3 border-t border-[#333333]/10">
                     <div className="flex items-center gap-3 flex-wrap">
@@ -426,7 +442,7 @@ export default function BebeProductDetailPage() {
                               }`}
                             >
                               {isSelected && (
-                                <Check className={`w-3.5 h-3.5 stroke-[3] ${c.key === "gris-clair" ? "text-[#333333]" : "text-white"}`} />
+                                <Check className={`w-3.5 h-3.5 stroke-[3] ${c.key === "gris-clair" || c.key === "ecru" ? "text-[#333333]" : "text-white"}`} />
                               )}
                             </button>
                           );

@@ -107,8 +107,8 @@ export function FeaturedProducts() {
         const originalPrice = Number(item.original_price_backup || item.price);
         
         const manuf = item.manufacturer_id ? manufById[item.manufacturer_id] : null;
-        const rawFab = manuf?.label_fr || item.brand || "Fabriqué en France";
-        const fabLabel = rawFab.replace(/\/UE|UE|Europe/gi, "").trim() || "Fabriqué en France";
+        const rawFab = manuf?.label_fr || item.brand || "ECLOSIA";
+        const fabLabel = "ECLOSIA";
         const flag = (manuf?.flag_emoji || "🇫🇷").replace("🇪🇺", "").trim() || "🇫🇷";
         const short = getMarketingShort(item);
 
@@ -172,9 +172,7 @@ export function FeaturedProducts() {
                   </span>
                 </div>
                 <p className="text-[11px] sm:text-xs text-white/70 mt-1 flex items-center gap-1.5 sm:gap-2">
-                  <span>🔥 Livraison 10,00 € (Offerte dès 89,00 €) !</span>
-                  <span className="w-1 h-1 bg-white/30 rounded-full"></span>
-                  <span>🇫🇷 Livraison France 2-4 jours</span>
+                  <span>🔥 Livraison standard 10,00 € (3 à 5 jours) | Express 15,00 € (2 à 3 jours) - Offerte dès 89,00 € !</span>
                 </p>
               </div>
             </div>
@@ -197,7 +195,7 @@ export function FeaturedProducts() {
           </div>
           
           <div className="bg-[#F5EBE6]/40 px-4 py-2.5 sm:px-5 sm:py-3 flex flex-wrap items-center justify-between sm:justify-start gap-2 sm:gap-3 text-[10px] sm:text-xs font-bold text-[#333333]/70">
-            <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B]"/>Livraison 10,00 € (Offerte dès 89,00 € d'achats)</span>
+            <span className="flex items-center gap-1.5"><Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B]"/>Standard 10,00 € (3-5 j) | Express 15,00 € (2-3 j) • Offerte dès 89,00 €</span>
             <span className="w-px h-3 bg-[#333333]/15 hidden sm:block"></span>
             <span className="flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#6E857B]"/>Certifié OEKO-TEX • Bambou & Coton Bio</span>
           </div>
@@ -222,7 +220,7 @@ export function FeaturedProducts() {
                 <div className="absolute left-0 right-0 top-0 z-20 flex justify-between items-start p-2.5 sm:p-3 pointer-events-none">
                   <div className="flex flex-col gap-1.5 items-start">
                     <span className="pointer-events-auto rounded-full bg-[#333333] px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-extrabold text-white shadow-sm">{product.badgeText}</span>
-                    <span className="pointer-events-auto rounded-full bg-white/95 backdrop-blur border border-[#333333]/10 px-2 py-0.5 text-[8px] sm:text-[9px] font-bold flex items-center gap-1 shadow-sm text-[#333333]"><span>{product.flag}</span><span className="truncate max-w-[60px] sm:max-w-[70px]">{product.fabrication.split(" ").slice(0,2).join(" ")}</span></span>
+                    <span className="pointer-events-auto rounded-full bg-white/95 backdrop-blur border border-[#333333]/10 px-2 py-0.5 text-[8px] sm:text-[9px] font-bold flex items-center gap-1 shadow-sm text-[#333333]"><span>{product.flag}</span><span className="truncate max-w-[60px] sm:max-w-[70px]">ECLOSIA</span></span>
                   </div>
                   <span className="pointer-events-auto rounded-full bg-white/95 backdrop-blur border border-[#333333]/10 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wide text-[#333333] shadow-sm">{product.universe}</span>
                 </div>
