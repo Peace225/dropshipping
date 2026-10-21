@@ -74,7 +74,9 @@ export default function BebeProductDetailPage() {
     if(sliderRef.current) sliderRef.current.scrollBy({ left: dir==="left"?-250:250, behavior:"smooth" });
   };
   
-  const activeDeliveryPriceStr = "10,00 €";
+  // Tarifs et délais dynamiques selon le mode de livraison choisi
+  const activeDeliveryPriceStr = deliveryMethod === "rapide" ? "15,00 €" : "10,00 €";
+  const activeDeliveryDelayStr = deliveryMethod === "rapide" ? "2 à 3 jours ouvrés" : "3 à 5 jours ouvrés";
   
   // Vérifie le type de produit affiché
   const isPlanIncline = slug?.includes("plan-incline") || product?.slug?.includes("plan-incline");
@@ -144,7 +146,7 @@ export default function BebeProductDetailPage() {
       brand: product.brand,
       fabrication: product.fabrication,
       fabricationFlag: product.fabricationFlag,
-      delivery: { method: deliveryMethod, region: selectedRegion, city: selectedCity, priceStr: activeDeliveryPriceStr }
+      delivery: { method: deliveryMethod, region: selectedRegion, city: selectedCity, priceStr: activeDeliveryPriceStr, delayStr: activeDeliveryDelayStr }
     };
     if (cart?.addItem) cart.addItem(item);
     else if (cart?.add) cart.add(item);
@@ -436,8 +438,14 @@ export default function BebeProductDetailPage() {
                   </div>
                 )}
               </div>
-              <p className="text-xs text-[#31A039] font-medium mb-1">En stock - Expédition en 2 à 4 jours</p>
-              <p className="text-xs text-[#333333]/80 mb-3">+ livraison standard à <span className="font-bold">{activeDeliveryPriceStr}</span> (offerte dès 89 € d&apos;achats)</p>
+              <p className="text-xs text-[#31A039] font-medium mb-1">En stock - Livraison en {activeDeliveryDelayStr}</p>
+              <p className="text-xs text-[#333333]/80 mb-3">
+                {deliveryMethod === "rapide"
+                  ? `+ livraison rapide à `
+                  : `+ livraison standard à `}
+                <span className="font-bold">{activeDeliveryPriceStr}</span>
+                {deliveryMethod === "standard" ? " (offerte dès 89 € d'achats)" : " (2 à 3 jours ouvrés)"}
+              </p>
               <div className="flex items-center gap-1.5 mb-5 text-amber-500">{[...Array(4)].map((_,i)=><Star key={i} className="w-4 h-4 fill-current"/>)}<Star className="w-4 h-4 text-gray-300"/><span className="text-xs text-[#333333]/60 ml-1">({product.reviewsCount} avis)</span></div>
               <hr className="border-[#333333]/10 mb-5"/>
               <div className="mt-auto">
@@ -455,8 +463,18 @@ export default function BebeProductDetailPage() {
               <select className="w-full text-sm border border-[#333333]/20 rounded-xl p-2.5 mb-3 bg-white text-[#333333] font-medium outline-none focus:border-[#333333] cursor-pointer" value={selectedRegion} onChange={(e)=>{const nr=e.target.value; setSelectedRegion(nr); setSelectedCity(locations[nr]?.[0]?.name||"");}}>{Object.keys(locations).map(r=><option key={r} value={r}>{r}</option>)}</select>
               <select className="w-full text-sm border border-[#333333]/20 rounded-xl p-2.5 mb-5 bg-white text-[#333333] font-medium outline-none focus:border-[#333333] cursor-pointer" value={selectedCity} onChange={e=>setSelectedCity(e.target.value)}>{(locations[selectedRegion]||[]).map((c:any)=><option key={c.name} value={c.name}>{c.name}</option>)}</select>
               <div className="border border-[#333333]/10 rounded-xl divide-y divide-[#333333]/10 bg-[#F9F6F4] text-[#333333]">
-                <div className="p-3.5 flex gap-3"><Package className="w-4 h-4 shrink-0 text-[#333333]"/><div><p className="text-xs font-extrabold mb-1">Livraison ({deliveryMethod === "rapide" ? "Rapide" : "Standard"})</p><p className="text-xs">Frais: <span className="font-bold text-[#6E857B]">{activeDeliveryPriceStr}</span> (Offerte dès 89 €)</p><p className="text-[10px] text-[#333333]/70">Délai : 2 à 4 jours ouvrés</p></div></div>
-                <div className="p-3.5 flex gap-3"><RotateCcw className="w-4 h-4 shrink-0 text-[#333333]"/><div><p className="text-xs font-extrabold mb-1">Retour</p><p className="text-xs text-[#333333]/70">30 jours pour changer d&apos;avis</p></div></div>
+                <div className="p-3.5 flex gap-3">
+                  <Package className="w-4 h-4 shrink-0 text-[#333333]"/>
+                  <div>
+                    <p className="text-xs font-extrabold mb-1">Livraison ({deliveryMethod === "rapide" ? "Rapide" : "Standard"})</p>
+                    <p className="text-xs">
+                      Frais: <span className="font-bold text-[#6E857B]">{activeDeliveryPriceStr}</span>
+                      {deliveryMethod === "standard" && " (Offerte dès 89 €)"}
+                    </p>
+                    <p className="text-[10px] text-[#333333]/70">Délai : {activeDeliveryDelayStr}</p>
+                  </div>
+                </div>
+                <div className="p-3.5 flex gap-3"><RotateCcw className="w-4 h-4 shrink-0 text-[#333333]"/><div><p className="text-xs font-extrabold mb-1">Retour</p><p className="text-xs text-[#333333]/70">20 jours pour changer d&apos;avis</p></div></div>
                 <div className="p-3.5 flex gap-3"><ShieldCheck className="w-4 h-4 shrink-0 text-[#333333]"/><div><p className="text-xs font-extrabold mb-1">Garantie</p><p className="text-xs text-[#333333]/70">12 mois</p></div></div>
               </div>
             </div>
