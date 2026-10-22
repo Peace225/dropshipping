@@ -23,6 +23,13 @@ const PLAN_INCLINE_SIZES = [
   { key: "70x35", label: "70x35 cm pour Lit bébé 70x140 cm", price: 24.90 }
 ];
 
+// Les coloris du Drap housse 32x72 Couffin Bambou
+const DRAP_BAMBOU_COLORS = [
+  { key: "blanc", label: "Blanc", hex: "#FFFFFF", border: true, image: "https://www.lamaisonenchiffon.com/img/p/1/6/8/3/1683.jpg" },
+  { key: "anis", label: "Anis", hex: "#9AB833", image: "https://www.lamaisonenchiffon.com/img/p/9/3/1/2/9312.jpg" },
+  { key: "bleu-ciel", label: "Bleu ciel", hex: "#2B6CB0", image: "https://www.lamaisonenchiffon.com/img/p/9/3/1/3/9313.jpg" },
+];
+
 // Les coloris exacts pour la Housse matelas à langer
 const HOUSSE_LANGER_COLORS = [
   { key: "ecru", label: "Écru", hex: "#F5EBE0", border: true, image: "https://www.lamaisonenchiffon.com/img/p/1/6/3/5/1635.jpg" },
@@ -33,10 +40,10 @@ const HOUSSE_LANGER_COLORS = [
 const TAPIS_LANGER_COLORS = [
   { key: "vert-anis", label: "Vert anis", hex: "#9AB833", image: "https://www.lamaisonenchiffon.com/img/p/1/5/8/0/2/15802.jpg" },
   { key: "gris", label: "Gris anthracite", hex: "#374151", image: "https://www.lamaisonenchiffon.com/img/p/1/7/6/0/1760.jpg" },
-  { key: "orange", label: "Orange", hex: "#C2593F", image: "https://www.lamaisonenchiffon.com/img/p/1/5/7/9/9/15799.jpg" },
+  { key: "orange", label: "Orange", hex: "#C2593F", image: "https://www.lamaisonenchiffon.com/img/p/1/5/8/0/3/15803.jpg" },
   { key: "bleu-ciel", label: "Bleu", hex: "#2B6CB0", image: "https://www.lamaisonenchiffon.com/img/p/1/5/8/0/0/15800.jpg" },
   { key: "bleu-marine", label: "Bleu marine", hex: "#1A365D", image: "https://www.lamaisonenchiffon.com/img/p/1/5/8/0/1/15801.jpg" },
-  { key: "violet", label: "Violet", hex: "#6B46C1", image: "https://www.lamaisonenchiffon.com/img/p/1/5/8/0/3/15803.jpg" },
+  { key: "violet", label: "Violet", hex: "#6B46C1", image: "https://www.lamaisonenchiffon.com/img/p/1/5/7/9/9/15799.jpg" },
 ];
 
 // Les coloris du Matelas à langer bébé 45x70 cm Coton enduit
@@ -46,7 +53,6 @@ const MATELAS_LANGER_COLORS = [
   { key: "bleu-marine", label: "Bleu marine / Bleu foncé", hex: "#1A365D", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/7/2/15572.jpg" }, 
   { key: "terracotta", label: "Terracotta", hex: "#C2593F", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/7/15567.jpg" }, 
   { key: "bleu-canard", label: "Bleu canard", hex: "#0F4C5C", image: "https://www.lamaisonenchiffon.com/img/p/1/5/5/6/6/15566.jpg" }, 
-  { key: "ensemble", label: "Vue d'ensemble", hex: "#6E857B", image: "https://www.lamaisonenchiffon.com/img/p/3/8/6/5/3865.jpg" }, 
 ];
 
 export default function BebeProductDetailPage() {
@@ -73,6 +79,9 @@ export default function BebeProductDetailPage() {
 
   // État pour la couleur
   const [selectedColorKey, setSelectedColorKey] = useState<string>("");
+
+  // État pour la quantité
+  const [quantity, setQuantity] = useState<number>(1);
   
   const sliderRef = useRef<HTMLDivElement>(null);
   const scrollSlider = (dir: "left" | "right") => {
@@ -97,10 +106,17 @@ export default function BebeProductDetailPage() {
       product?.slug?.includes("matelas-a-langer") ||
       product?.name?.toLowerCase().includes("matelas à langer")
     );
+  
   const isHousseLanger =
-    slug?.includes("housse") ||
-    product?.slug?.includes("housse") ||
-    product?.name?.toLowerCase().includes("housse");
+    (slug?.includes("housse-matelas-a-langer") ||
+     product?.slug?.includes("housse-matelas-a-langer") ||
+     product?.name?.toLowerCase().includes("housse matelas à langer")) &&
+    !slug?.includes("50x100");
+
+  const isDrapBambou =
+    slug?.includes("drap-housse-32x72") ||
+    product?.slug?.includes("drap-housse-32x72") ||
+    product?.name?.toLowerCase().includes("drap housse 32x72");
 
   // Palette de couleurs active selon le produit
   const activeColorPalette = isTapisLanger
@@ -109,6 +125,8 @@ export default function BebeProductDetailPage() {
     ? MATELAS_LANGER_COLORS
     : isHousseLanger
     ? HOUSSE_LANGER_COLORS
+    : isDrapBambou
+    ? DRAP_BAMBOU_COLORS
     : [];
 
   // Calcul du prix selon qu'il s'agit du plan incliné ou d'un autre produit standard
@@ -136,12 +154,13 @@ export default function BebeProductDetailPage() {
     let itemId = product.id;
     let itemName = product.name;
 
-    if (sizeObj) {
-      itemId = `${product.id}-${sizeObj.key}`;
-      itemName = `${product.name} (${sizeObj.label})`;
-    } else if (colorObj) {
-      itemId = `${product.id}-${colorObj.key}`;
-      itemName = `${product.name} (${colorObj.label})`;
+    let detailsParts = [];
+    if (sizeObj) detailsParts.push(sizeObj.label);
+    if (colorObj) detailsParts.push(`Couleur: ${colorObj.label}`);
+
+    if (detailsParts.length > 0) {
+      itemId = `${product.id}-${colorObj ? colorObj.key : 'default'}`;
+      itemName = `${product.name} (${detailsParts.join(" - ")})`;
     }
 
     const item = {
@@ -151,7 +170,7 @@ export default function BebeProductDetailPage() {
       price: currentNumericPrice,
       priceFormatted: currentPriceFormatted,
       image: mainImage,
-      quantity: 1,
+      quantity: quantity,
       size: sizeObj ? sizeObj.label : undefined,
       color: colorObj ? colorObj.label : undefined,
       brand: product.brand,
@@ -161,9 +180,18 @@ export default function BebeProductDetailPage() {
     };
     if (cart?.addItem) cart.addItem(item);
     else if (cart?.add) cart.add(item);
-    const s = JSON.stringify([item]);
-    localStorage.setItem("cart", s);
-    localStorage.setItem("checkout_items", s);
+    
+    const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    const existingIndex = existingCart.findIndex((i: any) => i.id === itemId);
+    
+    if (existingIndex > -1) {
+      existingCart[existingIndex].quantity += quantity;
+    } else {
+      existingCart.push(item);
+    }
+    
+    localStorage.setItem("cart", JSON.stringify(existingCart));
+    localStorage.setItem("checkout_items", JSON.stringify([item]));
     router.push("/checkout");
   };
 
@@ -199,16 +227,6 @@ export default function BebeProductDetailPage() {
           .limit(1)
           .maybeSingle();
         if (fb2) prodSimple = fb2;
-      }
-      
-      if (!prodSimple) {
-        const { data: fb3 } = await supabase
-          .from("products")
-          .select(selectQuery)
-          .ilike("name", `%32x72%`)
-          .limit(1)
-          .maybeSingle();
-        if (fb3) prodSimple = fb3;
       }
       
       if (!prodSimple) {
@@ -254,7 +272,8 @@ export default function BebeProductDetailPage() {
       // Synchroniser la couleur initiale selon le produit
       const prodIsTapis = slug?.includes("tapis-a-langer") || prodSimple.slug?.includes("tapis-a-langer") || prodSimple.name?.toLowerCase().includes("tapis à langer");
       const prodIsMatelasLanger = !prodIsTapis && !slug?.includes("housse") && !prodSimple.slug?.includes("housse") && (slug?.includes("matelas-a-langer") || prodSimple.slug?.includes("matelas-a-langer") || prodSimple.name?.toLowerCase().includes("matelas à langer"));
-      const prodIsHousseLanger = slug?.includes("housse") || prodSimple.slug?.includes("housse") || prodSimple.name?.toLowerCase().includes("housse");
+      const prodIsHousseLanger = (slug?.includes("housse-matelas-a-langer") || prodSimple.slug?.includes("housse-matelas-a-langer") || prodSimple.name?.toLowerCase().includes("housse matelas à langer")) && !slug?.includes("50x100");
+      const prodIsDrapBambou = slug?.includes("drap-housse-32x72") || prodSimple.slug?.includes("drap-housse-32x72") || prodSimple.name?.toLowerCase().includes("drap housse 32x72");
 
       if (prodIsTapis) {
         const match = TAPIS_LANGER_COLORS.find(c => c.image === formattedImages[0]) || TAPIS_LANGER_COLORS[0];
@@ -264,6 +283,9 @@ export default function BebeProductDetailPage() {
         setSelectedColorKey(match.key);
       } else if (prodIsHousseLanger) {
         const match = HOUSSE_LANGER_COLORS.find(c => c.image === formattedImages[0]) || HOUSSE_LANGER_COLORS[0];
+        setSelectedColorKey(match.key);
+      } else if (prodIsDrapBambou) {
+        const match = DRAP_BAMBOU_COLORS.find(c => c.image === formattedImages[0]) || DRAP_BAMBOU_COLORS[0];
         setSelectedColorKey(match.key);
       }
       
@@ -442,7 +464,7 @@ export default function BebeProductDetailPage() {
                               }`}
                             >
                               {isSelected && (
-                                <Check className={`w-3.5 h-3.5 stroke-[3] ${c.key === "gris-clair" || c.key === "ecru" ? "text-[#333333]" : "text-white"}`} />
+                                <Check className={`w-3.5 h-3.5 stroke-[3] ${c.key === "gris-clair" || c.key === "ecru" || c.key === "blanc" ? "text-[#333333]" : "text-white"}`} />
                               )}
                             </button>
                           );
@@ -452,6 +474,31 @@ export default function BebeProductDetailPage() {
                     <p className="text-xs font-bold text-[#333333] mt-2">{activeColorObj.label}</p>
                   </div>
                 )}
+
+                {/* CHAMP QUANTITÉ INTÉGRÉ JUSTE APRÈS LA COULEUR */}
+                <div className="mt-4 pt-3 border-t border-[#333333]/10 flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#333333]">Quantité :</span>
+                  <div className="flex items-center border border-[#333333]/20 rounded-xl bg-white overflow-hidden shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="px-3 py-1.5 text-sm font-bold text-[#333333] hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
+                      -
+                    </button>
+                    <span className="px-4 py-1.5 text-sm font-bold text-[#333333] min-w-[2.5rem] text-center">
+                      {quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(quantity + 1)}
+                      className="px-3 py-1.5 text-sm font-bold text-[#333333] hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
               </div>
               <p className="text-xs text-[#31A039] font-medium mb-1">En stock - Livraison en {activeDeliveryDelayStr}</p>
               <p className="text-xs text-[#333333]/80 mb-3">
