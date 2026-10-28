@@ -121,7 +121,7 @@ export function CheckoutForm() {
             value={formData.postalCode}
             onChange={handleChange}
             className="w-full px-4 py-3.5 rounded-xl border border-[#333333]/15 focus:outline-none focus:border-[#6E857B] focus:ring-1 focus:ring-[#6E857B] transition-colors text-sm text-[#333333] bg-white placeholder:text-gray-400"
-            placeholder="95490"
+            placeholder="75000"
           />
         </div>
         <div className="col-span-1 sm:col-span-2">
@@ -133,7 +133,7 @@ export function CheckoutForm() {
             value={formData.city}
             onChange={handleChange}
             className="w-full px-4 py-3.5 rounded-xl border border-[#333333]/15 focus:outline-none focus:border-[#6E857B] focus:ring-1 focus:ring-[#6E857B] transition-colors text-sm text-[#333333] bg-white placeholder:text-gray-400"
-            placeholder="Ex: Vauréal ou Paris"
+            placeholder="Ex: Paris ou Lyon"
           />
         </div>
       </div>

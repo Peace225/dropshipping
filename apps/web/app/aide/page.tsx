@@ -71,7 +71,7 @@ export default function AidePage() {
         <div className="bg-[#333333] text-[#F5EBE6] p-8 rounded-3xl shadow-md text-center space-y-4">
           <h2 className="text-xl font-bold text-white">Vous n&apos;avez pas trouvé votre réponse ?</h2>
           <p className="text-xs sm:text-sm text-[#F5EBE6]/80 max-w-lg mx-auto leading-relaxed">
-            Notre équipe basée à Vauréal est à votre écoute du lundi au vendredi de 09h à 18h.
+            Notre équipe basée en France est à votre écoute du lundi au vendredi de 09h à 18h.
           </p>
           <div className="pt-2 flex flex-col sm:flex-row justify-center gap-3">
             <Link 

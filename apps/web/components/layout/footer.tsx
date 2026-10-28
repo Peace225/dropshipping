@@ -32,8 +32,8 @@ export function Footer() {
         ]
       },
       {
-        "@type": "LocalBusiness",
-        "@id": "https://eclosia.shop/#localbusiness",
+        "@type": "OnlineStore",
+        "@id": "https://eclosia.shop/#onlinestore",
         "name": "ECLOSIA",
         "image": "https://eclosia.shop/images/logo.png",
         "url": "https://eclosia.shop",
@@ -42,13 +42,9 @@ export function Footer() {
         "priceRange": "€€",
         "currenciesAccepted": "EUR",
         "paymentAccepted": "Carte bancaire, Visa, Mastercard",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "22 rue de la gerbe d’or",
-          "addressLocality": "Vauréal",
-          "postalCode": "95490",
-          "addressRegion": "Île-de-France",
-          "addressCountry": "FR"
+        "areaServed": {
+          "@type": "Country",
+          "name": "France"
         },
         "openingHoursSpecification": {
           "@type": "OpeningHoursSpecification",
@@ -81,14 +77,6 @@ export function Footer() {
             "acceptedAnswer": {
               "@type": "Answer",
               "text": "La livraison standard est de 10,00 € en France métropolitaine (délai de 2 à 4 jours ouvrables), et elle est offerte dès 89,00 € d'achats."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Où est situé le siège d'ECLOSIA ?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Notre siège est basé au 22 rue de la gerbe d’or, 95490 Vauréal, en France."
             }
           },
           {
@@ -162,7 +150,7 @@ export function Footer() {
               <div className="space-y-1 pt-0.5">
                 <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-[#F5EBE6]/60">
                   <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#6E857B] shrink-0" />
-                  <span>22 rue de la gerbe d’or, 95490 Vauréal</span>
+                  <span>France</span>
                 </div>
                 <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-[#F5EBE6]/60">
                   <Phone className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#6E857B] shrink-0" />

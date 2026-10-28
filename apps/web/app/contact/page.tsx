@@ -73,7 +73,7 @@ export default function ContactPage() {
                 <div>
                   <span className="block text-xs font-bold text-gray-400 uppercase tracking-wide">Siège Social</span>
                   <p className="text-sm font-semibold text-[#333333]">
-                    22 rue de la gerbe d’or, 95490 Vauréal, France
+                    France
                   </p>
                 </div>
               </div>

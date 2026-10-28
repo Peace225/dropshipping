@@ -9,8 +9,8 @@ export default function AboutPage() {
         "@type": "AboutPage",
         "@id": "https://eclosia.shop/about#webpage",
         "url": "https://eclosia.shop/about",
-        "name": "À propos d'ECLOSIA - Puériculture & Confort Bébé à Vauréal",
-        "description": "Plateforme e-commerce de référence dédiée au confort et à la sécurité infantile au 22 rue de la gerbe d’or, 95490 Vauréal."
+        "name": "À propos d'ECLOSIA - Puériculture & Confort Bébé en France",
+        "description": "Plateforme e-commerce de référence dédiée au confort et à la sécurité infantile en France."
       },
       {
         "@type": "Organization",
@@ -20,13 +20,9 @@ export default function AboutPage() {
         "logo": "https://eclosia.shop/images/logo.png",
         "legalName": "Guy-Mars Karamba Mamadou",
         "identifier": "104232756",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "22 rue de la gerbe d’or",
-          "addressLocality": "Vauréal",
-          "postalCode": "95490",
-          "addressRegion": "Île-de-France",
-          "addressCountry": "FR"
+        "areaServed": {
+          "@type": "Country",
+          "name": "France"
         },
         "contactPoint": {
           "@type": "ContactPoint",
@@ -69,7 +65,7 @@ export default function AboutPage() {
               L&apos;excellence de la puériculture et du confort infantile
             </h1>
             <p className="text-xs sm:text-xs text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              Basée au <strong>22 rue de la gerbe d’or, 95490 Vauréal</strong>, ECLOSIA s&apos;engage auprès des parents en France en combinant des articles pour bébé écoresponsables rigoureusement sélectionnés et une conseillère IA disponible 24/7. Livraison en 2 à 4 jours ouvrables (frais de port de 10,00 €, offerts dès 89,00 € d&apos;achats).
+              Basée en <strong>France</strong>, ECLOSIA s&apos;engage auprès des parents en combinant des articles pour bébé écoresponsables rigoureusement sélectionnés et une conseillère IA disponible 24/7. Livraison en 2 à 4 jours ouvrables (frais de port de 10,00 €, offerts dès 89,00 € d&apos;achats).
             </p>
           </div>
 
@@ -165,7 +161,7 @@ export default function AboutPage() {
           <div className="bg-[#333333] text-[#F5EBE6] p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-md text-center space-y-4">
             <h2 className="text-lg sm:text-2xl font-serif font-bold text-white">Une question sur un produit ou une commande ?</h2>
             <p className="text-xs sm:text-sm text-[#F5EBE6]/80 max-w-xl mx-auto leading-relaxed">
-              Notre équipe basée à Vauréal et notre conseillère IA sont à votre écoute pour vous guider 24/7.
+              Notre équipe basée en France et notre conseillère IA sont à votre écoute pour vous guider 24/7.
             </p>
             <div className="pt-2 flex flex-col sm:flex-row justify-center gap-2.5 sm:gap-3">
               <Link 

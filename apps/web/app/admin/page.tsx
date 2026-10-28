@@ -102,7 +102,7 @@ export default function AdminPage() {
               Tableau de bord
             </h1>
             <p className="text-xs text-[#333333]/60 mt-1">
-              Espace Super Admin — ECLOSIA (Vauréal, France).
+              Espace Super Admin — ECLOSIA (France).
             </p>
           </div>
 

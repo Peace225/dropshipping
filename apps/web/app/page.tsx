@@ -15,44 +15,19 @@ export const metadata = {
 export default function HomePage() {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
+    "@type": "OnlineStore",
     "name": "ECLOSIA",
     "image": "https://eclosia.shop/og-image.jpg",
     "@id": "https://eclosia.shop",
     "url": "https://eclosia.shop",
-    "telephone": "",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "22 rue de la gerbe d'or",
-      "postalCode": "95490",
-      "addressLocality": "Vauréal",
-      "addressRegion": "Île-de-France",
-      "addressCountry": "FR"
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": 49.0333,
-      "longitude": 2.0333
-    },
-    "openingHoursSpecification": {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday"
-      ],
-      "opens": "00:00",
-      "closes": "23:59"
+    "areaServed": {
+      "@type": "Country",
+      "name": "France"
     },
     "sameAs": [
       "https://facebook.com/eclosia",
       "https://instagram.com/eclosia"
     ],
-    "priceRange": "$$",
     "description": "Plateforme e-commerce spécialisée dans la puériculture, offrant des articles de literie et accessoires d'excellence pour bébé."
   };
 

@@ -16,7 +16,7 @@ export default function MentionsLegalesPage() {
               <p><strong>SIREN :</strong> 104 232 756</p>
               <p><strong>SIRET (Siège) :</strong> 104 232 756 00015</p>
               <p><strong>TVA :</strong> TVA non applicable, art. 293 B du CGI</p>
-              <p><strong>Siège social :</strong> 22 rue de la gerbe d’or, 95490 Vauréal, France</p>
+              <p><strong>Siège social :</strong> France</p>
               <p><strong>Téléphone :</strong> +33 7 69 23 85 11</p>
               <p><strong>Contact :</strong> contact@eclosia.shop</p>
               <p><strong>Pays d&apos;exploitation :</strong> France</p>

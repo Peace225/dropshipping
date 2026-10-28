@@ -23,7 +23,7 @@ export default function AdminSettingsPage() {
     storeName: "ECLOSIA",
     supportEmail: "contact@eclosia.shop",
     phoneNumber: "+33 7 69 23 85 11",
-    address: "22 rue de la gerbe d'or, 95490 Vauréal, France",
+    address: "France",
     currency: "EUR",
     taxRate: 20,
     enableNotifications: true,

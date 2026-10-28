@@ -193,7 +193,7 @@ export default function InscriptionPage() {
 
         <div className="mt-8 text-center text-xs text-[#333333]/50 font-medium space-y-1">
           <p>© {new Date().getFullYear()} ECLOSIA Maternité & Puériculture</p>
-          <p>75 rue de Rivoli, 75001 Paris</p>
+          <p>France</p>
         </div>
       </div>
     </div>

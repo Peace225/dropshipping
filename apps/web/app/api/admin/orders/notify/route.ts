@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       notifType = 'validated';
     } else if (status === 'shipped') {
       title = "Colis en route! 🚚";
-      messageBody = `Votre commande #${shortId} est en route! Suivi: ${order.tracking_number || 'en cours'}. Livraison 10,00€ prévue sous 48h. ECLOSIA 75 rue de Rivoli.`;
+      messageBody = `Votre commande #${shortId} est en route! Suivi: ${order.tracking_number || 'en cours'}. Livraison 10,00€ prévue sous 48h. ECLOSIA.`;
       notifType = 'shipped';
     } else if (status === 'delivered') {
       title = "Commande livrée! ✨";
